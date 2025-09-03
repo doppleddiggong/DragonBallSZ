@@ -6,3 +6,8 @@ void UDBSZEventManager::SendMessage(const FString& InMsg)
 {
 	OnMessage.Broadcast(InMsg);
 }
+
+void UDBSZEventManager::SendCamera(const int& Group, const int& Index)
+{
+	OnCamera.Broadcast(Group, Index);
+}
