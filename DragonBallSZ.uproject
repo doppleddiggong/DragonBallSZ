@@ -31,5 +31,8 @@
 				"Editor"
 			]
 		}
+	],
+	"AdditionalPluginDirectories": [
+		"../../../Plugins/CoffeeToolbar"
 	]
 }
