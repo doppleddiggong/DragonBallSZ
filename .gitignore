@@ -165,3 +165,4 @@ http-client.private.env.json
 Documents/Movies/Reference.mp4
 Documents/Resources/Steel/LFS
 DragonBallSZ.sln.DotSettings.user
+*.user

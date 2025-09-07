@@ -21,14 +21,12 @@ void UStatSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 void UStatSystem::InitStat_Implementation(bool IsPlayer)
 {
-	// TODO, 데이터 테이블로 빼자
 	this->bIsPlayer = IsPlayer;
 
+	// TODO, 데이터 테이블로 빼자
 	this->MaxHP = 1000;
 	this->CurHP = MaxHP;
 	this->IsDead = false;
-
-	UDBSZEventManager::Get(GetWorld())->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 }
 
 void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)
@@ -38,7 +36,8 @@ void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)
 	if( CurHP > MaxHP )
 		CurHP = MaxHP;
 
-	UDBSZEventManager::Get(GetWorld())->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
+	if (auto EM = UDBSZEventManager::Get(GetWorld()) )
+		EM->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 }
 
 bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
@@ -51,7 +50,8 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 		this->IsDead = true;
 	}
 
-	UDBSZEventManager::Get(GetWorld())->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
+	if (auto EM = UDBSZEventManager::Get(GetWorld()) )
+		EM->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 
 	return IsDead;
 }

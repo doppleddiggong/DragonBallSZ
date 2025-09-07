@@ -16,6 +16,11 @@ public class DragonBallSZ : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+			
+			"AIModule",				
+			"GameplayTasks",		
+			"NavigationSystem",		
+			
 			"CoffeeLibrary"
 		});
 
