@@ -11,3 +11,8 @@ void UDBSZEventManager::SendCamera(const int& Group, const int& Index)
 {
 	OnCamera.Broadcast(Group, Index);
 }
+
+void UDBSZEventManager::SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp)
+{
+	OnUpdateHealth.Broadcast(IsPlayer, CurHP, MaxHp);
+}

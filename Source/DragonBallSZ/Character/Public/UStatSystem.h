@@ -23,7 +23,7 @@ public:
 
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
-	void InitStat();	
+	void InitStat(bool IsPlayer);	
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void IncreaseHealth(float InHealPoint);	
@@ -32,19 +32,22 @@ public:
 	bool DecreaseHealth(float InDamagePoint);	
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	bool bIsPlayer = false;
+	
 	// Health
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float CurHP;
+	float CurHP = 1000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float MaxHP;
+	float MaxHP = 1000;
 
 	// STATE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	bool IsDead;
+	bool IsDead = false;
 
 	// Sight
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float SightLength;
+	float SightLength = 1000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float SightAngle;
+	float SightAngle = 45;
 };

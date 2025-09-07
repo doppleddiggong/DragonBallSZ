@@ -15,7 +15,6 @@ class DRAGONBALLSZ_API UDBSZEventManager : public UGameInstanceSubsystem
 public:
 	DEFINE_SUBSYSTEM_GETTER_INLINE(UDBSZEventManager);
 
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMessage, FString, Msg);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnMessage OnMessage;
@@ -29,4 +28,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendCamera(const int& Group, const int& Index);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnUpdateHealth, bool, IsPlayer, float, CurHP, float, MaxHp );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnUpdateHealth OnUpdateHealth;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);	
 };

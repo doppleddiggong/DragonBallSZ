@@ -24,7 +24,8 @@ public class DragonBallSZ : ModuleRules
 		PublicIncludePaths.AddRange(new string[] {
 			Path.Combine(ModuleDirectory, "Common", "Public"),
 			Path.Combine(ModuleDirectory, "Character", "Public"),
-			// Path.Combine(ModuleDirectory, "Enviroment", "Public"),
+			Path.Combine(ModuleDirectory, "Enviroment", "Public"),
+			Path.Combine(ModuleDirectory, "UI", "Public"),
 		});
 	}
 }
