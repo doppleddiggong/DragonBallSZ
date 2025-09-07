@@ -1,0 +1,48 @@
+﻿// Copyright (c) 2025 Doppleddiggong. All rights reserved. Unauthorized copying, modification, or distribution of this file, via any medium is strictly prohibited. Proprietary and confidential.
+
+#include "UStatSystem.h"
+
+UStatSystem::UStatSystem()
+{
+	PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UStatSystem::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void UStatSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UStatSystem::InitStat_Implementation()
+{
+	// TODO, 데이터 테이블로 빼자
+
+	this->MaxHP = 1000;
+	this->CurHP = MaxHP;
+	this->IsDead = false;
+}
+
+void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)
+{
+	this->CurHP += InHealPoint;
+
+	if( CurHP > MaxHP )
+		CurHP = MaxHP;
+}
+
+bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
+{
+	this->CurHP -= InDamagePoint;
+
+	if( CurHP < 0 )
+	{
+		CurHP = 0;
+		this->IsDead = true;
+	}
+
+	return IsDead;
+}
