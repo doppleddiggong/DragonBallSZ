@@ -64,7 +64,7 @@ public: // Control Interface
 	virtual void Cmd_Jump() override;
 	virtual void Cmd_Dash() override;
 	
-	virtual void Cmd_LockOn() override;
+	virtual void Cmd_Landing() override;
 
 	virtual void Cmd_ChargeKi(bool bPressed) override;
 	virtual void Cmd_Guard(bool bPressed) override;

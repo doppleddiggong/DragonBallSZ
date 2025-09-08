@@ -40,7 +40,16 @@ APlayerActor::APlayerActor()
 	
 	bUseControllerRotationYaw = true;
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
 		Move->bOrientRotationToMovement = false;
+
+		// 플라잉 모드 미끄러짐 방지 설정
+		// 높은 값으로 설정하여 즉시 멈추도록 함
+		Move->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
+    
+		// 추가적으로 마찰력도 조정 가능
+		Move->BrakingFriction = 4.0f; // 기본값 0.0f
+	}
 }
 
 void APlayerActor::BeginPlay()
@@ -91,8 +100,6 @@ void APlayerActor::Cmd_Look(const FVector2D& Axis)
 void APlayerActor::Cmd_Jump()
 {
 	Jump();
-
-	// 점프 중일때는 하늘로 고정이 되어야 합니다.
 }
 
 void APlayerActor::Cmd_Dash()
@@ -100,9 +107,28 @@ void APlayerActor::Cmd_Dash()
 	PRINTINFO();
 }
 
-void APlayerActor::Cmd_LockOn()
+void APlayerActor::Cmd_Landing()
 {
-	PRINTINFO();
+	if (GetCharacterMovement()->MovementMode == MOVE_Flying)
+	{
+		// 지면을 레이캐스트로 찾기
+		FHitResult Hit;
+		FVector Start = GetActorLocation();
+		FVector End = Start - FVector(0, 0, 10000);
+
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+		{
+			FVector LandingLocation = Hit.Location;
+			LandingLocation.Z += 88.0f;
+
+			SetActorLocation(LandingLocation);
+		}
+
+		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	}
 }
 
 void APlayerActor::Cmd_ChargeKi(bool bPressed)

@@ -26,7 +26,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Jump;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Dash;
 
-	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_LockOn;
+	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Landing;
 
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Guard;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Vanish;
@@ -44,7 +44,7 @@ protected:
 	void OnJump(const FInputActionValue& Value);
 	void OnDash(const FInputActionValue& Value);
 
-	void OnLockOn(const FInputActionValue& Value);
+	void OnLanding(const FInputActionValue& Value);
 	
 	void OnChargeKiPressed(const FInputActionValue& Value);
 	void OnChargeKiReleased(const FInputActionValue& Value);
