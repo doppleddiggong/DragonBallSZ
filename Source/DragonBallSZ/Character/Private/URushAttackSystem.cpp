@@ -239,7 +239,7 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
 	    PrevMovementMode = Movement->MovementMode;
 		Movement->DisableMovement();
 
-    	PRINT_STRING(TEXT("Movement->DisableMovement()"));
+    	// PRINT_STRING(TEXT("Movement->DisableMovement()"));
     }
 
     AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
@@ -256,7 +256,7 @@ void URushAttackSystem::OnRushDashCompleted()
         {
             Movement->SetMovementMode(PrevMovementMode);
 
-			PRINT_STRING(TEXT("Movement->SetMovementMode(PrevMovementMode)"));
+			// PRINT_STRING(TEXT("Movement->SetMovementMode(PrevMovementMode)"));
         }
     	
         PlayAttackMontage(PendingMontageIndex);
