@@ -39,7 +39,7 @@ AEnemyActor::AEnemyActor()
 
 	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
 	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
-	RightHandComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	RightFootComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 }
 
 void AEnemyActor::BeginPlay()

@@ -34,7 +34,7 @@ void APlayerControl::SetupInputComponent()
 
 		EIC->BindAction(IA_Jump, ETriggerEvent::Started,    this, &APlayerControl::OnJump);
 		EIC->BindAction(IA_Dash, ETriggerEvent::Started,    this, &APlayerControl::OnDash);
-		EIC->BindAction(IA_LockOn, ETriggerEvent::Started,  this, &APlayerControl::OnLockOn);
+		EIC->BindAction(IA_Landing, ETriggerEvent::Started,  this, &APlayerControl::OnLanding);
 		EIC->BindAction(IA_Guard, ETriggerEvent::Started,   this, &APlayerControl::OnGuardPressed);
 		EIC->BindAction(IA_Guard, ETriggerEvent::Completed, this, &APlayerControl::OnGuardReleased);
 		EIC->BindAction(IA_Vanish, ETriggerEvent::Started,   this, &APlayerControl::OnVanish);
@@ -83,10 +83,10 @@ void APlayerControl::OnDash(const FInputActionValue&)
 		C->Cmd_Dash();
 }
 
-void APlayerControl::OnLockOn(const FInputActionValue&)
+void APlayerControl::OnLanding(const FInputActionValue&)
 {
 	if (IControllable* C = GetControllable())
-		C->Cmd_LockOn();
+		C->Cmd_Landing();
 }
 
 void APlayerControl::OnGuardPressed(const FInputActionValue&)
