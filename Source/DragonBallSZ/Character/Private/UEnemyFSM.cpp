@@ -39,16 +39,16 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	case EEnemyState::Idle:
 		Idle();
 		break;
-	case EEnemyState::Act:
-		Act();
+	case EEnemyState::Move:
+		Move();
 		break;
 	case EEnemyState::Damaged:
 		Damaged();
 		break;
-	case EEnemyState::PlayerDown:
+	case EEnemyState::EnemyWin:
 		PlayerDown();
 		break;
-	case EEnemyState::EnemyDown:
+	case EEnemyState::EnemyLose:
 		EnemyDown();
 		break;
 	}
@@ -76,24 +76,7 @@ void UEnemyFSM::Idle()
 	PRINTINFO();
 }
 
-void UEnemyFSM::Act()
-{
-	switch (CurrentAct)
-	{
-	case EActDecision::Move:
-		Move();
-		break;
-	case EActDecision::Attack:
-		Attack();
-		break;
-	case EActDecision::Charge:
-		Charge();
-		break;
-	case EActDecision::Skill:
-		Skill();
-		break;
-	}
-}
+
 
 void UEnemyFSM::Damaged()
 {
@@ -112,18 +95,6 @@ void UEnemyFSM::EnemyDown()
 
 void UEnemyFSM::Move()
 {
-	switch (CurrentMove)
-	{
-	case EMoveType::Approach:
-		Approach();
-		break;
-	case EMoveType::SideStep:
-		SideStep();
-		break;
-	case EMoveType::Escape:
-		Escape();
-		break;
-	}
 }
 
 void UEnemyFSM::Attack()
@@ -141,83 +112,3 @@ void UEnemyFSM::Skill()
 	PRINTINFO();
 }
 
-void UEnemyFSM::Approach()
-{
-	switch (CurrentApproach)
-	{
-	case EApproachType::NormalApproach:
-		NormalApproach();
-		break;
-	case EApproachType::JogitanApproach:
-		JogitanApproach();
-		break;
-	}
-}
-void UEnemyFSM::SideStep()
-{
-	switch (CurrentSideStep)
-	{
-	case ESideStepType::LeftStep:
-		LeftStep();
-		break;
-	case ESideStepType::JogitanLeftStep:
-		JogitanLeftStep();
-		break;
-	case ESideStepType::LeftDodge:
-		LeftDodge();
-		break;
-	case ESideStepType::RightStep:
-		RightStep();
-		break;
-	case ESideStepType::JogitanRightStep:
-		JogitanRightStep();
-		break;
-	case ESideStepType::RightDodge:
-		RightDodge();
-		break;
-	}
-}
-void UEnemyFSM::Escape()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::NormalApproach()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::JogitanApproach()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::LeftStep()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::JogitanLeftStep()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::LeftDodge()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::RightStep()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::JogitanRightStep()
-{
-	PRINTINFO();
-}
-
-void UEnemyFSM::RightDodge()
-{
-	PRINTINFO();
-}
