@@ -1,12 +1,15 @@
 ﻿// Copyright (c) 2025 Doppleddiggong. All rights reserved. Unauthorized copying, modification, or distribution of this file, via any medium is strictly prohibited. Proprietary and confidential.
 
-
 #include "URushAttackSystem.h"
+
+#include "AEnemyActor.h"
 #include "DragonBallSZ.h"
 #include "APlayerActor.h"
 #include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 URushAttackSystem::URushAttackSystem()
 {
@@ -22,8 +25,6 @@ void URushAttackSystem::BeginPlay()
 	AnimInstance = MeshComp->GetAnimInstance();
 
 	BindMontageDelegates(AnimInstance);
-
-	PRINTINFO();
 }
 
 void URushAttackSystem::EndPlay(const EEndPlayReason::Type Reason)
@@ -63,30 +64,66 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 	bDelegatesBound = false;
 }
 
-void URushAttackSystem::OnAttack()
+void URushAttackSystem::OnLookTarget()
 {
-	if ( Owner->IsHit == false && bIsAttacking == false )
-	{
-		PlayAttackByIndex(ComboCount);
-	}
+	if (!Owner || !Owner->TargetActor)
+		return;
+
+	const FVector MyLoc = Owner->GetActorLocation();
+	const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
+	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(MyLoc, TargetLoc);
+	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
+	Owner->SetActorRotation(NewRot);
 }
 
-void URushAttackSystem::PlayAttackByIndex(int32 Index)
+void URushAttackSystem::OnAttack()
+{
+    if ( Owner->IsHit == false && bIsAttacking == false )
+    {
+        const bool bHasTarget = (Owner && Owner->TargetActor != nullptr);
+        if (bUseDashMove && !bIsDashing && bHasTarget)
+        {
+            const FVector MyLoc = Owner->GetActorLocation();
+            const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
+            const float Dist = FVector::Dist2D(MyLoc, TargetLoc);
+            if ( Dist > DashStopDistance + 10.0f)
+            {
+                StartRushToTarget(ComboCount);
+                return;
+            }
+        }
+
+        OnLookTarget();
+        PlayAttackMontage(ComboCount);
+    }
+}
+
+void URushAttackSystem::PlayAttackMontage(int32 MontageIndex)
 {
 	if (!MeshComp)
 		return;
 	
-	if (!AttackMontages.IsValidIndex(Index))
+	if (!AttackMontages.IsValidIndex(MontageIndex))
 		return;
 
 	bIsAttacking = true;
 
 	AnimInstance->Montage_Play(
-		AttackMontages[Index],
-		AttackSpeed,
+		AttackMontages[MontageIndex],
+		1.0f,
 		EMontagePlayReturnType::MontageLength,
 		0.f,
 		true);
+
+	FTimerManager& TM = GetWorld()->GetTimerManager();
+	TM.ClearTimer(ComboTimeHandler);
+	TM.SetTimer(
+		ComboTimeHandler,
+		this,
+		&URushAttackSystem::ResetCounter,
+		3.0f,
+		false
+	);
 }
 
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -96,7 +133,7 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 	bIsAttacking = false;
 	
 	ComboCount++;
-	if ( ComboCount > 3 )
+	if ( ComboCount > AttackMontages.Num()-1 )
 		ComboCount = 0;
 	
 	ResetByHit();
@@ -117,9 +154,8 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 
 void URushAttackSystem::StartAttackTrace()
 {
-	// 0.01초 간격 반복 호출
 	GetWorld()->GetTimerManager().SetTimer(
-		AttackTimeHandler,
+		AttackTraceTimeHandler,
 		this,
 		&URushAttackSystem::AttackTrace,
 		0.01f,
@@ -129,28 +165,116 @@ void URushAttackSystem::StartAttackTrace()
 
 void URushAttackSystem::StopAttackTrace()
 {
-	UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, AttackTimeHandler);
+    UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, AttackTraceTimeHandler);
+}
+
+void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
+{
+    if (!Owner || !Owner->TargetActor)
+    {
+        PlayAttackMontage(MontageIndex);
+        return;
+    }
+
+    USceneComponent* RootComp = Owner->GetRootComponent();
+    if (!RootComp)
+    {
+        PlayAttackMontage(MontageIndex);
+        return;
+    }
+
+    const FVector MyLoc = Owner->GetActorLocation();
+    const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
+
+    FVector ToTarget = (TargetLoc - MyLoc);
+    ToTarget.Z = 0.0f;
+    const float Distance = ToTarget.Size();
+
+    if (Distance <= KINDA_SMALL_NUMBER)
+    {
+        PlayAttackMontage(MontageIndex);
+        return;
+    }
+
+    const FVector Dir = ToTarget / Distance;
+    const float Travel = FMath::Max(0.0f, Distance - DashStopDistance);
+    const FVector TargetDashWorld = MyLoc + Dir * Travel;
+
+    // Face the target (yaw only)
+    {
+        const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(MyLoc, TargetLoc);
+        FRotator NewRot(0.f, LookAt.Yaw, 0.f);
+        Owner->SetActorRotation(NewRot);
+    }
+
+    // Prepare latent move info
+    FLatentActionInfo LatentInfo;
+    LatentInfo.CallbackTarget   = this;
+    LatentInfo.ExecutionFunction = FName("OnRushDashCompleted");
+    LatentInfo.Linkage          = 0;
+    LatentInfo.UUID             = __LINE__; // reasonably unique per call site
+
+    // Root typically has no parent; world == relative in that case
+    const FVector TargetRelative = TargetDashWorld; 
+    const FRotator TargetRelRot  = RootComp->GetRelativeRotation();
+
+    bIsDashing = true;
+    PendingMontageIndex = MontageIndex;
+
+    if (UCharacterMovementComponent* Move = Owner->GetCharacterMovement())
+    {
+        Move->DisableMovement();
+    }
+
+    // Play dash montage while moving
+    if (AnimInstance && DashMontages)
+    {
+        AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+    }
+
+    UKismetSystemLibrary::MoveComponentTo(
+        RootComp,
+        TargetRelative,
+        TargetRelRot,
+        /*bEaseOut*/ true,
+        /*bEaseIn*/  true,
+        /*OverTime*/ DashDuration,
+        /*bForceShortestRotationPath*/ true,
+        EMoveComponentAction::Type::Move,
+        LatentInfo
+    );
+}
+
+void URushAttackSystem::OnRushDashCompleted()
+{
+    bIsDashing = false;
+    // Stop dash montage regardless of hit state
+    if (AnimInstance && DashMontages)
+    {
+        AnimInstance->Montage_Stop(0.1f, DashMontages);
+    }
+    // If hit during dash, do not continue combo
+    if (Owner && !Owner->IsHit)
+    {
+        if (UCharacterMovementComponent* Move = Owner->GetCharacterMovement())
+        {
+            Move->SetMovementMode(MOVE_Walking);
+        }
+    	
+        // 돌진 종료 시점에 다시 한번 적을 바라보게 정렬
+        OnLookTarget();
+        PlayAttackMontage(PendingMontageIndex);
+    }
 }
 
 void URushAttackSystem::AttackTrace()
 {
-	if ( ComboCount == 0  || ComboCount == 2 )
-	{
-		// Left
-		FVector Start, End;
-		GetHandLocation( Owner->LeftHandComp, Start, End );
-		AttackSphereTrace(Start, End, Damage, Owner);
-	}
-	else if ( ComboCount == 1 || ComboCount == 3)
-	{
-		// Right
-		FVector Start, End;
-		GetHandLocation( Owner->RightHandComp, Start, End );
-		AttackSphereTrace(Start, End, Damage, Owner);
-	}
+	FVector Start, End;
+	GetBodyLocation( Owner->GetBodyPart(AttackPart[ComboCount]), Start, End );
+	AttackSphereTrace( Start, End, Damage, Owner);
 }
 
-void URushAttackSystem::GetHandLocation(USceneComponent* Hand, FVector& OutStart, FVector& OutEnd) const
+void URushAttackSystem::GetBodyLocation(USceneComponent* Hand, FVector& OutStart, FVector& OutEnd) const
 {
 	if (!Hand)
 	{
@@ -180,12 +304,12 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 		UEngineTypes::ConvertToTraceType(ECC_Visibility), // TraceChannel
 		false,							// bTraceComplex
 		ActorsToIgnore,					// 무시할 액터들
-		EDrawDebugTrace::ForDuration,	// 디버그 그리기 옵션
+		DrawTraceState,					// 디버그 그리기 옵션
 		OutHit,                     // Hit 결과
 		true,							// Ignore Self
 		FLinearColor::Red,				// Trace 색상
 		FLinearColor::Green,			// Hit 색상
-		7.0f							// Draw Time
+		3.0f							// Draw Time
 	);
 
 	if (bHit)
@@ -211,9 +335,3 @@ void URushAttackSystem::ResetByHit()
 		ComboCount = 0;
 	}
 }
-
-void URushAttackSystem::ResetCounter()
-{
-	ComboCount = 0;
-}
-

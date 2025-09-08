@@ -41,6 +41,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	float MaxHP = 1000;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	float Damage = 30;
+
 	// STATE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	bool IsDead = false;

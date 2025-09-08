@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EBodyPartType.h"
 #include "GameFramework/Character.h"
 #include "AEnemyActor.generated.h"
 
@@ -23,6 +24,29 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* LeftHandComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* RightHandComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* LeftFootComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* RightFootComp;
+
+public:
+	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part)
+	{
+		switch (Part)
+		{
+		case EBodyPartType::Hand_L: return LeftHandComp;
+		case EBodyPartType::Hand_R: return RightHandComp;
+		case EBodyPartType::Foot_L: return LeftFootComp;
+		case EBodyPartType::Foot_R: return LeftHandComp;
+		default:	return LeftHandComp;
+		}
+	}
+	
 public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UStatSystem* StatSystem;
@@ -30,6 +54,9 @@ public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class USightSystem* SightSystem;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
+	class UEnemyFSM* EnemyFSM;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UEnemyAnimInstance* AnimBP;
 

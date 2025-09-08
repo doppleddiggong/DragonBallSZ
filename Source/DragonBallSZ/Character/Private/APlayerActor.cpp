@@ -30,6 +30,14 @@ APlayerActor::APlayerActor()
 	RightHandComp->SetupAttachment(GetMesh(), TEXT("hand_r"));
 	RightHandComp->SetRelativeRotation(FRotator(180.f, 0.f, 0.f));
 
+	LeftFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootComp"));
+	LeftFootComp->SetupAttachment(GetMesh(), TEXT("foot_l"));
+	LeftFootComp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+
+	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
+	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
+	RightHandComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	
 	bUseControllerRotationYaw = true;
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 		Move->bOrientRotationToMovement = false;
@@ -43,6 +51,7 @@ void APlayerActor::BeginPlay()
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
 	StatSystem->InitStat(true);
+	RushAttackSystem->SetDamage( StatSystem->Damage );
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
@@ -82,6 +91,8 @@ void APlayerActor::Cmd_Look(const FVector2D& Axis)
 void APlayerActor::Cmd_Jump()
 {
 	Jump();
+
+	// 점프 중일때는 하늘로 고정이 되어야 합니다.
 }
 
 void APlayerActor::Cmd_Dash()
@@ -118,6 +129,7 @@ void APlayerActor::Cmd_RushAttack()
 void APlayerActor::Cmd_EnergyBlast()
 {
 	PRINTINFO();
+	// 조기탄
 }
 
 void APlayerActor::Cmd_Kamehameha()

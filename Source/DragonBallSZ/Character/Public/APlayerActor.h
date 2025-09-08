@@ -6,6 +6,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "IControllable.h"
+#include "EBodyPartType.h"
+#include "URushAttackSystem.h"
 #include "APlayerActor.generated.h"
 
 UCLASS()
@@ -30,12 +32,30 @@ public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class URushAttackSystem* RushAttackSystem;
 
+
+
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UArrowComponent* LeftHandComp;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UArrowComponent* RightHandComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* LeftFootComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UArrowComponent* RightFootComp;
 
+public:
+	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part)
+	{
+		switch (Part)
+		{
+			case EBodyPartType::Hand_L: return LeftHandComp;
+			case EBodyPartType::Hand_R: return RightHandComp;
+			case EBodyPartType::Foot_L: return LeftFootComp;
+			case EBodyPartType::Foot_R: return LeftHandComp;
+			default:	return LeftHandComp;
+		}
+	}
 	
 public: // Control Interface
 	virtual void Cmd_Move(const FVector2D& Axis) override;

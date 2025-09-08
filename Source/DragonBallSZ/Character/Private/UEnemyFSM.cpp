@@ -1,26 +1,22 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "AEnemyFSM.h"
+#include "UEnemyFSM.h"
+#include "DragonBallSZ.h"
 
-
-// Sets default values
-AAEnemyFSM::AAEnemyFSM()
+UEnemyFSM::UEnemyFSM()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
-void AAEnemyFSM::BeginPlay()
+void UEnemyFSM::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-// Called every frame
-void AAEnemyFSM::Tick(float DeltaTime)
+void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::Tick(DeltaTime);
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	CurrentTime += DeltaTime;
 	
 	if (CurrentState == EEnemyState::Damaged)	// 피격 시 행동 취소
@@ -35,7 +31,6 @@ void AAEnemyFSM::Tick(float DeltaTime)
 	{
 		CurrentTime = 0;
 	}
-
 	
 	// States.Add({EEnemyState::Act, 100.f});	// 가중치 추가
 	CurrentState = SelectWeightedRandomState();
@@ -59,7 +54,7 @@ void AAEnemyFSM::Tick(float DeltaTime)
 	}
 }
 
-EEnemyState AAEnemyFSM::SelectWeightedRandomState()
+EEnemyState UEnemyFSM::SelectWeightedRandomState()
 {
 	// 총합 계산
 	float TotalWeight = 0.f;
@@ -76,13 +71,12 @@ EEnemyState AAEnemyFSM::SelectWeightedRandomState()
 	})].Key;
 }
 
-
-// State implementation
-void AAEnemyFSM::Idle()
+void UEnemyFSM::Idle()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::Act()
+void UEnemyFSM::Act()
 {
 	switch (CurrentAct)
 	{
@@ -101,20 +95,22 @@ void AAEnemyFSM::Act()
 	}
 }
 
-void AAEnemyFSM::Damaged()
+void UEnemyFSM::Damaged()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::PlayerDown()
+void UEnemyFSM::PlayerDown()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::EnemyDown()
+void UEnemyFSM::EnemyDown()
 {
+	PRINTINFO();
 }
 
-// Act implementation
-void AAEnemyFSM::Move()
+void UEnemyFSM::Move()
 {
 	switch (CurrentMove)
 	{
@@ -130,20 +126,22 @@ void AAEnemyFSM::Move()
 	}
 }
 
-void AAEnemyFSM::Attack()
+void UEnemyFSM::Attack()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::Charge()
+void UEnemyFSM::Charge()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::Skill()
+void UEnemyFSM::Skill()
 {
+	PRINTINFO();
 }
 
-// Move implementation
-void AAEnemyFSM::Approach()
+void UEnemyFSM::Approach()
 {
 	switch (CurrentApproach)
 	{
@@ -155,7 +153,7 @@ void AAEnemyFSM::Approach()
 		break;
 	}
 }
-void AAEnemyFSM::SideStep()
+void UEnemyFSM::SideStep()
 {
 	switch (CurrentSideStep)
 	{
@@ -179,41 +177,47 @@ void AAEnemyFSM::SideStep()
 		break;
 	}
 }
-void AAEnemyFSM::Escape()
+void UEnemyFSM::Escape()
 {
+	PRINTINFO();
 }
 
-// Approach implementation
-void AAEnemyFSM::NormalApproach()
+void UEnemyFSM::NormalApproach()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::JogitanApproach()
+void UEnemyFSM::JogitanApproach()
 {
+	PRINTINFO();
 }
 
-// SideStep implementation
-void AAEnemyFSM::LeftStep()
+void UEnemyFSM::LeftStep()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::JogitanLeftStep()
+void UEnemyFSM::JogitanLeftStep()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::LeftDodge()
+void UEnemyFSM::LeftDodge()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::RightStep()
+void UEnemyFSM::RightStep()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::JogitanRightStep()
+void UEnemyFSM::JogitanRightStep()
 {
+	PRINTINFO();
 }
 
-void AAEnemyFSM::RightDodge()
+void UEnemyFSM::RightDodge()
 {
+	PRINTINFO();
 }
-

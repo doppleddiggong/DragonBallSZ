@@ -22,7 +22,7 @@ public:
 
 	virtual void Cmd_Jump() = 0;							// 점프
 	virtual void Cmd_Dash() = 0;							// 대시(부스트)
-	
+
 	virtual void Cmd_LockOn() = 0;							// 적 대상 락온 토글
 
 	virtual void Cmd_ChargeKi(bool bPressed) = 0;			// 기 모으기
