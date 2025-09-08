@@ -37,6 +37,36 @@ void URushAttackSystem::EndPlay(const EEndPlayReason::Type Reason)
 	Super::EndPlay(Reason);
 }
 
+void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsDashing)
+	{
+		DashElapsedTime += DeltaTime;
+        
+		const float Alpha = FMath::Clamp(DashElapsedTime / DashDuration, 0.0f, 1.0f);
+		const FVector Location = FMath::Lerp(DashStartLocation, DashTargetLocation, Alpha);
+        
+		Owner->SetActorLocation(Location, true);
+        
+		const float Distance = FVector::Dist2D(Owner->GetActorLocation(), DashTargetLocation);
+		if ( Distance <= DashStopDistance )
+		{
+			PRINT_STRING(TEXT("Distance <= DashStopDistance"));
+			OnRushDashCompleted();
+		}
+		else if ( DashElapsedTime >= DashDuration )
+		{
+			PRINT_STRING(TEXT("DashElapsedTime >= DashDuration"));
+			OnRushDashCompleted();
+		}
+	}
+
+	if ( bIsAttacking || bIsDashing )
+		OnLookTarget();
+}
+
 // BeginPlay 등 한 번만 호출
 void URushAttackSystem::BindMontageDelegates(UAnimInstance* Anim)
 {
@@ -69,9 +99,8 @@ void URushAttackSystem::OnLookTarget()
 	if (!Owner || !Owner->TargetActor)
 		return;
 
-	const FVector MyLoc = Owner->GetActorLocation();
 	const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
-	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(MyLoc, TargetLoc);
+	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), TargetLoc);
 	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
 	Owner->SetActorRotation(NewRot);
 }
@@ -80,20 +109,17 @@ void URushAttackSystem::OnAttack()
 {
     if ( Owner->IsHit == false && bIsAttacking == false )
     {
-        const bool bHasTarget = (Owner && Owner->TargetActor != nullptr);
-        if (bUseDashMove && !bIsDashing && bHasTarget)
+        if ( bUseDashMove && !bIsDashing)
         {
-            const FVector MyLoc = Owner->GetActorLocation();
             const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
-            const float Dist = FVector::Dist2D(MyLoc, TargetLoc);
-            if ( Dist > DashStopDistance + 10.0f)
+            const float Dist = FVector::Dist2D(Owner->GetActorLocation(), TargetLoc);
+            if ( Dist > DashStopDistance )
             {
                 StartRushToTarget(ComboCount);
                 return;
             }
         }
 
-        OnLookTarget();
         PlayAttackMontage(ComboCount);
     }
 }
@@ -170,99 +196,69 @@ void URushAttackSystem::StopAttackTrace()
 
 void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
 {
-    if (!Owner || !Owner->TargetActor)
-    {
-        PlayAttackMontage(MontageIndex);
-        return;
-    }
-
-    USceneComponent* RootComp = Owner->GetRootComponent();
-    if (!RootComp)
-    {
-        PlayAttackMontage(MontageIndex);
-        return;
-    }
-
-    const FVector MyLoc = Owner->GetActorLocation();
+    const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
 
-    FVector ToTarget = (TargetLoc - MyLoc);
-    ToTarget.Z = 0.0f;
-    const float Distance = ToTarget.Size();
+	// 1. Z축을 제외하고 XY 평면에서의 벡터와 거리를 계산
+	FVector ToTargetXY = TargetLoc - OwnerLoc;
+	ToTargetXY.Z = 0.0f; // Z축 무시
+	const float DistanceXY = ToTargetXY.Size();
 
-    if (Distance <= KINDA_SMALL_NUMBER)
-    {
-        PlayAttackMontage(MontageIndex);
-        return;
-    }
+	if (DistanceXY <= DashStopDistance)
+	{
+		PlayAttackMontage(MontageIndex);
+		return;
+	}
 
-    const FVector Dir = ToTarget / Distance;
-    const float Travel = FMath::Max(0.0f, Distance - DashStopDistance);
-    const FVector TargetDashWorld = MyLoc + Dir * Travel;
+	// 2. 대시 방향은 XY 평면으로, Z축은 그대로 유지
+	const FVector DirXY = ToTargetXY / DistanceXY;
+	const float TravelXY = FMath::Max(0.0f, DistanceXY - DashStopDistance);
+
+	// 3. 목표 지점의 Z축을 대상의 Z축으로 설정
+	const FVector TargetDashWorldXY = OwnerLoc + DirXY * TravelXY;
+	const FVector TargetDashWorld = FVector(TargetDashWorldXY.X, TargetDashWorldXY.Y, TargetLoc.Z); // 대상의 Z축 사용
 
     // Face the target (yaw only)
     {
-        const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(MyLoc, TargetLoc);
+        const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(OwnerLoc, TargetLoc);
         FRotator NewRot(0.f, LookAt.Yaw, 0.f);
         Owner->SetActorRotation(NewRot);
     }
 
-    // Prepare latent move info
-    FLatentActionInfo LatentInfo;
-    LatentInfo.CallbackTarget   = this;
-    LatentInfo.ExecutionFunction = FName("OnRushDashCompleted");
-    LatentInfo.Linkage          = 0;
-    LatentInfo.UUID             = __LINE__; // reasonably unique per call site
-
-    // Root typically has no parent; world == relative in that case
-    const FVector TargetRelative = TargetDashWorld; 
-    const FRotator TargetRelRot  = RootComp->GetRelativeRotation();
-
+	// 1. 대시 시작 위치와 목표 위치 저장
+	DashStartLocation = OwnerLoc;
+	DashTargetLocation = TargetDashWorld;
+ 
+	bIsAttacking = true;
     bIsDashing = true;
+	DashElapsedTime = 0.0f;
     PendingMontageIndex = MontageIndex;
 
-    if (UCharacterMovementComponent* Move = Owner->GetCharacterMovement())
+    if (auto Movement = Owner->GetCharacterMovement())
     {
-        Move->DisableMovement();
+	    PrevMovementMode = Movement->MovementMode;
+		Movement->DisableMovement();
+
+    	PRINT_STRING(TEXT("Movement->DisableMovement()"));
     }
 
-    // Play dash montage while moving
-    if (AnimInstance && DashMontages)
-    {
-        AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
-    }
-
-    UKismetSystemLibrary::MoveComponentTo(
-        RootComp,
-        TargetRelative,
-        TargetRelRot,
-        /*bEaseOut*/ true,
-        /*bEaseIn*/  true,
-        /*OverTime*/ DashDuration,
-        /*bForceShortestRotationPath*/ true,
-        EMoveComponentAction::Type::Move,
-        LatentInfo
-    );
+    AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 
 void URushAttackSystem::OnRushDashCompleted()
 {
     bIsDashing = false;
-    // Stop dash montage regardless of hit state
-    if (AnimInstance && DashMontages)
+    AnimInstance->Montage_Stop(0.1f, DashMontages);
+
+	if (Owner && !Owner->IsHit)
     {
-        AnimInstance->Montage_Stop(0.1f, DashMontages);
-    }
-    // If hit during dash, do not continue combo
-    if (Owner && !Owner->IsHit)
-    {
-        if (UCharacterMovementComponent* Move = Owner->GetCharacterMovement())
+		if (auto Movement = Owner->GetCharacterMovement())
         {
-            Move->SetMovementMode(MOVE_Walking);
+            Movement->SetMovementMode(PrevMovementMode);
+
+			PRINT_STRING(TEXT("Movement->SetMovementMode(PrevMovementMode)"));
         }
     	
-        // 돌진 종료 시점에 다시 한번 적을 바라보게 정렬
-        OnLookTarget();
         PlayAttackMontage(PendingMontageIndex);
     }
 }
@@ -283,12 +279,8 @@ void URushAttackSystem::GetBodyLocation(USceneComponent* Hand, FVector& OutStart
 		return;
 	}
 
-	// Start = 컴포넌트 월드 위치
 	OutStart = Hand->GetComponentLocation();
-
-	// 로컬 오프셋 (20,0,0)을 월드 기준으로 변환
-	const FVector LocalOffset(20.f, 0.f, 0.f);
-	OutEnd = Hand->GetComponentTransform().TransformPosition(LocalOffset);
+	OutEnd = OutStart + Hand->GetForwardVector() * TraceLength;
 }
 
 void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser)
@@ -300,8 +292,8 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 		this,
 		Start,							// 시작 위치
 		End,							// 끝 위치
-		20.0f,							// 반지름
-		UEngineTypes::ConvertToTraceType(ECC_Visibility), // TraceChannel
+		TraceRadius,					// 반지름
+		UEngineTypes::ConvertToTraceType(ECC_EngineTraceChannel1), // TraceChannel
 		false,							// bTraceComplex
 		ActorsToIgnore,					// 무시할 액터들
 		DrawTraceState,					// 디버그 그리기 옵션
@@ -309,7 +301,7 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 		true,							// Ignore Self
 		FLinearColor::Red,				// Trace 색상
 		FLinearColor::Green,			// Hit 색상
-		3.0f							// Draw Time
+		TraceDrawTime					// Draw Time
 	);
 
 	if (bHit)

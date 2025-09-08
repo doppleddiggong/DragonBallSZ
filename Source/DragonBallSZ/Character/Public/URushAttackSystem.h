@@ -20,6 +20,9 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+						   FActorComponentTickFunction* ThisTickFunction) override;
+	
 private: // AnimNotify
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
@@ -74,6 +77,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
 	TEnumAsByte<EDrawDebugTrace::Type> DrawTraceState = EDrawDebugTrace::None;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
+	float TraceLength  = 30.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
+	float TraceRadius  = 30.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
+	float TraceDrawTime = 1.5f;
+	
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<EBodyPartType> AttackPart;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
@@ -90,7 +101,7 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.05", ClampMax="3.0", AllowPrivateAccess="true"))
     float DashDuration = 0.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
-	float DashStopDistance = 150.0f;
+	float DashStopDistance = 250.0f;
 	
 private:
 	float Damage = 30.0f;
@@ -98,6 +109,12 @@ private:
 
     FTimerHandle ComboTimeHandler;
     FTimerHandle AttackTraceTimeHandler;
+
+	TEnumAsByte<EMovementMode> PrevMovementMode;
+	
+	FVector DashStartLocation;
+	FVector DashTargetLocation;
+	float DashElapsedTime = 0.0f;
 
 	bool bIsDashing = false;
 	int32 PendingMontageIndex = 0;

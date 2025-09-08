@@ -28,15 +28,14 @@ APlayerActor::APlayerActor()
 
 	RightHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightHandComp"));
 	RightHandComp->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	RightHandComp->SetRelativeRotation(FRotator(180.f, 0.f, 0.f));
+	RightHandComp->SetRelativeRotation(FRotator(0, -180.f, 0.f));
 
 	LeftFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootComp"));
 	LeftFootComp->SetupAttachment(GetMesh(), TEXT("foot_l"));
-	LeftFootComp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	LeftFootComp->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
 
 	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
 	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
-	RightHandComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	
 	bUseControllerRotationYaw = true;
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
