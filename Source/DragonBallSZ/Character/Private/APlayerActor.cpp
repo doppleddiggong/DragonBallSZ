@@ -83,6 +83,8 @@ void APlayerActor::Cmd_Look(const FVector2D& Axis)
 void APlayerActor::Cmd_Jump()
 {
 	Jump();
+
+	// 점프 중일때는 하늘로 고정이 되어야 합니다.
 }
 
 void APlayerActor::Cmd_Dash()
@@ -119,6 +121,7 @@ void APlayerActor::Cmd_RushAttack()
 void APlayerActor::Cmd_EnergyBlast()
 {
 	PRINTINFO();
+	// 조기탄
 }
 
 void APlayerActor::Cmd_Kamehameha()

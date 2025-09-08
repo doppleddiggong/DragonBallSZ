@@ -31,6 +31,9 @@ public: // Component
 	class USightSystem* SightSystem;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
+	class UEnemyFSM* EnemyFSM;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UEnemyAnimInstance* AnimBP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")

@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "AEnemyFSM.generated.h"
-
+#include "UEnemyFSM.generated.h"
 
 // Enemy State
 UENUM(BlueprintType)
@@ -59,22 +58,19 @@ enum class ESideStepType : uint8
 };
 
 
-UCLASS()
-class DRAGONBALLSZ_API AAEnemyFSM : public AActor
+UCLASS( Blueprintable, ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent) )
+class DRAGONBALLSZ_API UEnemyFSM : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
-	AAEnemyFSM();
+	UEnemyFSM();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	// EEnemyState Weights

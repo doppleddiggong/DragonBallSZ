@@ -4,9 +4,13 @@
 
 #include "AEnemyAIController.h"
 #include "APlayerActor.h"
+
 #include "UStatSystem.h"
-#include "UDBSZEventManager.h"
 #include "USightSystem.h"
+#include "UEnemyFSM.h"
+
+#include "UDBSZEventManager.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -16,7 +20,8 @@ AEnemyActor::AEnemyActor()
 
 	StatSystem = CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	SightSystem = CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
-
+	EnemyFSM = CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
+	
 	AutoPossessAI   = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AEnemyAIController::StaticClass();
 }
@@ -37,6 +42,9 @@ void AEnemyActor::BeginPlay()
 
 	SightSystem->InitSightSystem(TargetActor, StatSystem->SightLength, StatSystem->SightAngle );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);
+
+	// TODO, 할것 있으면 하세요.
+	// EnemyFSM->
 }
 
 void AEnemyActor::OnSightDetect(bool Target)
@@ -51,6 +59,10 @@ void AEnemyActor::Tick(float DeltaTime)
 	if ( !IsValid(TargetActor ))
 		return;
 
-	auto TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetActor->GetActorLocation() );
-	this->SetActorRotation( UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, RotateLerpSpeed) );
+	if ( !IsHit )
+	{
+		// 피격이거나, 뭔가 안봐야 할경우에는 안해야 한다
+		auto TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetActor->GetActorLocation() );
+		this->SetActorRotation( UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, RotateLerpSpeed) );
+	}
 }
