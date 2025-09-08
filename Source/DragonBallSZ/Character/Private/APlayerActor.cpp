@@ -43,6 +43,7 @@ void APlayerActor::BeginPlay()
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
 	StatSystem->InitStat(true);
+	RushAttackSystem->SetDamage( StatSystem->Damage );
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);

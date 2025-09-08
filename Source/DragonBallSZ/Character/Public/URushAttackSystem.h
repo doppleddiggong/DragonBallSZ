@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
 #include "URushAttackSystem.generated.h"
 
@@ -18,7 +19,7 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
-private:
+private: // AnimNotify
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
 	UFUNCTION()
@@ -29,8 +30,16 @@ private:
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
+	FORCEINLINE void SetDamage(float InDamage)
+	{
+		this->Damage = InDamage;
+	}
+
+public:
+	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void OnAttack();
-	void PlayAttackByIndex(int32 Index);
+
+	void PlayAttackMontage(int32 Index);
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void StartAttackTrace();
@@ -50,32 +59,28 @@ public:
 	void ResetCounter();
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack")
-	TArray<UAnimMontage*> AttackMontages;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class APlayerActor* Owner;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class UAnimInstance* AnimInstance;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack")
-	bool bIsAttacking = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
+	TEnumAsByte<EDrawDebugTrace::Type> DrawTraceState = EDrawDebugTrace::None;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	TArray<UAnimMontage*> AttackMontages;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	bool bIsAttacking = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	int ComboCount = 0;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack")
-	float AttackSpeed = 1.0f;
+private:
+	FTimerHandle ComboTimeHandler;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack")
-	FTimerHandle AttackTimeHandler;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack")
-	float Damage = 30.0f;
-
+	
+	FTimerHandle AttackTraceTimeHandler;
 	bool bDelegatesBound = false;
+	float Damage = 30.0f;
 };

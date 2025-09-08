@@ -26,6 +26,8 @@ void UStatSystem::InitStat_Implementation(bool IsPlayer)
 	// TODO, 데이터 테이블로 빼자
 	this->MaxHP = 1000;
 	this->CurHP = MaxHP;
+	this->Damage = 30;
+
 	this->IsDead = false;
 }
 

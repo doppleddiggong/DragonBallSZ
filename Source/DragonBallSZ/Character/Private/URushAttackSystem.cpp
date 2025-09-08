@@ -67,11 +67,11 @@ void URushAttackSystem::OnAttack()
 {
 	if ( Owner->IsHit == false && bIsAttacking == false )
 	{
-		PlayAttackByIndex(ComboCount);
+		PlayAttackMontage(ComboCount);
 	}
 }
 
-void URushAttackSystem::PlayAttackByIndex(int32 Index)
+void URushAttackSystem::PlayAttackMontage(int32 Index)
 {
 	if (!MeshComp)
 		return;
@@ -83,10 +83,20 @@ void URushAttackSystem::PlayAttackByIndex(int32 Index)
 
 	AnimInstance->Montage_Play(
 		AttackMontages[Index],
-		AttackSpeed,
+		1.0f,
 		EMontagePlayReturnType::MontageLength,
 		0.f,
 		true);
+
+	FTimerManager& TM = GetWorld()->GetTimerManager();
+	TM.ClearTimer(ComboTimeHandler);
+	TM.SetTimer(
+		ComboTimeHandler,
+		this,
+		&URushAttackSystem::ResetCounter,
+		3.0f,
+		false
+	);
 }
 
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
@@ -96,7 +106,7 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 	bIsAttacking = false;
 	
 	ComboCount++;
-	if ( ComboCount > 3 )
+	if ( ComboCount > AttackMontages.Num()-1 )
 		ComboCount = 0;
 	
 	ResetByHit();
@@ -119,7 +129,7 @@ void URushAttackSystem::StartAttackTrace()
 {
 	// 0.01초 간격 반복 호출
 	GetWorld()->GetTimerManager().SetTimer(
-		AttackTimeHandler,
+		AttackTraceTimeHandler,
 		this,
 		&URushAttackSystem::AttackTrace,
 		0.01f,
@@ -129,7 +139,7 @@ void URushAttackSystem::StartAttackTrace()
 
 void URushAttackSystem::StopAttackTrace()
 {
-	UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, AttackTimeHandler);
+	UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, AttackTraceTimeHandler);
 }
 
 void URushAttackSystem::AttackTrace()
@@ -147,6 +157,10 @@ void URushAttackSystem::AttackTrace()
 		FVector Start, End;
 		GetHandLocation( Owner->RightHandComp, Start, End );
 		AttackSphereTrace(Start, End, Damage, Owner);
+	}
+	else
+	{
+		PRINT_STRING( TEXT("AttackTrace : %d"), ComboCount );
 	}
 }
 
@@ -180,12 +194,12 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 		UEngineTypes::ConvertToTraceType(ECC_Visibility), // TraceChannel
 		false,							// bTraceComplex
 		ActorsToIgnore,					// 무시할 액터들
-		EDrawDebugTrace::ForDuration,	// 디버그 그리기 옵션
+		DrawTraceState,					// 디버그 그리기 옵션
 		OutHit,                     // Hit 결과
 		true,							// Ignore Self
 		FLinearColor::Red,				// Trace 색상
 		FLinearColor::Green,			// Hit 색상
-		7.0f							// Draw Time
+		3.0f							// Draw Time
 	);
 
 	if (bHit)
