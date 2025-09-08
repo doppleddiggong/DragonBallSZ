@@ -35,7 +35,7 @@ public:
 	class UArrowComponent* RightFootComp;
 
 public:
-	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part)
+	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
 	{
 		switch (Part)
 		{

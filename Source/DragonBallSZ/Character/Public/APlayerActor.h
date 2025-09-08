@@ -45,7 +45,7 @@ public: // Component
 	class UArrowComponent* RightFootComp;
 
 public:
-	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part)
+	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
 	{
 		switch (Part)
 		{
@@ -58,24 +58,40 @@ public:
 	}
 	
 public: // Control Interface
-	virtual void Cmd_Move(const FVector2D& Axis) override;
-	virtual void Cmd_Look(const FVector2D& Axis) override;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Move(const FVector2D& Axis) override;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Look(const FVector2D& Axis) override;
 
-	virtual void Cmd_Jump() override;
-	virtual void Cmd_Dash() override;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Jump() override;
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Dash() override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Landing() override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_ChargeKi(bool bPressed) override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Guard(bool bPressed) override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Vanish() override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_RushAttack() override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_EnergyBlast() override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
+	void Cmd_Kamehameha() override;
+
+
+
 	
-	virtual void Cmd_Landing() override;
-
-	virtual void Cmd_ChargeKi(bool bPressed) override;
-	virtual void Cmd_Guard(bool bPressed) override;
-	virtual void Cmd_Vanish() override;
-	
-	virtual void Cmd_RushAttack() override;
-	virtual void Cmd_EnergyBlast() override;
-	
-	virtual void Cmd_Kamehameha() override;
-
-
 public: // Control Interface
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
 	bool IsSprinting = false;

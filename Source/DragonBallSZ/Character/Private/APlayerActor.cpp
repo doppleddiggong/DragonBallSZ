@@ -76,38 +76,41 @@ void APlayerActor::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-void APlayerActor::Cmd_Move(const FVector2D& Axis)
+void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
 	if (Controller)
 	{
-		const FRotator ControlRot = Controller->GetControlRotation();
-		const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+		// const FRotator ControlRot = Controller->GetControlRotation();
+		// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+		//
+		// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+		// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
 
-		const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-		const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+		const FVector Forward = GetActorForwardVector();
+		const FVector Right   = GetActorRightVector();
 
 		AddMovementInput(Forward, Axis.Y);
 		AddMovementInput(Right,   Axis.X);
 	}
 }
 
-void APlayerActor::Cmd_Look(const FVector2D& Axis)
+void APlayerActor::Cmd_Look_Implementation(const FVector2D& Axis)
 {
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
 }
 
-void APlayerActor::Cmd_Jump()
+void APlayerActor::Cmd_Jump_Implementation()
 {
 	Jump();
 }
 
-void APlayerActor::Cmd_Dash()
+void APlayerActor::Cmd_Dash_Implementation()
 {
 	PRINTINFO();
 }
 
-void APlayerActor::Cmd_Landing()
+void APlayerActor::Cmd_Landing_Implementation()
 {
 	if (GetCharacterMovement()->MovementMode == MOVE_Flying)
 	{
@@ -131,34 +134,34 @@ void APlayerActor::Cmd_Landing()
 	}
 }
 
-void APlayerActor::Cmd_ChargeKi(bool bPressed)
+void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 {
 	PRINTINFO();
 }
 
-void APlayerActor::Cmd_Guard(bool bPressed)
+void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
 {
 	PRINTINFO();
 }
 
-void APlayerActor::Cmd_Vanish()
+void APlayerActor::Cmd_Vanish_Implementation()
 {
 	PRINTINFO();
 }
 
-void APlayerActor::Cmd_RushAttack()
+void APlayerActor::Cmd_RushAttack_Implementation()
 {
 	PRINTINFO();
 	RushAttackSystem->OnAttack();
 }
 
-void APlayerActor::Cmd_EnergyBlast()
+void APlayerActor::Cmd_EnergyBlast_Implementation()
 {
 	PRINTINFO();
 	// 조기탄
 }
 
-void APlayerActor::Cmd_Kamehameha()
+void APlayerActor::Cmd_Kamehameha_Implementation()
 {
 	PRINTINFO();
 }
