@@ -23,7 +23,7 @@ protected:
 private: // AnimNotify
 	UFUNCTION()
 	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
-	UFUNCTION()
+	UFUNCTION()	
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	void BindMontageDelegates(UAnimInstance* Anim);
