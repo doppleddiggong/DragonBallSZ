@@ -46,6 +46,9 @@ public:
 		default:	return LeftHandComp;
 		}
 	}
+
+	UFUNCTION(BlueprintCallable, Category="Enemy|Attack")
+	void GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const;
 	
 public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
@@ -71,6 +74,14 @@ public: // Component
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
 	float RotateLerpSpeed = 5.0f;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
+	float TraceLength  = 30.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
+	float TraceRadius  = 30.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
+	float TraceDrawTime = 1.5f;
 };
 
 

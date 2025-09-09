@@ -81,3 +81,16 @@ void AEnemyActor::Tick(float DeltaTime)
 		this->SetActorRotation( UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, RotateLerpSpeed) );
 	}
 }
+
+void AEnemyActor::GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const
+{
+	if (!SceneComp)	
+	{
+		OutStart = FVector::ZeroVector;
+		OutEnd   = FVector::ZeroVector;
+		return;
+	}
+
+	OutStart = SceneComp->GetComponentLocation();
+	OutEnd = OutStart + SceneComp->GetForwardVector() * TraceLength;
+}

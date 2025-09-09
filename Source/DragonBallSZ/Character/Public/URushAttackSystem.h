@@ -54,7 +54,7 @@ public:
 	void AttackTrace();
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void GetBodyLocation(USceneComponent* Hand, FVector& OutStart, FVector& OutEnd) const;
+	void GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const;
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser);
 

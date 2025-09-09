@@ -50,7 +50,7 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
         
 		Owner->SetActorLocation(Location, true);
         
-		const float Distance = FVector::Dist2D(Owner->GetActorLocation(), DashTargetLocation);
+		const float Distance = FVector::Dist(Owner->GetActorLocation(), DashTargetLocation);
 		if ( Distance <= DashStopDistance )
 		{
 			PRINT_STRING(TEXT("Distance <= DashStopDistance"));
@@ -270,17 +270,17 @@ void URushAttackSystem::AttackTrace()
 	AttackSphereTrace( Start, End, Damage, Owner);
 }
 
-void URushAttackSystem::GetBodyLocation(USceneComponent* Hand, FVector& OutStart, FVector& OutEnd) const
+void URushAttackSystem::GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const
 {
-	if (!Hand)
+	if (!SceneComp)
 	{
 		OutStart = FVector::ZeroVector;
 		OutEnd   = FVector::ZeroVector;
 		return;
 	}
 
-	OutStart = Hand->GetComponentLocation();
-	OutEnd = OutStart + Hand->GetForwardVector() * TraceLength;
+	OutStart = SceneComp->GetComponentLocation();
+	OutEnd = OutStart + SceneComp->GetForwardVector() * TraceLength;
 }
 
 void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser)
