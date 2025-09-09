@@ -28,10 +28,10 @@ public:
 public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UStatSystem* StatSystem;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class URushAttackSystem* RushAttackSystem;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UDashSystem* DashSystem;
 
 
 	
@@ -89,8 +89,6 @@ public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void Cmd_Kamehameha() override;
 
-
-
 	
 public: // Control Interface
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
@@ -101,4 +99,9 @@ public: // Control Interface
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
 	class AEnemyActor* TargetActor;
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Player|Dash")
+	TObjectPtr<class UNiagaraSystem> DashNiagaraSystem = nullptr;
 };

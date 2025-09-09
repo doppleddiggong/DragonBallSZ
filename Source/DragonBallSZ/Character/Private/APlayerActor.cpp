@@ -2,14 +2,16 @@
 
 
 #include "APlayerActor.h"
-
 #include "AEnemyActor.h"
-#include "DragonBallSZ.h"
-#include "UDBSZEventManager.h"
-#include "URushAttackSystem.h"
-#include "UStatSystem.h"
-#include "Components/ArrowComponent.h"
 
+#include "DragonBallSZ.h"
+
+#include "UDBSZEventManager.h"
+#include "UStatSystem.h"
+#include "URushAttackSystem.h"
+#include "UDashSystem.h"
+
+#include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -20,8 +22,9 @@ APlayerActor::APlayerActor()
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
 
-	StatSystem		= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	RushAttackSystem = CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
+	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
+	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
 	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -60,6 +63,7 @@ void APlayerActor::BeginPlay()
 
 	StatSystem->InitStat(true);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
+	DashSystem->InitDash(this, DashNiagaraSystem);
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
@@ -115,8 +119,8 @@ void APlayerActor::Cmd_Landing_Implementation()
 	{
 		// 지면을 레이캐스트로 찾기
 		FHitResult Hit;
-		FVector Start = GetActorLocation();
-		FVector End = Start - FVector(0, 0, 10000);
+		const FVector Start = GetActorLocation();
+		const FVector End = Start - FVector(0, 0, 10000);
 
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
@@ -150,14 +154,12 @@ void APlayerActor::Cmd_Vanish_Implementation()
 
 void APlayerActor::Cmd_RushAttack_Implementation()
 {
-	PRINTINFO();
 	RushAttackSystem->OnAttack();
 }
 
 void APlayerActor::Cmd_EnergyBlast_Implementation()
 {
 	PRINTINFO();
-	// 조기탄
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()

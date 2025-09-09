@@ -8,7 +8,7 @@
 #include "Components/ActorComponent.h"
 #include "URushAttackSystem.generated.h"
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS( Blueprintable, ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent) )
 class DRAGONBALLSZ_API URushAttackSystem : public UActorComponent
 {
 	GENERATED_BODY()

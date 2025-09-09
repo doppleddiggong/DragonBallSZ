@@ -16,6 +16,8 @@ public class DragonBallSZ : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+
+			"Niagara",
 			
 			"AIModule",				
 			"GameplayTasks",		
