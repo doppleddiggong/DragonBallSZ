@@ -25,6 +25,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void Landed(const FHitResult& Hit) override;
+
 public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UStatSystem* StatSystem;
@@ -32,7 +34,8 @@ public: // Component
 	class URushAttackSystem* RushAttackSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UDashSystem* DashSystem;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UFlySystem* FlySystem;
 
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
@@ -56,6 +59,20 @@ public:
 			default:	return LeftHandComp;
 		}
 	}
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsControlEnable();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsAttackIng();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsMoveEnable();
+
+
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Fly")
+	void OnFlyEnd();
 	
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
@@ -100,8 +117,10 @@ public: // Control Interface
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
 	class AEnemyActor* TargetActor;
 
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Player|Dash")
 	TObjectPtr<class UNiagaraSystem> DashNiagaraSystem = nullptr;
+
+
+private:
+	int JumpCount = 0;
 };

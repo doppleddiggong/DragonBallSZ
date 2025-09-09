@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "UFlySystem.generated.h"
 
+DECLARE_DYNAMIC_DELEGATE(FEndCallback);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class DRAGONBALLSZ_API UFlySystem : public UActorComponent
@@ -22,39 +23,52 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
+
 	UFUNCTION(BlueprintCallable, Category="Fly")
-	FORCEINLINE void InitSystem(class AActor* InOwner) {
+	FORCEINLINE void InitSystem(class ACharacter* InOwner, FEndCallback InCallback)
+	{
 		this->Owner = InOwner;
+		this->Callback = InCallback;
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Fly")
-	void ActivateFlyProcess();
+	void OnJump();
 	UFUNCTION(BlueprintCallable, Category="Fly")
-	void ActivateLandingProcess();
+	void OnLand(const FHitResult& Hit);
+
+	UFUNCTION(BlueprintCallable, Category="Fly")
+	void ActivateUpstream();
+	UFUNCTION(BlueprintCallable, Category="Fly")
+	void ActivateDownstream();
 
 private:
-	void FlyTick(float DeltaTime);
-	void LandingTick(float DeltaTime);
+	void UpstreamTick(float DeltaTime);
+	void DownstreamTick(float DeltaTime);
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Fly")
-	bool FlyingProcess = false;
+	bool bIsUpstream = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fly")
-	float FlyDuration = 1.5f;
+	float UpstreamDuration = 1.5f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fly")
-	float FlyHeight = 3000.0f;
+	float UpstreamHeight = 3000.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Fly")
-	bool LandingProcess = false;
+	bool bIsDownstream = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Fly")
-	float LadningDuration = 1.5f;
+	float DownstreamDuration = 1.5f;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category="Fly")
+	class ACharacter* Owner;
 	
 private:
-	UPROPERTY();
-	class AActor* Owner;
-
+	UPROPERTY()
+	FEndCallback Callback;
+	
 	float ElapsedTime = 0;
 
 	FVector StartLocation;
 	FVector EndLocation;
+
+	int JumpCount = 0;
 };

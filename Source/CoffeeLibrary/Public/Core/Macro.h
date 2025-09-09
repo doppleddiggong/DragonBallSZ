@@ -30,3 +30,10 @@ static ClassName* Get(UObject* WorldContext) \
 		return GI->GetSubsystem<ClassName>(); \
 	return nullptr; \
 }
+
+#define BIND_DYNAMIC_DELEGATE(DelegateType, Obj, ClassType, FuncName) \
+[] (auto* InObj) { \
+DelegateType Tmp; \
+Tmp.BindUFunction(InObj, GET_FUNCTION_NAME_CHECKED(ClassType, FuncName)); \
+return Tmp; \
+} (Obj)

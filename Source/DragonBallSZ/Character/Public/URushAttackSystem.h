@@ -91,9 +91,12 @@ public:
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
+	
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
     int ComboCount = 0;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
+	bool bIsDashing = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
 	UAnimMontage* DashMontages = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(AllowPrivateAccess="true"))
@@ -116,6 +119,5 @@ private:
 	FVector DashTargetLocation;
 	float DashElapsedTime = 0.0f;
 
-	bool bIsDashing = false;
 	int32 PendingMontageIndex = 0;
 };

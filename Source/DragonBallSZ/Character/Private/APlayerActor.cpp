@@ -4,12 +4,15 @@
 #include "APlayerActor.h"
 #include "AEnemyActor.h"
 
-#include "DragonBallSZ.h"
+#include "Core/Macro.h"
 
+#include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
+
 #include "UStatSystem.h"
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
+#include "UFlySystem.h"
 
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -25,6 +28,7 @@ APlayerActor::APlayerActor()
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
+	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
 
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
 	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -63,7 +67,8 @@ void APlayerActor::BeginPlay()
 
 	StatSystem->InitStat(true);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
-	DashSystem->InitDash(this, DashNiagaraSystem);
+	DashSystem->InitSystem(this, DashNiagaraSystem);
+	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
@@ -79,8 +84,54 @@ void APlayerActor::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
+void APlayerActor::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (FlySystem)
+		FlySystem->OnLand(Hit);
+}
+
+bool APlayerActor::IsMoveEnable_Implementation()
+{
+	if ( !IsControlEnable() )
+		return false;
+
+	if ( IsAttackIng() )
+		return false;
+
+	return true;
+}
+
+
+bool APlayerActor::IsControlEnable_Implementation()
+{
+	if ( IsHit )
+		return false;
+
+	if ( StatSystem->IsDead )
+		return false;
+
+	return true;
+}
+
+bool APlayerActor::IsAttackIng_Implementation()
+{
+	if ( RushAttackSystem->bIsAttacking || RushAttackSystem->bIsDashing )
+		return true;
+	return false;
+}
+
+void APlayerActor::OnFlyEnd_Implementation()
+{
+	DashSystem->ActivateEffect(false);
+}
+
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
+	if ( !IsMoveEnable() )
+		return;
+	
 	if (Controller)
 	{
 		// const FRotator ControlRot = Controller->GetControlRotation();
@@ -105,64 +156,73 @@ void APlayerActor::Cmd_Look_Implementation(const FVector2D& Axis)
 
 void APlayerActor::Cmd_Jump_Implementation()
 {
-	Jump();
+	if ( !IsMoveEnable() )
+		return;
+
+	FlySystem->OnJump();
 }
 
 void APlayerActor::Cmd_Dash_Implementation()
 {
+	if ( !IsMoveEnable() )
+		return;
+
 	PRINTINFO();
 }
 
 void APlayerActor::Cmd_Landing_Implementation()
 {
-	if (GetCharacterMovement()->MovementMode == MOVE_Flying)
-	{
-		// 지면을 레이캐스트로 찾기
-		FHitResult Hit;
-		const FVector Start = GetActorLocation();
-		const FVector End = Start - FVector(0, 0, 10000);
+	if ( !IsControlEnable() )
+		return;
 
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-
-		if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
-		{
-			FVector LandingLocation = Hit.Location;
-			LandingLocation.Z += 88.0f;
-
-			SetActorLocation(LandingLocation);
-		}
-
-		GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-	}
+	FHitResult HitResult;
+	FlySystem->OnLand(HitResult);
 }
 
 void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 {
+	if ( !IsControlEnable() )
+		return;
+
 	PRINTINFO();
 }
 
 void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
 {
+	if ( !IsControlEnable() )
+		return;
+
 	PRINTINFO();
 }
 
 void APlayerActor::Cmd_Vanish_Implementation()
 {
+	if ( !IsControlEnable() )
+		return;
+	
 	PRINTINFO();
 }
 
 void APlayerActor::Cmd_RushAttack_Implementation()
 {
+	if ( !IsControlEnable() )
+		return;
+
 	RushAttackSystem->OnAttack();
 }
 
 void APlayerActor::Cmd_EnergyBlast_Implementation()
 {
+	if ( !IsControlEnable() )
+		return;
+
 	PRINTINFO();
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
 {
+	if ( !IsControlEnable() )
+		return;
+
 	PRINTINFO();
 }
