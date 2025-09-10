@@ -55,7 +55,7 @@ public:
 			case EBodyPartType::Hand_L: return LeftHandComp;
 			case EBodyPartType::Hand_R: return RightHandComp;
 			case EBodyPartType::Foot_L: return LeftFootComp;
-			case EBodyPartType::Foot_R: return LeftHandComp;
+			case EBodyPartType::Foot_R: return RightFootComp;
 			default:	return LeftHandComp;
 		}
 	}
