@@ -48,7 +48,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="RushAttack")
     void OnAttack();
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void PlayAttackMontage(int32 MontageIndex);
+	void PlayMontage(int32 MontageIndex);
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void StartAttackTrace();
@@ -65,10 +65,11 @@ public:
     UFUNCTION(BlueprintCallable, Category="RushAttack")
     void ResetByHit();
 
+	
     UFUNCTION(BlueprintCallable, Category="RushAttack|Rush")
-    void StartRushToTarget(int32 MontageIndex);
+    void DashToAttackTarget(int32 MontageIndex);
     UFUNCTION()
-    void OnRushDashCompleted();
+    void OnDashCompleted();
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
@@ -98,7 +99,9 @@ public:
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<EAttackPowerType> AttackPowerType;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	float ComboAttackTime = 1.0f;
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
@@ -114,8 +117,24 @@ public:
 	bool bUseDashMove = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.05", ClampMax="3.0", AllowPrivateAccess="true"))
     float DashDuration = 0.5f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
-	float DashStopDistance = 250.0f;
+    float AttackRange = 150.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    float TeleportRange = 900.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    float TeleportBehindOffset = 150.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    float TeleportThresholdMultiplier = 2.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    bool bTeleportAlignToGround = true;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    float TeleportHeightOffset = 0.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+    float AirAssistDuration = 0.4f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0"))
+    float TeleportFlyZThreshold = 120.0f; // 텔레포트 시 Z 상승이 이 값보다 크면 비행 보조
 	
 private:
 	float Damage = 30.0f;
@@ -130,5 +149,10 @@ private:
 	FVector DashTargetLocation;
 	float DashElapsedTime = 0.0f;
 
-	int32 PendingMontageIndex = 0;
+    int32 PendingMontageIndex = 0;
+
+private:
+    void EngageTarget(int32 MontageIndex);
+    void TeleportAttackTarget(int32 MontageIndex);
+    FTimerHandle AirAssistTimer;
 };

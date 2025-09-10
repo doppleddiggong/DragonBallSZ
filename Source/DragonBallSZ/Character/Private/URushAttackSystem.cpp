@@ -8,9 +8,9 @@
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZDataManager.h"
-
 #include "TimerManager.h"
 
+#include "Components/CapsuleComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
@@ -25,7 +25,6 @@ URushAttackSystem::URushAttackSystem()
 void URushAttackSystem::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void URushAttackSystem::InitSystem(APlayerActor* InOwner)
@@ -63,8 +62,8 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		Owner->SetActorLocation(Location, true);
         
 		const float Distance = FVector::Dist(Owner->GetActorLocation(), DashTargetLocation);
-		if ( Distance <= DashStopDistance || DashElapsedTime >= DashDuration )
-			OnRushDashCompleted();
+		if ( Distance <= AttackRange || DashElapsedTime >= DashDuration )
+			OnDashCompleted();
 	}
 
 	if ( bIsAttacking || bIsDashing )
@@ -111,28 +110,42 @@ void URushAttackSystem::OnLookTarget()
 
 void URushAttackSystem::OnAttack()
 {
-    if ( Owner->IsHit == false && bIsAttacking == false )
-    {
-        if ( bUseDashMove && !bIsDashing)
-        {
-            const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
-            const float Dist = FVector::Dist2D(Owner->GetActorLocation(), TargetLoc);
-            if ( Dist > DashStopDistance )
-            {
-            	StartRushToTarget(ComboCount);
-                return;
-            }
-        }
+    if (Owner->IsHit || bIsAttacking)
+        return;
 
-        PlayAttackMontage(ComboCount);
-    }
+    EngageTarget(ComboCount);
 }
 
-void URushAttackSystem::PlayAttackMontage(int32 MontageIndex)
+
+void URushAttackSystem::EngageTarget(int32 MontageIndex)
 {
-	if (!MeshComp)
+	if (!Owner || !Owner->TargetActor)
+	{
+		PlayMontage(MontageIndex);
 		return;
-	
+	}
+
+	const FVector OwnerLocation = Owner->GetActorLocation();
+	const FVector TargetLocation = Owner->TargetActor->GetActorLocation();
+	const float Dist = FVector::Dist(OwnerLocation, TargetLocation);
+
+	if (Dist >= TeleportRange)
+	{
+		TeleportAttackTarget(MontageIndex);
+		return;
+	}
+	else if (bUseDashMove && !bIsDashing)
+	{
+		DashToAttackTarget(MontageIndex);
+		return;
+	}
+
+	// fallback
+	PlayMontage(MontageIndex);
+}
+
+void URushAttackSystem::PlayMontage(int32 MontageIndex)
+{
 	if (!AttackMontages.IsValidIndex(MontageIndex))
 		return;
 
@@ -151,15 +164,13 @@ void URushAttackSystem::PlayAttackMontage(int32 MontageIndex)
 		ComboTimeHandler,
 		this,
 		&URushAttackSystem::ResetCounter,
-		3.0f,
+		ComboAttackTime,
 		false
 	);
 }
 
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
-	PRINT_STRING( TEXT("OnMontageNotifyBegin : %s"), *NotifyName.ToString());
-
 	bIsAttacking = false;
 	
 	ComboCount++;
@@ -197,7 +208,7 @@ void URushAttackSystem::StopAttackTrace()
     UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, AttackTraceTimeHandler);
 }
 
-void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
+void URushAttackSystem::DashToAttackTarget(int32 MontageIndex)
 {
     const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
@@ -208,11 +219,11 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
 
 	// 대시 방향은 XY 평면으로, Z축은 그대로 유지
 	const FVector DirXY = ToTargetXY / DistanceXY;
-	const float TravelXY = FMath::Max(0.0f, DistanceXY - DashStopDistance);
+	const float TravelXY = FMath::Max(0.0f, DistanceXY - AttackRange);
 
 	// 목표 지점의 Z축을 대상의 Z축으로 설정
 	const FVector TargetDashWorldXY = OwnerLoc + DirXY * TravelXY;
-	const FVector TargetDashWorld = FVector(TargetDashWorldXY.X, TargetDashWorldXY.Y, TargetLoc.Z); // 대상의 Z축 사용
+	const FVector TargetDashWorld = FVector(TargetDashWorldXY.X, TargetDashWorldXY.Y, TargetLoc.Z);
 
     // Face the target (yaw only)
     {
@@ -236,7 +247,7 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
     AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 
-void URushAttackSystem::OnRushDashCompleted()
+void URushAttackSystem::OnDashCompleted()
 {
     bIsDashing = false;
     AnimInstance->Montage_Stop(0.1f, DashMontages);
@@ -244,13 +255,14 @@ void URushAttackSystem::OnRushDashCompleted()
 	if (Owner && !Owner->IsHit)
     {
         MoveComp->SetMovementMode(PrevMovementMode);
-        PlayAttackMontage(PendingMontageIndex);
+        PlayMontage(PendingMontageIndex);
     }
 }
 
 void URushAttackSystem::AttackTrace()
 {
 	FVector Start, End;
+	
 	GetBodyLocation( Owner->GetBodyPart(AttackPart[ComboCount]), Start, End );
 	AttackSphereTrace( Start, End, Damage, Owner);
 }
@@ -333,4 +345,91 @@ void URushAttackSystem::ResetByHit()
 		bIsAttacking = false;
 		ComboCount = 0;
 	}
+}
+
+void URushAttackSystem::TeleportAttackTarget(int32 MontageIndex)
+{
+    if (!Owner || !Owner->TargetActor)
+    {
+        PlayMontage(MontageIndex);
+        return;
+    }
+	const FVector MyLoc = Owner->GetActorLocation();
+    const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
+    const FVector BackDir = -Owner->TargetActor->GetActorForwardVector();
+    FVector Desired = TargetLoc + BackDir * TeleportBehindOffset;
+
+    bool bTargetAirborne = false;
+    if (ACharacter* TargetCharCheck = Cast<ACharacter>(Owner->TargetActor))
+    {
+        if (UCharacterMovementComponent* TMove = TargetCharCheck->GetCharacterMovement())
+            bTargetAirborne = TMove->IsFalling();
+    }
+	
+    const bool bGoAir = bTargetAirborne || (FMath::Abs(TargetLoc.Z - MyLoc.Z) > TeleportFlyZThreshold);
+
+    if (!bGoAir && bTeleportAlignToGround)
+    {
+        const FVector TraceStart = Desired + FVector(0,0,500);
+        const FVector TraceEnd   = Desired + FVector(0,0,-2000);
+    	
+        FHitResult Hit;
+        TArray<AActor*> Ignore;
+        bool bHit = UKismetSystemLibrary::LineTraceSingle(
+            this, TraceStart, TraceEnd,
+            UEngineTypes::ConvertToTraceType(ECC_Visibility), false, Ignore,
+            DrawTraceState, Hit, true
+        );
+    	
+        if (bHit)
+        {
+            float HalfHeight = 0.f;
+            if (UCapsuleComponent* Cap = Owner->GetCapsuleComponent())
+                HalfHeight = Cap->GetScaledCapsuleHalfHeight();
+            Desired.Z = Hit.ImpactPoint.Z + HalfHeight;
+        }
+    }
+    else
+    {
+        Desired.Z = TargetLoc.Z + TeleportHeightOffset;
+    }
+
+    const float VerticalDelta = Desired.Z - MyLoc.Z;
+
+    if (bGoAir)
+    {
+        PrevMovementMode = MoveComp->MovementMode;
+        MoveComp->SetMovementMode(MOVE_Flying);
+
+    	Owner->bUseControllerRotationYaw = true;
+    	Owner->bUseControllerRotationPitch = true;
+    	MoveComp->bOrientRotationToMovement = false;
+    }
+
+    Owner->SetActorLocation(Desired, false, nullptr, ETeleportType::TeleportPhysics);
+
+    const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), TargetLoc);
+    Owner->SetActorRotation(FRotator(0.f, LookAt.Yaw, 0.f));
+
+    // 공중 보조: 적이 낙하 중이거나 높이 차가 큰 경우 잠시 비행 모드
+    bool bNeedAirAssist = (VerticalDelta > TeleportFlyZThreshold);
+    if (ACharacter* TargetChar = Cast<ACharacter>(Owner->TargetActor))
+    {
+        if (UCharacterMovementComponent* TMove = TargetChar->GetCharacterMovement())
+            bNeedAirAssist |= (TMove->IsFalling());
+    }
+	
+    bNeedAirAssist |= (FMath::Abs(TargetLoc.Z - Desired.Z) > TeleportFlyZThreshold);
+
+    if (bNeedAirAssist)
+    {
+        PrevMovementMode = MoveComp->MovementMode;
+        MoveComp->SetMovementMode(MOVE_Flying);
+
+    	Owner->bUseControllerRotationYaw = true;
+    	Owner->bUseControllerRotationPitch = true;
+    	MoveComp->bOrientRotationToMovement = false;
+    }
+
+    PlayMontage(MontageIndex);
 }
