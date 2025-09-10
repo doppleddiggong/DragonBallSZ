@@ -68,10 +68,12 @@ void APlayerActor::BeginPlay()
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
 	StatSystem->InitStat(true);
+	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	DashSystem->InitSystem(this, DashNiagaraSystem);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
-
+	HitStopSystem->InitSystem(this);
+	
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
 }
@@ -134,14 +136,17 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
-	if (Controller)
-	{
-		// const FRotator ControlRot = Controller->GetControlRotation();
-		// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-		//
-		// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-		// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	// if (Controller)
+	// {
+	// 	// Move By Control
+	// 	// const FRotator ControlRot = Controller->GetControlRotation();
+	// 	// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+	// 	// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+	// 	// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	// }
 
+	{
+		// Move By Actor
 		const FVector Forward = GetActorForwardVector();
 		const FVector Right   = GetActorRightVector();
 

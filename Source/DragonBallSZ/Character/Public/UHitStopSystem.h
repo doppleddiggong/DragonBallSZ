@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "EAttackPowerType.h"
 #include "UHitStopSystem.generated.h"
 
 USTRUCT(BlueprintType)
@@ -11,19 +12,42 @@ struct FHitStopParams
 {
 	GENERATED_BODY()
 
-	// 0.0f ~ 1.0f (0.0에 가까울수록 더 얼어붙음. 0.01 추천)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float TimeDilation = 0.05f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)	float TimeDilation = 0.05f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)	float Duration = 0.10f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)	bool bRefreshIfStronger = true;
 
-	// 실시간 기준 지속(초)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Duration = 0.10f;
+	static FHitStopParams GetParamsFromType(EAttackPowerType PowerType)
+	{
+		FHitStopParams RetParams;
+		switch (PowerType)
+		{
+		case EAttackPowerType::Small:
+			RetParams.TimeDilation = 0.1f;
+			RetParams.Duration     = 0.1f;
+			break;
+			
+		case EAttackPowerType::Normal:
+			RetParams.TimeDilation = 0.06f;
+			RetParams.Duration     = 0.15f;
+			break;
+			
+		case EAttackPowerType::Large:
+			RetParams.TimeDilation = 0.04f;
+			RetParams.Duration     = 0.22f;
+			break;
+			
+		case EAttackPowerType::Huge:
+			RetParams.TimeDilation = 0.02f;
+			RetParams.Duration     = 0.30f;
+			break;
 
-	// 누적/갱신 정책
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bRefreshIfStronger = true;
+		default:
+			break;
+		}
+		
+		return RetParams;
+	}
 };
-
 
 UCLASS( Blueprintable, ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent) )
 class DRAGONBALLSZ_API UHitStopSystem : public UActorComponent
@@ -38,13 +62,15 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 	UFUNCTION()
-	void OnHitStopIssued(AActor* Target, FHitStopParams Params);
+	void OnHitStopIssued(AActor* Target, const EAttackPowerType Type);
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
 	void InitSystem(ACharacter* InOwner);
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
-	void ApplyHitStop(const FHitStopParams& Params);
+	void ApplyHitStop(const EAttackPowerType Type);
+
+
 	
 private:
 	void BeginFreeze(const FHitStopParams& Params);

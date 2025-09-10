@@ -48,8 +48,8 @@ void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
-		TargetActor = Cast<APlayerActor>(FoundActor);
+	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
+		TargetActor = Cast<APlayerActor>(Player);
 
 	StatSystem->InitStat(false);
 
@@ -61,8 +61,7 @@ void AEnemyActor::BeginPlay()
 	SightSystem->InitSightSystem(TargetActor, StatSystem->SightLength, StatSystem->SightAngle );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);
 
-	// TODO, 할것 있으면 하세요.
-	// EnemyFSM->
+	HitStopSystem->InitSystem(this);
 }
 
 void AEnemyActor::OnSightDetect(bool Target)

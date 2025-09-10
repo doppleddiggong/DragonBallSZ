@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EBodyPartType.h"
+#include "EAttackPowerType.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
 #include "URushAttackSystem.generated.h"
@@ -33,6 +34,9 @@ private: // AnimNotify
 	void UnbindMontageDelegates(UAnimInstance* Anim);
 	
 public:
+	UFUNCTION(BlueprintCallable, Category="RushAttack")
+	void InitSystem(class APlayerActor* InOwner);
+
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
 	FORCEINLINE void ResetCounter()	{ ComboCount = 0; }
@@ -73,7 +77,10 @@ public:
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class UAnimInstance* AnimInstance;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
+	class UCharacterMovementComponent* MoveComp;
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
 	TEnumAsByte<EDrawDebugTrace::Type> DrawTraceState = EDrawDebugTrace::None;
 
@@ -89,6 +96,10 @@ public:
 	TArray<EBodyPartType> AttackPart;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<UAnimMontage*> AttackMontages;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	TArray<EAttackPowerType> AttackPowerType;
+
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
 	

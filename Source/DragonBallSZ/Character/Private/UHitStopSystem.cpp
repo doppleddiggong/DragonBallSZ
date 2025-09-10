@@ -4,7 +4,6 @@
 #include "UHitStopSystem.h"
 
 #include "UDBSZEventManager.h"
-#include "Animation/AnimInstance.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -46,16 +45,20 @@ void UHitStopSystem::TickComponent(float DeltaTime, ELevelTick TickType,
 		EndFreeze();
 }
 
-void UHitStopSystem::OnHitStopIssued(AActor* Target, FHitStopParams Params)
+void UHitStopSystem::OnHitStopIssued(AActor* Target, const EAttackPowerType Type)
 {
-	if (Target == Owner)
-		ApplyHitStop(Params);
+	if (Target != Owner)
+		return;
+
+	ApplyHitStop(Type);
 }
 
-void UHitStopSystem::ApplyHitStop(const FHitStopParams& Params)
+void UHitStopSystem::ApplyHitStop(const EAttackPowerType Type)
 {
 	const double Now = GetWorld()->GetRealTimeSeconds();
 
+	auto Params = FHitStopParams::GetParamsFromType(Type);
+	
 	if (!bActive)
 	{
 		BeginFreeze(Params);

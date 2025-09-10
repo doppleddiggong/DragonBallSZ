@@ -3,9 +3,13 @@
 #include "URushAttackSystem.h"
 
 #include "AEnemyActor.h"
-#include "DragonBallSZ.h"
 #include "APlayerActor.h"
+
+#include "DragonBallSZ.h"
+#include "UDBSZEventManager.h"
+
 #include "Components/ArrowComponent.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -20,10 +24,16 @@ void URushAttackSystem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Owner = Cast<APlayerActor>( GetOwner() );
+}
+
+void URushAttackSystem::InitSystem(APlayerActor* InOwner)
+{
+	this->Owner = InOwner;
+
 	MeshComp = Owner->GetMesh();
 	AnimInstance = MeshComp->GetAnimInstance();
-
+	MoveComp = Owner->GetCharacterMovement();
+	
 	BindMontageDelegates(AnimInstance);
 }
 
@@ -51,16 +61,8 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		Owner->SetActorLocation(Location, true);
         
 		const float Distance = FVector::Dist(Owner->GetActorLocation(), DashTargetLocation);
-		if ( Distance <= DashStopDistance )
-		{
-			PRINT_STRING(TEXT("Distance <= DashStopDistance"));
+		if ( Distance <= DashStopDistance || DashElapsedTime >= DashDuration )
 			OnRushDashCompleted();
-		}
-		else if ( DashElapsedTime >= DashDuration )
-		{
-			PRINT_STRING(TEXT("DashElapsedTime >= DashDuration"));
-			OnRushDashCompleted();
-		}
 	}
 
 	if ( bIsAttacking || bIsDashing )
@@ -115,8 +117,14 @@ void URushAttackSystem::OnAttack()
             const float Dist = FVector::Dist2D(Owner->GetActorLocation(), TargetLoc);
             if ( Dist > DashStopDistance )
             {
-                StartRushToTarget(ComboCount);
+            	PRINT_STRING(TEXT("Need Dash %f, %f"), Dist, DashStopDistance );
+
+            	StartRushToTarget(ComboCount);
                 return;
+            }
+            else
+            {
+            	PRINT_STRING( TEXT("No Dash %f, %f"), Dist, DashStopDistance );
             }
         }
 
@@ -199,22 +207,15 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
     const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Owner->TargetActor->GetActorLocation();
 
-	// 1. Z축을 제외하고 XY 평면에서의 벡터와 거리를 계산
+	// XY 평면에서의 벡터와 거리를 계산
 	FVector ToTargetXY = TargetLoc - OwnerLoc;
-	ToTargetXY.Z = 0.0f; // Z축 무시
 	const float DistanceXY = ToTargetXY.Size();
 
-	if (DistanceXY <= DashStopDistance)
-	{
-		PlayAttackMontage(MontageIndex);
-		return;
-	}
-
-	// 2. 대시 방향은 XY 평면으로, Z축은 그대로 유지
+	// 대시 방향은 XY 평면으로, Z축은 그대로 유지
 	const FVector DirXY = ToTargetXY / DistanceXY;
 	const float TravelXY = FMath::Max(0.0f, DistanceXY - DashStopDistance);
 
-	// 3. 목표 지점의 Z축을 대상의 Z축으로 설정
+	// 목표 지점의 Z축을 대상의 Z축으로 설정
 	const FVector TargetDashWorldXY = OwnerLoc + DirXY * TravelXY;
 	const FVector TargetDashWorld = FVector(TargetDashWorldXY.X, TargetDashWorldXY.Y, TargetLoc.Z); // 대상의 Z축 사용
 
@@ -225,7 +226,7 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
         Owner->SetActorRotation(NewRot);
     }
 
-	// 1. 대시 시작 위치와 목표 위치 저장
+	// 대시 시작 위치와 목표 위치 저장
 	DashStartLocation = OwnerLoc;
 	DashTargetLocation = TargetDashWorld;
  
@@ -234,13 +235,8 @@ void URushAttackSystem::StartRushToTarget(int32 MontageIndex)
 	DashElapsedTime = 0.0f;
     PendingMontageIndex = MontageIndex;
 
-    if (auto Movement = Owner->GetCharacterMovement())
-    {
-	    PrevMovementMode = Movement->MovementMode;
-		Movement->DisableMovement();
-
-    	// PRINT_STRING(TEXT("Movement->DisableMovement()"));
-    }
+    PrevMovementMode = MoveComp->MovementMode;
+	MoveComp->DisableMovement();
 
     AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
@@ -252,13 +248,7 @@ void URushAttackSystem::OnRushDashCompleted()
 
 	if (Owner && !Owner->IsHit)
     {
-		if (auto Movement = Owner->GetCharacterMovement())
-        {
-            Movement->SetMovementMode(PrevMovementMode);
-
-			// PRINT_STRING(TEXT("Movement->SetMovementMode(PrevMovementMode)"));
-        }
-    	
+        MoveComp->SetMovementMode(PrevMovementMode);
         PlayAttackMontage(PendingMontageIndex);
     }
 }
@@ -308,6 +298,13 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 	{
 		if (AActor* HitActor = OutHit.GetActor())
 		{
+			if ( auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+			{
+				EventManager->SendHitStopPair(
+					Owner,   AttackPowerType[ComboCount],
+					HitActor, AttackPowerType[ComboCount] );
+			}
+			
 			UGameplayStatics::ApplyDamage(
 				HitActor,
 				BaseDamage,

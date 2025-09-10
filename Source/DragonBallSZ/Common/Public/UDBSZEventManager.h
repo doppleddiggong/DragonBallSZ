@@ -38,14 +38,14 @@ public:
 	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
 
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, FHitStopParams, Params);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, EAttackPowerType, Type);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnHitStop OnHitStop;
 
 	UFUNCTION(BlueprintCallable, Category="Events")
-	void SendHitStop(AActor* Target, const FHitStopParams& Params);
+	void SendHitStop(AActor* Target, const EAttackPowerType Type);
 
 	UFUNCTION(BlueprintCallable, Category="Events")
-	void SendHitStopPair(AActor* Attacker, const FHitStopParams& ForAtk,
-						 AActor* Target,   const FHitStopParams& ForTarget);
+	void SendHitStopPair(AActor* Attacker, const EAttackPowerType AttackerType,
+						 AActor* Target,   const EAttackPowerType TargetType);
 };
