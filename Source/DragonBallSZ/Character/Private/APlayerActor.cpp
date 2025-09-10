@@ -10,6 +10,7 @@
 #include "UDBSZEventManager.h"
 
 #include "UStatSystem.h"
+#include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
@@ -26,6 +27,7 @@ APlayerActor::APlayerActor()
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
 
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));

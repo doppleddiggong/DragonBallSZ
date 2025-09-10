@@ -10,6 +10,7 @@
 #include "UEnemyFSM.h"
 
 #include "UDBSZEventManager.h"
+#include "UHitStopSystem.h"
 #include "Components/ArrowComponent.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -19,9 +20,11 @@ AEnemyActor::AEnemyActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	StatSystem = CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	SightSystem = CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
-	EnemyFSM = CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
+	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	SightSystem			= CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
+
+	EnemyFSM			= CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
 	
 	AutoPossessAI   = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AEnemyAIController::StaticClass();

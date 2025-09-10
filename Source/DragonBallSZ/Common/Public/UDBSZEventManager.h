@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Core/Macro.h"
+#include "UHitStopSystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "UDBSZEventManager.generated.h"
 
@@ -34,5 +35,17 @@ public:
 	FOnUpdateHealth OnUpdateHealth;
 
 	UFUNCTION(BlueprintCallable, Category="Events")
-	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);	
+	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, FHitStopParams, Params);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnHitStop OnHitStop;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendHitStop(AActor* Target, const FHitStopParams& Params);
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendHitStopPair(AActor* Attacker, const FHitStopParams& ForAtk,
+						 AActor* Target,   const FHitStopParams& ForTarget);
 };

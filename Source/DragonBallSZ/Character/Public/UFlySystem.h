@@ -8,7 +8,7 @@
 
 DECLARE_DYNAMIC_DELEGATE(FEndCallback);
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent))
 class DRAGONBALLSZ_API UFlySystem : public UActorComponent
 {
 	GENERATED_BODY()

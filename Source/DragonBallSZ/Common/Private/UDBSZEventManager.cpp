@@ -16,3 +16,16 @@ void UDBSZEventManager::SendUpdateHealth(const bool IsPlayer, const float CurHP,
 {
 	OnUpdateHealth.Broadcast(IsPlayer, CurHP, MaxHp);
 }
+
+void UDBSZEventManager::SendHitStop(AActor* Target, const FHitStopParams& Params)
+{
+	OnHitStop.Broadcast(Target, Params);
+}
+
+void UDBSZEventManager::SendHitStopPair(
+	AActor* Attacker, const FHitStopParams& ForAtk,
+	AActor* Target,   const FHitStopParams& ForTarget)
+{
+	OnHitStop.Broadcast(Attacker, ForAtk);
+	OnHitStop.Broadcast(Target,   ForTarget);
+}

@@ -53,7 +53,8 @@ public:
 public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UStatSystem* StatSystem;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UHitStopSystem* HitStopSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class USightSystem* SightSystem;
 
