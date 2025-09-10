@@ -27,10 +27,14 @@ public:
 	
 #pragma region HIT_STOP
 public:
-	UPROPERTY(EditAnywhere, Category="MasterData|Tables")
+	UPROPERTY(EditAnywhere, Category="MasterData|HitStop")
 	TSoftObjectPtr<UDataTable> HitStopTable;
 
-	bool GetHitStopData(EAttackPowerType Power, FHitStopData& Out) const;
+
+    UFUNCTION(BlueprintCallable, Category="MasterData|HitStop")
+    bool GetHitStopData(EAttackPowerType Power, UPARAM(ref) FHitStopData& Out) const;
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category="MasterData|HitStop")
+	float GetHitStopDelayTime(EAttackPowerType Type) const;
 
 private:
 	void Clear_HitStopTable();
@@ -42,9 +46,10 @@ private:
 
 #pragma region KNOCKBACK
 public:
-	UPROPERTY(EditAnywhere, Category="MasterData|Tables")
+	UPROPERTY(EditAnywhere, Category="MasterData|Knockback")
 	TSoftObjectPtr<UDataTable> KnockbackTable;
 
+	UFUNCTION(BlueprintCallable, Category="MasterData|Knockback")
 	bool GetKnockbackData(EAttackPowerType Power, FKnockbackData& Out) const;
 
 private:

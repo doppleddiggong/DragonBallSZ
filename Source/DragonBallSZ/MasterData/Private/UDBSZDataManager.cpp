@@ -79,6 +79,18 @@ bool UDBSZDataManager::GetHitStopData(EAttackPowerType Type, FHitStopData& Out) 
     PRINTLOG(TEXT("DataGetFail : %s"), *UEnum::GetValueAsString(Type) );
     return false;
 }
+
+float UDBSZDataManager::GetHitStopDelayTime(EAttackPowerType Type) const
+{
+    if (!bLoadHitStop)
+        return 0.0f;
+
+    if (const FHitStopData* Found = HitStopCache.Find(Type))
+        return Found->Duration;
+    
+    return 0.0f;
+}
+
 #pragma endregion HIT_STOP
 
 
@@ -110,7 +122,7 @@ void UDBSZDataManager::LoadData_KnockbackTable()
         }
     }
 
-    bLoadHitStop = true;
+    bLoadKnockback = true;
 }
 
 bool UDBSZDataManager::GetKnockbackData(EAttackPowerType Type, FKnockbackData& Out) const

@@ -26,9 +26,9 @@ Coding Style & Naming
 - UE 스타일 준수: `UCLASS`/`USTRUCT`/`UFUNCTION` 매크로, 타입/클래스 PascalCase, 변수 camelCase.
 - `UPROPERTY`/`UPARAM` 메타 유지(가시성, 에디터 노출, 직렬화 등 의도 반영).
 - 폴더 네임스페이스 예시
-  - 게임: `Source/DragonBallSZ/<Domain>/...` (`Character`, `Enviroment`, `Common` 등)
-  - 라이브러리: `Source/CoffeeLibrary/<Domain>/...`
-- 로그 카테고리: `DECLARE_LOG_CATEGORY_EXTERN` / `DEFINE_LOG_CATEGORY`로 모듈별 정의.
+  - 게임: `Source/DragonBallSZ/<Domain>/...` (`Character`, `Enviroment`, `Common`, `MasterData`, `UI` 등)
+  - 라이브러리: `Source/CoffeeLibrary/<Domain>/...` (`Actor`, `Features`, `Shared`, `Core` 등)
+- 로그 카테고리: `DECLARE_LOG_CATEGORY_EXTERN` / `DEFINE_LOG_CATEGORY`로 모듈별 정의. 게임 모듈 기본 카테고리: `DBSZ`.
 
 Testing
 - Automation 기반 단위 테스트(`AutomationTest.h`) 권장.
@@ -43,5 +43,6 @@ Git & PR
 
 Notes
 - `.uproject`: `DragonBallSZ.uproject`
-- 주요 코드 영역: `Character`, `Enviroment`, `Common`, `CoffeeLibrary`(`Actor`/`Features`/`Shared`/`Core`).
+- 주요 코드 영역: `Character`, `Enviroment`, `Common`, `MasterData`, `UI`, 그리고 `CoffeeLibrary`(`Actor`/`Features`/`Shared`/`Core`).
 - 대용량 에셋(`Content/`)과 `Saved/` 산출물은 버전 관리에서 제외 권장.
+

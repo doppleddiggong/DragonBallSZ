@@ -24,6 +24,7 @@ void UKnockbackSystem::BeginPlay()
 void UKnockbackSystem::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     RestoreMovement();
+    GetWorld()->GetTimerManager().ClearTimer(FlyingTimer);
     Super::EndPlay(EndPlayReason);
 }
 
@@ -40,49 +41,51 @@ void UKnockbackSystem::InitSystem(ACharacter* InOwner)
 	}
 }
 
-void UKnockbackSystem::OnKnockback(
-	AActor* InOwner,
-	const FHitResult& Hit, AActor* InstigatorActor,
-	EAttackPowerType Type, float Resistance)
+void UKnockbackSystem::OnKnockback( AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
-	if ( Owner != InOwner )
+	if ( Owner != Target )
 		return;
 
-	FKnockbackData Params;
-	if ( UDBSZDataManager::Get(GetWorld())->GetKnockbackData(Type, Params) == false )
-		return;
-
-	const FVector Dir = ComputeKnockDir(Hit, GetOwner(), InstigatorActor, Params.bUse2D);
-	Knockback(Dir, Params, Resistance);
+	Knockback(Target, Instigator, Type, Resistance);
 }
 
-FVector UKnockbackSystem::ComputeKnockDir(const FHitResult& Hit, const AActor* Victim,
-										  const AActor* InstigatorActor, bool bUse2D)
+FVector UKnockbackSystem::ComputeKnockDir(const AActor* Target, const AActor* Instigator)
 {
-	// 공격 들어온 반대방향
-	FVector Dir = (-Hit.ImpactNormal).GetSafeNormal();
+    FVector Dir = FVector::ZeroVector;
 
-	if (Dir.IsNearlyZero() && InstigatorActor && Victim)
-		Dir = (Victim->GetActorLocation() - InstigatorActor->GetActorLocation()).GetSafeNormal();
+    if (Target && Instigator)
+        Dir = Target->GetActorLocation() - Instigator->GetActorLocation();
 
-	if (Dir.IsNearlyZero() && Hit.TraceStart != Hit.TraceEnd)
-		Dir = (Hit.TraceEnd - Hit.TraceStart).GetSafeNormal();
+    if (!Dir.Normalize())
+    {
+        if (Target)
+        {
+            FVector Fwd = Target->GetActorForwardVector();
+            Dir = (-Fwd).GetSafeNormal();
+        }
+        else
+        {
+            Dir = FVector::ForwardVector;
+        }
+    }
 
-	if (bUse2D)
-	{
-		Dir.Z = 0.f;
-		Dir.Normalize();
-	}
-    
-	return Dir.IsNearlyZero() ? FVector::ForwardVector : Dir;
+    return Dir;
 }
 
-
-void UKnockbackSystem::Knockback(const FVector& Dir, const FKnockbackData& Params, float Resistance)
+void UKnockbackSystem::Knockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
-	if (MoveComp->MovementMode != MOVE_Falling)
-		MoveComp->SetMovementMode(MOVE_Falling);
+    FKnockbackData Params;
+    if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
+    {
+	    if (!DataManager->GetKnockbackData(Type, Params))
+	    	return;
+    }
 
+    const FVector Dir = ComputeKnockDir(Target, Instigator);
+
+    if (MoveComp->MovementMode != MOVE_Falling)
+        MoveComp->SetMovementMode(MOVE_Falling);
+	
 	if (!bFriction)
 	{
 		PrevBrakingFriction = MoveComp->BrakingFrictionFactor;
@@ -90,26 +93,37 @@ void UKnockbackSystem::Knockback(const FVector& Dir, const FKnockbackData& Param
 	}
 	MoveComp->BrakingFrictionFactor = FMath::Clamp(Params.BrakingFrictionFactor, 0.f, 1.f);
 
-	const float H = FMath::Max(0.f, Params.HorizontalSpeed) * (1.f - Clamp01(Resistance));
-	const FVector Launch = Dir * H + FVector(0,0, FMath::Max(0.f, Params.ZBoost));
+    const float Power = FMath::Max(0.f, Params.KnockbackPower) * (1.f - Clamp01(Resistance));
+    const FVector Launch = Dir * Power + FVector(0,0, Params.UpPower);
 
-	Owner->LaunchCharacter(Launch, true, true);
+    Owner->LaunchCharacter(Launch, true, true);
 
-	if (UWorld* W = GetWorld())
-	{
-		W->GetTimerManager().ClearTimer(RestoreTimer);
-		W->GetTimerManager().SetTimer(
-			RestoreTimer, this, &UKnockbackSystem::RestoreMovement,
-			FMath::Max(0.f, Params.Duration), false
-		);
-	}
+    GetWorld()->GetTimerManager().ClearTimer(RestoreTimer);
+    GetWorld()->GetTimerManager().SetTimer(
+        RestoreTimer, this, &UKnockbackSystem::RestoreMovement,
+        FMath::Max(0.f, Params.Duration), false
+    );
+
+    if (Params.bAfterFlying)
+    {
+        GetWorld()->GetTimerManager().ClearTimer(FlyingTimer);
+        GetWorld()->GetTimerManager().SetTimer(
+            FlyingTimer, this, &UKnockbackSystem::EnterFlying,
+            FMath::Max(0.f, Params.FlyingDelay), false
+        );
+    }
 }
 
 void UKnockbackSystem::RestoreMovement()
 {
-	if (MoveComp && bFriction)
+	if (bFriction)
 	{
 		MoveComp->BrakingFrictionFactor = PrevBrakingFriction;
 		bFriction = false;
 	}
+}
+
+void UKnockbackSystem::EnterFlying()
+{
+    MoveComp->SetMovementMode(MOVE_Flying);
 }

@@ -7,9 +7,11 @@
 
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
+#include "UDBSZDataManager.h"
+
+#include "TimerManager.h"
 
 #include "Components/ArrowComponent.h"
-
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -293,20 +295,30 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 		{
 			if ( auto EventManager = UDBSZEventManager::Get(GetWorld()) )
 			{
-				EventManager->SendHitStopPair(
-					Owner,   AttackPowerType[ComboCount],
-					HitActor, AttackPowerType[ComboCount] );
+				EAttackPowerType Type = AttackPowerType[ComboCount];
+				EventManager->SendHitStopPair(Owner, Type, HitActor, Type);
 
-				EventManager->SendKnockback(
-					HitActor, 
-					OutHit, Owner,
-					AttackPowerType[ComboCount], 0.3f );
+				float DelayKnockback = 0.f;
+				if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
+					DelayKnockback = DataManager->GetHitStopDelayTime(Type);
+
+				FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([this, HitActor, OutHit, Type]()
+				{
+					if ( !IsValid(this) )
+						return;
+				
+					if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+						EventManager->SendKnockback(HitActor, Owner, Type, 0.3f);
+				});
+				
+				FTimerHandle TimerHandler;
+				GetWorld()->GetTimerManager().SetTimer(TimerHandler, TimerDelegate, DelayKnockback, false);
 			}
 			
 			UGameplayStatics::ApplyDamage(
 				HitActor,
 				BaseDamage,
-				nullptr,   // 필요하면 컨트롤러 전달
+				nullptr,
 				DamageCauser,
 				UDamageType::StaticClass()
 			);

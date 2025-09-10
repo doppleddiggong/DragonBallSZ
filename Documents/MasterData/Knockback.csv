@@ -1,5 +1,5 @@
-Name,Type,HorizontalSpeed,ZBoost,Duration,BrakingFrictionFactor,bUse2D
-1,Small,1000,60,0.18,0.35,TRUE
-2,Normal,1400,100,0.22,0.3,TRUE
-3,Large,1900,120,0.28,0.25,TRUE
-4,Huge,2400,150,0.34,0.2,TRUE
+Name,Type,KnockbackPower,UpPower,Duration,BrakingFrictionFactor,bAfterFlying,FlyingDelay
+1,Small,1000,0,0.18,0.35,false,0.00
+2,Normal,1400,0,0.22,0.30,false,0.00
+3,Large,1900,1500,0.28,0.25,true,0.25
+4,Huge,2400,1500,0.34,0.20,true,0.30

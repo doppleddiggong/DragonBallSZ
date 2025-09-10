@@ -30,10 +30,7 @@ void UDBSZEventManager::SendHitStopPair(
 	OnHitStop.Broadcast(Target,   TargetType);
 }
 
-void UDBSZEventManager::SendKnockback(
-	AActor* InOwner,
-	const FHitResult& Hit, AActor* Instigator,
-	EAttackPowerType Type, float Resistance )
+void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
-	OnKnockback.Broadcast(InOwner, Hit, Instigator, Type, Resistance);
+	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);
 }

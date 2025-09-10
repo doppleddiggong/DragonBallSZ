@@ -20,22 +20,18 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-public:	
-	UFUNCTION(BlueprintCallable, Category="Knockback")
-	void InitSystem(ACharacter* InOwner);
+public:	 
+    UFUNCTION(BlueprintCallable, Category="Knockback")
+    void InitSystem(ACharacter* InOwner);
 
-	UFUNCTION(BlueprintCallable, Category="Knockback")
-	void OnKnockback(
-		AActor* InOwner,
-		const FHitResult& Hit, AActor* InstigatorActor,
-		EAttackPowerType Type, float Resistance);
+    UFUNCTION(BlueprintCallable, Category="Knockback")
+    void OnKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
 
 private:
-	static FVector ComputeKnockDir(const FHitResult& Hit, const AActor* Victim,
-								   const AActor* InstigatorActor, bool bUse2D);
-
-	void Knockback(const FVector& Dir, const FKnockbackData& Data, float Resistance);
-	void RestoreMovement();
+    static FVector ComputeKnockDir(const AActor* Target, const AActor* Instigator);
+    void Knockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
+    void RestoreMovement();
+    void EnterFlying();
 
 private:
 	UPROPERTY()
@@ -48,4 +44,5 @@ private:
 	float PrevBrakingFriction = 1.f;
 	bool  bFriction = false;
 	FTimerHandle RestoreTimer;
+    FTimerHandle FlyingTimer;
 };
