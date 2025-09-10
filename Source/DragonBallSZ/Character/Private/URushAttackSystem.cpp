@@ -117,14 +117,14 @@ void URushAttackSystem::OnAttack()
             const float Dist = FVector::Dist2D(Owner->GetActorLocation(), TargetLoc);
             if ( Dist > DashStopDistance )
             {
-            	PRINT_STRING(TEXT("Need Dash %f, %f"), Dist, DashStopDistance );
+            	// PRINT_STRING(TEXT("Need Dash %f, %f"), Dist, DashStopDistance );
 
             	StartRushToTarget(ComboCount);
                 return;
             }
             else
             {
-            	PRINT_STRING( TEXT("No Dash %f, %f"), Dist, DashStopDistance );
+            	// PRINT_STRING( TEXT("No Dash %f, %f"), Dist, DashStopDistance );
             }
         }
 
@@ -175,15 +175,14 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (!bInterrupted)
-	{
-		if (AttackMontages.Num() > 0)
-			ComboCount = (ComboCount + 1) % AttackMontages.Num();
-	}
-	else
+	if (bInterrupted)
 	{
 		ResetByHit();
+		return;
 	}
+
+	if (AttackMontages.Num() > 0)
+		ComboCount = (ComboCount + 1) % AttackMontages.Num();
 }
 
 void URushAttackSystem::StartAttackTrace()

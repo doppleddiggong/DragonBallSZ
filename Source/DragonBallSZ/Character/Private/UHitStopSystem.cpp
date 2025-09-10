@@ -4,6 +4,8 @@
 #include "UHitStopSystem.h"
 
 #include "UDBSZEventManager.h"
+#include "UDBSZDataManager.h"
+
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -57,7 +59,9 @@ void UHitStopSystem::ApplyHitStop(const EAttackPowerType Type)
 {
 	const double Now = GetWorld()->GetRealTimeSeconds();
 
-	auto Params = FHitStopParams::GetParamsFromType(Type);
+	FHitStopData Params;
+	if ( UDBSZDataManager::Get(GetWorld())->GetHitStopData(Type, Params) == false )
+		return;
 	
 	if (!bActive)
 	{
@@ -80,7 +84,7 @@ void UHitStopSystem::ApplyHitStop(const EAttackPowerType Type)
 	}
 }
 
-void UHitStopSystem::BeginFreeze(const FHitStopParams& Params)
+void UHitStopSystem::BeginFreeze(const FHitStopData& Params)
 {
 	bActive = true;
 

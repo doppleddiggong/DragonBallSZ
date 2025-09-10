@@ -4,50 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "EAttackPowerType.h"
+#include "FHitStopData.h"
 #include "UHitStopSystem.generated.h"
-
-USTRUCT(BlueprintType)
-struct FHitStopParams
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)	float TimeDilation = 0.05f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)	float Duration = 0.10f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)	bool bRefreshIfStronger = true;
-
-	static FHitStopParams GetParamsFromType(EAttackPowerType PowerType)
-	{
-		FHitStopParams RetParams;
-		switch (PowerType)
-		{
-		case EAttackPowerType::Small:
-			RetParams.TimeDilation = 0.1f;
-			RetParams.Duration     = 0.1f;
-			break;
-			
-		case EAttackPowerType::Normal:
-			RetParams.TimeDilation = 0.06f;
-			RetParams.Duration     = 0.15f;
-			break;
-			
-		case EAttackPowerType::Large:
-			RetParams.TimeDilation = 0.04f;
-			RetParams.Duration     = 0.22f;
-			break;
-			
-		case EAttackPowerType::Huge:
-			RetParams.TimeDilation = 0.02f;
-			RetParams.Duration     = 0.30f;
-			break;
-
-		default:
-			break;
-		}
-		
-		return RetParams;
-	}
-};
 
 UCLASS( Blueprintable, ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent) )
 class DRAGONBALLSZ_API UHitStopSystem : public UActorComponent
@@ -69,11 +27,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
 	void ApplyHitStop(const EAttackPowerType Type);
-
-
 	
 private:
-	void BeginFreeze(const FHitStopParams& Params);
+	void BeginFreeze(const FHitStopData& Params);
 	void EndFreeze();
 
 private:
@@ -84,7 +40,7 @@ private:
 	UPROPERTY()
 	class UCharacterMovementComponent* MoveComp;
 
-	FHitStopParams LastParams;
+	FHitStopData LastParams;
 	
 	bool bActive = false;
 	double EndRealTimeSeconds = 0.0;
