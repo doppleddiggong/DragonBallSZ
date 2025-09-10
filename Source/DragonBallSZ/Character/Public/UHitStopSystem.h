@@ -19,12 +19,13 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
-	UFUNCTION()
-	void OnHitStopIssued(AActor* Target, const EAttackPowerType Type);
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
 	void InitSystem(ACharacter* InOwner);
 
+	UFUNCTION(BlueprintCallable, Category="HitStop")
+	void OnHitStop(AActor* Target, const EAttackPowerType Type);
+	
 	UFUNCTION(BlueprintCallable, Category="HitStop")
 	void ApplyHitStop(const EAttackPowerType Type);
 	

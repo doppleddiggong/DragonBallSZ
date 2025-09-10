@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Core/Macro.h"
 #include "FHitStopData.h"
+#include "FKnockbackData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "UDBSZDataManager.generated.h"
 
@@ -24,7 +25,7 @@ public:
 	UFUNCTION(Exec)
 	void ReloadMasterData();
 	
-
+#pragma region HIT_STOP
 public:
 	UPROPERTY(EditAnywhere, Category="MasterData|Tables")
 	TSoftObjectPtr<UDataTable> HitStopTable;
@@ -32,7 +33,24 @@ public:
 	bool GetHitStopData(EAttackPowerType Power, FHitStopData& Out) const;
 
 private:
+	void Clear_HitStopTable();
 	void LoadData_HitStopTable();
 	bool bLoadHitStop = false;
 	TMap<EAttackPowerType, FHitStopData> HitStopCache;
+#pragma endregion HIT_STOP
+
+
+#pragma region KNOCKBACK
+public:
+	UPROPERTY(EditAnywhere, Category="MasterData|Tables")
+	TSoftObjectPtr<UDataTable> KnockbackTable;
+
+	bool GetKnockbackData(EAttackPowerType Power, FKnockbackData& Out) const;
+
+private:
+	void Clear_KnockbackTable();
+	void LoadData_KnockbackTable();
+	bool bLoadKnockback = false;
+	TMap<EAttackPowerType, FKnockbackData> KnockbackCache;
+#pragma endregion KNOCKBACK
 };

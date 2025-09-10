@@ -11,6 +11,7 @@
 
 #include "UDBSZEventManager.h"
 #include "UHitStopSystem.h"
+#include "UKnockbackSystem.h"
 #include "Components/ArrowComponent.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -22,6 +23,7 @@ AEnemyActor::AEnemyActor()
 
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
 	SightSystem			= CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
 
 	EnemyFSM			= CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
@@ -62,6 +64,7 @@ void AEnemyActor::BeginPlay()
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);
 
 	HitStopSystem->InitSystem(this);
+	KnockbackSystem->InitSystem(this);
 }
 
 void AEnemyActor::OnSightDetect(bool Target)

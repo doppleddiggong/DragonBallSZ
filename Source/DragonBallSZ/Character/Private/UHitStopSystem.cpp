@@ -27,10 +27,9 @@ void UHitStopSystem::InitSystem(ACharacter* InOwner )
 	MeshComp = Owner->GetMesh();
 	MoveComp = Owner->GetCharacterMovement();
 
-	// 구독
-	if (auto EM = UDBSZEventManager::Get(this))
+	if (auto EventManager = UDBSZEventManager::Get(this))
 	{
-		EM->OnHitStop.AddDynamic(this, &UHitStopSystem::OnHitStopIssued);
+		EventManager->OnHitStop.AddDynamic(this, &UHitStopSystem::OnHitStop);
 	}
 }
 
@@ -47,7 +46,7 @@ void UHitStopSystem::TickComponent(float DeltaTime, ELevelTick TickType,
 		EndFreeze();
 }
 
-void UHitStopSystem::OnHitStopIssued(AActor* Target, const EAttackPowerType Type)
+void UHitStopSystem::OnHitStop(AActor* Target, const EAttackPowerType Type)
 {
 	if (Target != Owner)
 		return;

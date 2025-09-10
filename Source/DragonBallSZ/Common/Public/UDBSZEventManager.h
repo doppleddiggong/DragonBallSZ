@@ -48,4 +48,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendHitStopPair(AActor* Attacker, const EAttackPowerType AttackerType,
 						 AActor* Target,   const EAttackPowerType TargetType);
+
+	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnKnockback,
+		AActor*,		   InOwner,
+		const FHitResult&, Hit,
+		AActor*,           InstigatorActor,
+		EAttackPowerType,  Type,
+		float,             Resistance );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnKnockback OnKnockback;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendKnockback(
+						AActor*			  InOwner,
+						const FHitResult& Hit,
+						AActor*           Instigator,
+						EAttackPowerType  Type,
+						float             Resistance );
 };

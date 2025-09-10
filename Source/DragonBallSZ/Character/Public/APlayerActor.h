@@ -33,6 +33,8 @@ public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UHitStopSystem* HitStopSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UKnockbackSystem* KnockbackSystem;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class URushAttackSystem* RushAttackSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UDashSystem* DashSystem;

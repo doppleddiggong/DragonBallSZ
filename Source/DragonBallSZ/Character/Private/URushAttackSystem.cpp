@@ -117,14 +117,8 @@ void URushAttackSystem::OnAttack()
             const float Dist = FVector::Dist2D(Owner->GetActorLocation(), TargetLoc);
             if ( Dist > DashStopDistance )
             {
-            	// PRINT_STRING(TEXT("Need Dash %f, %f"), Dist, DashStopDistance );
-
             	StartRushToTarget(ComboCount);
                 return;
-            }
-            else
-            {
-            	// PRINT_STRING( TEXT("No Dash %f, %f"), Dist, DashStopDistance );
             }
         }
 
@@ -302,6 +296,11 @@ void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float Base
 				EventManager->SendHitStopPair(
 					Owner,   AttackPowerType[ComboCount],
 					HitActor, AttackPowerType[ComboCount] );
+
+				EventManager->SendKnockback(
+					HitActor, 
+					OutHit, Owner,
+					AttackPowerType[ComboCount], 0.3f );
 			}
 			
 			UGameplayStatics::ApplyDamage(

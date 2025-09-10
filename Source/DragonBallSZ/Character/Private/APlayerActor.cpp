@@ -14,6 +14,7 @@
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
+#include "UKnockbackSystem.h"
 
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -28,6 +29,7 @@ APlayerActor::APlayerActor()
 
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
@@ -70,6 +72,8 @@ void APlayerActor::BeginPlay()
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
+	KnockbackSystem->InitSystem(this);
+	
 	DashSystem->InitSystem(this, DashNiagaraSystem);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
