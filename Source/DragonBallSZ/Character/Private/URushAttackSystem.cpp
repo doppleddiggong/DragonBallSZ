@@ -103,7 +103,7 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
 	bIsAttacking = false;
-	
+
 	ComboCount++;
 	if ( ComboCount > AttackMontages.Num()-1 )
 		ComboCount = 0;
@@ -111,15 +111,11 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (bInterrupted)
+	if (bInterrupted && Owner->IsHiting() )
 	{
 		bIsAttacking = false;
 		ComboCount = 0;
-		return;
 	}
-
-	if (AttackMontages.Num() > 0)
-		ComboCount = (ComboCount + 1) % AttackMontages.Num();
 }
 
 void URushAttackSystem::InitSystem(APlayerActor* InOwner)
@@ -317,7 +313,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		EMontagePlayReturnType::MontageLength,
 		0.f,
 		true);
-
+	
 	GetWorld()->GetTimerManager().ClearTimer(ComboTimeHandler);
 	GetWorld()->GetTimerManager().SetTimer(
 		ComboTimeHandler,

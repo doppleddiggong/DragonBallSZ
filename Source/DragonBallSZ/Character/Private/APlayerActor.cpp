@@ -198,10 +198,16 @@ bool APlayerActor::IsAttackEnable_Implementation()
 	return true;
 }
 
+bool APlayerActor::IsHiting_Implementation()
+{
+	return IsHit;
+}
+
 bool APlayerActor::IsAttackIng_Implementation()
 {
 	return RushAttackSystem->IsAttackIng();
 }
+
 
 bool APlayerActor::IsInSight(const AActor* Other) const
 {

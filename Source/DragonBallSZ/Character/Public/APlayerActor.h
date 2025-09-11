@@ -69,9 +69,12 @@ public:
 	bool IsAttackEnable();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsHiting();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsAttackIng();
 	UFUNCTION(BlueprintPure, Category="Player|Sight")
 	bool IsInSight(const AActor* Other) const;
+
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="LookTarget")
 	void OnLookTarget();
