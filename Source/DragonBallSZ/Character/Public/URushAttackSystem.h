@@ -143,4 +143,7 @@ private:
 	
 	FVector DashStartLoc;
 	FVector DashTargetLoc;
+
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
 };

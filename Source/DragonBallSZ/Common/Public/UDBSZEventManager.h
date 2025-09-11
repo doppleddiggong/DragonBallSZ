@@ -60,4 +60,25 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDash, AActor*, Target, bool, bIsDashing);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnDash OnDash;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendDash(AActor* Target, bool bIsDashing);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleport, AActor*, Target);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnTeleport OnTeleport;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendTeleport(AActor* Target);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttack, AActor*, Target, int, ComboCount );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnAttack OnAttack;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendAttack(AActor* Target, int ComboCount);
 };

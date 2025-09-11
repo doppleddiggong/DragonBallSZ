@@ -34,3 +34,18 @@ void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttac
 {
 	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);
 }
+
+void UDBSZEventManager::SendDash(AActor* Target, bool bIsDashing)
+{
+	OnDash.Broadcast(Target, bIsDashing);
+}
+
+void UDBSZEventManager::SendTeleport(AActor* Target)
+{
+	OnTeleport.Broadcast(Target);
+}
+
+void UDBSZEventManager::SendAttack(AActor* Target, int ComboCount)
+{
+	OnAttack.Broadcast(Target, ComboCount);
+}
