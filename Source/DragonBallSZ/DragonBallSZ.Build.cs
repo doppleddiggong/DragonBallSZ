@@ -32,6 +32,7 @@ public class DragonBallSZ : ModuleRules
 			Path.Combine(ModuleDirectory, "Common", "Public"),
 			Path.Combine(ModuleDirectory, "Character", "Public"),
 			Path.Combine(ModuleDirectory, "Enviroment", "Public"),
+			Path.Combine(ModuleDirectory, "MasterData", "Public"),
 			Path.Combine(ModuleDirectory, "UI", "Public"),
 		});
 	}

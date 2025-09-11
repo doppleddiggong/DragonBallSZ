@@ -16,3 +16,36 @@ void UDBSZEventManager::SendUpdateHealth(const bool IsPlayer, const float CurHP,
 {
 	OnUpdateHealth.Broadcast(IsPlayer, CurHP, MaxHp);
 }
+
+void UDBSZEventManager::SendHitStop(AActor* Target, const EAttackPowerType Type)
+{
+	OnHitStop.Broadcast(Target, Type);
+}
+
+void UDBSZEventManager::SendHitStopPair(
+	AActor* Attacker, const EAttackPowerType AttackerType,
+	AActor* Target,   const EAttackPowerType TargetType)
+{
+	OnHitStop.Broadcast(Attacker, AttackerType);
+	OnHitStop.Broadcast(Target,   TargetType);
+}
+
+void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
+{
+	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);
+}
+
+void UDBSZEventManager::SendDash(AActor* Target, bool bIsDashing)
+{
+	OnDash.Broadcast(Target, bIsDashing);
+}
+
+void UDBSZEventManager::SendTeleport(AActor* Target)
+{
+	OnTeleport.Broadcast(Target);
+}
+
+void UDBSZEventManager::SendAttack(AActor* Target, int ComboCount)
+{
+	OnAttack.Broadcast(Target, ComboCount);
+}
