@@ -61,12 +61,6 @@ public:
 	void StopAttackTrace();
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void AttackTrace();
-	// UFUNCTION(BlueprintCallable, Category="RushAttack")
-	// void GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const;
-	// UFUNCTION(BlueprintCallable, Category="RushAttack")
-	// void AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser);
-	// UFUNCTION(BlueprintCallable, Category="RushAttack")
-	// void SetOwnerFlying();
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void PlayMontage(int32 MontageIndex);
@@ -104,8 +98,6 @@ public:
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	float ComboAttackTime = 1.0f;
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	// TArray<EBodyPartType> AttackPart;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
@@ -130,12 +122,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0"))
     float TeleportFlyZThreshold = 120.0f; 	// 텔레포트 시 Z 상승이 이 값보다 크면 비행 보조
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(AllowPrivateAccess="true"))
-	bool bEnableAutoTrackDuringAttack = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
 	float AutoTrackTurnRateDeg = 540.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
 	float AutoTrackMoveSpeed = 900.0f;
+
 	
 private:
 	float ElapsedTime = 0.0f;
@@ -150,11 +141,9 @@ private:
     FTimerHandle ComboTimeHandler;
     FTimerHandle TraceTimeHandler;
 
-	TEnumAsByte<EMovementMode> PrevMovementMode;
-	
 	FVector DashStartLoc;
 	FVector DashTargetLoc;
 
-	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+    UPROPERTY()
+    class UDBSZEventManager* EventManager;
 };

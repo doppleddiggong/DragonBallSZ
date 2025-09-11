@@ -52,24 +52,20 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
             OnDashCompleted();
     }
 
-    // 공격 중 자동 추적
-	if ( bEnableAutoTrackDuringAttack )
+    // 공격 중 자동 추적(간단 2D 기반, 루트모션 시 비활성)
+	if ( bIsAttacking && !bIsDashing && Owner && Target )
 	{
-		if ( bIsAttacking && !bIsDashing )
+		const FVector OwnerLoc = Owner->GetActorLocation();
+		const FVector ToTarget2D = (Target->GetActorLocation() - OwnerLoc).GetSafeNormal2D();
+		// 회전 보정(Yaw만)
+		const float DesiredYaw = ToTarget2D.Rotation().Yaw;
+		const FRotator NewRot = FMath::RInterpConstantTo(Owner->GetActorRotation(), FRotator(0.f, DesiredYaw, 0.f), DeltaTime, AutoTrackTurnRateDeg);
+		Owner->SetActorRotation(FRotator(0.f, NewRot.Yaw, 0.f));
+
+		if (AutoTrackMoveSpeed > 0.f)
 		{
-			const FVector ToTarget = (Target->GetActorLocation() - Owner->GetActorLocation());
-			const FRotator CurRot = Owner->GetActorRotation();
-			const FRotator DesiredRot = ToTarget.Rotation();
-			const FRotator NewRot = FMath::RInterpConstantTo(CurRot, DesiredRot, DeltaTime, AutoTrackTurnRateDeg);
-
-			Owner->SetActorRotation(FRotator(0.f, NewRot.Yaw, 0.f));
-			const FVector MoveDir = Owner->GetActorForwardVector();
-
-			if (AutoTrackMoveSpeed > 0.f)
-			{
-				const FVector NewLoc = Owner->GetActorLocation() + MoveDir.GetSafeNormal() * (AutoTrackMoveSpeed * DeltaTime);
-				Owner->SetActorLocation(NewLoc, true);
-			}
+			const FVector NewLoc = OwnerLoc + Owner->GetActorForwardVector() * (AutoTrackMoveSpeed * DeltaTime);
+			Owner->SetActorLocation(NewLoc, true);
 		}
 	}
 }
@@ -103,7 +99,7 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
 	bIsAttacking = false;
-
+	
 	ComboCount++;
 	if ( ComboCount > AttackMontages.Num()-1 )
 		ComboCount = 0;
@@ -142,8 +138,6 @@ void URushAttackSystem::OnDashCompleted()
 	if (Owner && !Owner->IsHit)
 	{
 		EventManager->SendDash(Owner, false);
-		
-		MoveComp->SetMovementMode(PrevMovementMode);
 		PlayMontage(PendingMontageIndex);
 	}
 }
@@ -218,86 +212,6 @@ void URushAttackSystem::AttackTrace()
 	);
 }
 
-// void URushAttackSystem::GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const
-// {
-// 	if (!SceneComp)
-// 	{
-// 		OutStart = FVector::ZeroVector;
-// 		OutEnd   = FVector::ZeroVector;
-// 		return;
-// 	}
-//
-// 	OutStart = SceneComp->GetComponentLocation();
-// 	OutEnd = OutStart + SceneComp->GetForwardVector() * TraceLength;
-// }
-
-// void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser)
-// {
-// 	FHitResult OutHit;
-// 	TArray<AActor*> ActorsToIgnore;
-//
-// 	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
-// 		this,
-// 		Start,							// 시작 위치
-// 		End,							// 끝 위치
-// 		TraceRadius,					// 반지름
-// 		UEngineTypes::ConvertToTraceType(ECC_EngineTraceChannel1), // TraceChannel
-// 		false,							// bTraceComplex
-// 		ActorsToIgnore,					// 무시할 액터들
-// 		DrawTraceState,					// 디버그 그리기 옵션
-// 		OutHit,                     // Hit 결과
-// 		true,							// Ignore Self
-// 		FLinearColor::Red,				// Trace 색상
-// 		FLinearColor::Green,			// Hit 색상
-// 		TraceDrawTime					// Draw Time
-// 	);
-//
-// 	if (bHit)
-// 	{
-// 		if (AActor* HitActor = OutHit.GetActor())
-// 		{
-// 			EAttackPowerType Type = AttackPowerType[ComboCount];
-// 			EventManager->SendHitStopPair(
-// 				Owner, Type,
-// 				HitActor, Type);
-//
-// 			float DelayKnockback = 0.f;
-// 			if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
-// 				DelayKnockback = DataManager->GetHitStopDelayTime(Type);
-//
-// 			FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([this, HitActor, Type]()
-// 			{
-// 				if ( !IsValid(this))
-// 					return;
-//
-// 				EventManager->SendKnockback(HitActor, this->Owner, Type, 0.3f);
-// 			});
-// 			
-// 			FTimerHandle TimerHandler;
-// 			GetWorld()->GetTimerManager().SetTimer(TimerHandler, TimerDelegate, DelayKnockback, false);
-// 			
-// 			UGameplayStatics::ApplyDamage(
-// 				HitActor,
-// 				BaseDamage,
-// 				nullptr,
-// 				DamageCauser,
-// 				UDamageType::StaticClass()
-// 			);
-// 		}
-// 	}
-// }
-
-
-// EMovementMode URushAttackSystem::SetOwnerFlying()
-// {
-// 	PrevMovementMode = MoveComp->MovementMode;
-// 	MoveComp->SetMovementMode(MOVE_Flying);
-//
-// 	Owner->bUseControllerRotationYaw = true;
-// 	Owner->bUseControllerRotationPitch = true;
-// 	MoveComp->bOrientRotationToMovement = false;
-// }
-
 void URushAttackSystem::PlayMontage(int32 MontageIndex)
 {
 	if (!AttackMontages.IsValidIndex(MontageIndex))
@@ -351,7 +265,6 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	ElapsedTime = 0.0f;
     PendingMontageIndex = MontageIndex;
 
-    PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
 
 	EventManager->SendDash(Owner, true);
@@ -360,60 +273,89 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 
 void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
 {
-	// 1. 목표물 위치와 플레이어 위치를 기반으로 Desired 위치 계산 (Z축은 제외)
     const FVector TargetLoc = Target->GetActorLocation();
-    const FVector BackDir = Target->GetActorForwardVector() * -1.0f;
-    FVector TeleportLoc = TargetLoc + BackDir * TeleportBehindOffset;
 
-	// 2. 목표물이 공중에 있는지 확인 (단 한번만)
-	FHitResult TargetTraceHit;
-	bool bTargetOnGround = GetWorld()->LineTraceSingleByChannel(
-		TargetTraceHit, 
-		TargetLoc, 
-		TargetLoc - FVector(0, 0, 1000.f), 
-		ECC_Visibility
-	);
+    // 1) 기본 후보: 타겟이 '서 있다고 가정'한 Yaw 기준의 뒤편(Forward의 Pitch/Roll 무시)
+    const float DesiredRadius = FMath::Clamp(TeleportBehindOffset, 50.f, AttackRange * 0.9f);
+    const float TargetYaw = Target->GetActorRotation().Yaw; // Pitch/Roll 무시
+    const FVector UprightForward = FRotator(0.f, TargetYaw, 0.f).Vector();
+    FVector Desired = TargetLoc - UprightForward * DesiredRadius;
 
-	// 3. 목표물 상태에 따라 Desired Z값 결정
-	if (bTargetOnGround)
-	{
-		// 지상에 있을 경우, 목표물 높이로 설정
-		TeleportLoc.Z = TargetLoc.Z;
-	}
-	else
-	{
-		// 공중에 있을 경우
-		// 지면 정렬 모드라면, 텔레포트 지점의 지면을 트레이스
-		FHitResult PlayerTraceHit;
-		bool bPlayerGroundFound = GetWorld()->LineTraceSingleByChannel(
-			PlayerTraceHit, 
-			TeleportLoc + FVector(0, 0, 500), 
-			TeleportLoc - FVector(0, 0, 2000), 
-			ECC_Visibility
-		);
+    // 2) 지면 정렬/공중 고려로 Z 보정 함수
+    auto AlignZ = [&](const FVector& In) -> FVector
+    {
+        FVector Out = In;
+        if (bTeleportAlignToGround)
+        {
+            FHitResult Hit;
+            const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, In + FVector(0,0,500), In - FVector(0,0,2000), ECC_Visibility);
+            if (bHit)
+            {
+                const float HalfHeight = Owner->GetCapsuleComponent() ? Owner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 0.f;
+                Out.Z = Hit.ImpactPoint.Z + HalfHeight;
+                return Out;
+            }
+        }
+        // 지면 정렬 실패 시: 타겟 Z 유지
+        Out.Z = TargetLoc.Z;
+        return Out;
+    };
 
-		if (bPlayerGroundFound)
-		{
-			// 지면을 찾았을 경우 Z값 조정
-			float HalfHeight = Owner->GetCapsuleComponent() ? Owner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 0.f;
-			TeleportLoc.Z = PlayerTraceHit.ImpactPoint.Z + HalfHeight;
-		}
-		else
-		{
-			// 지면을 찾지 못하면 목표물 높이로 설정 (공중 콤보로 이어짐)
-			TeleportLoc.Z = TargetLoc.Z;
-		}
-	}
+    // 3) 위치 충돌 검사: 캡슐 오버랩로 블로킹 여부 확인
+    auto IsFree = [&](const FVector& Pos) -> bool
+    {
+        const UCapsuleComponent* Cap = Owner->GetCapsuleComponent();
+        const float R = Cap ? Cap->GetScaledCapsuleRadius() : 34.f;
+        const float H = Cap ? Cap->GetScaledCapsuleHalfHeight() : 88.f;
+        FCollisionQueryParams QP(SCENE_QUERY_STAT(TeleportProbe), false, Owner);
+        return !GetWorld()->OverlapBlockingTestByChannel(Pos, FQuat::Identity, ECC_Pawn, FCollisionShape::MakeCapsule(R, H), QP);
+    };
 
-	// 4. 최종적으로 캐릭터 텔레포트 및 애니메이션 재생
-	Owner->SetActorLocation(TeleportLoc, false, nullptr, ETeleportType::TeleportPhysics);
-	EventManager->SendTeleport(Owner);
-	
-	// 5. 공중 콤보 보조 로직 (별도로 분리 가능)
-	if (!bTargetOnGround)
-	{
-		PrevMovementMode = Owner->SetFlying();
-	}
-	
+    // 4) 후보 탐색: 뒤쪽 우선, 좌우로 각도 샘플링하며 AttackRange 원주상에서 빈자리 찾기
+    const int32 Samples = 10;
+    const float BaseYaw = TargetYaw + 180.f; // 뒤편 기준
+    FVector Chosen = AlignZ(Desired);
+    if (!IsFree(Chosen))
+    {
+        bool bFound = false;
+        for (int32 i=1; i<=Samples; ++i)
+        {
+            const float Angle = 20.f * i; // 20deg step
+            for (int s=-1; s<=1; s+=2)
+            {
+                const float Yaw = BaseYaw + s*Angle;
+                const FVector Dir = FRotationMatrix(FRotator(0, Yaw, 0)).GetUnitAxis(EAxis::X);
+                const FVector Cand = TargetLoc + Dir * DesiredRadius;
+                const FVector CandZ = AlignZ(Cand);
+                if (IsFree(CandZ))
+                {
+	                Chosen = CandZ;
+                	bFound = true;
+                	break;
+                }
+            }
+
+        	if (bFound)
+            	break;
+        }
+        // 최종 실패 시: 타겟 주변으로 강제 스윕 텔레포트(충돌 무시)
+    }
+
+    // 5) 텔레포트 및 회전: 타겟을 바라보게 정렬
+    Owner->SetActorLocation(Chosen, false, nullptr, ETeleportType::TeleportPhysics);
+    const FRotator Face = (TargetLoc - Chosen).Rotation();
+    Owner->SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
+    EventManager->SendTeleport(Owner);
+
+    // 6) 공중 콤보 보조: 타겟이 공중이면 비행 모드로
+    {
+        FHitResult TargetTraceHit;
+        const bool bTargetOnGround = GetWorld()->LineTraceSingleByChannel(TargetTraceHit, TargetLoc, TargetLoc - FVector(0,0,1000.f), ECC_Visibility);
+        if (!bTargetOnGround)
+        {
+        	Owner->SetFlying();
+        }
+    }
+
     PlayMontage(MontageIndex);
 }

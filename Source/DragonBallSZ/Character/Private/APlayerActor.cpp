@@ -264,20 +264,16 @@ void APlayerActor::OnRestoreAvoid()
 	EventManager->SendAvoid(this, false);
 }
 
-EMovementMode APlayerActor::SetFlying()
+void APlayerActor::SetFlying()
 {
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
 	
-	auto PrevMode = MoveComp->MovementMode;
 	MoveComp->SetMovementMode(MOVE_Flying);
 
 	this->bUseControllerRotationYaw = true;
 	this->bUseControllerRotationPitch = true;
 	MoveComp->bOrientRotationToMovement = false;
-
-	return PrevMode;
 }
-
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {

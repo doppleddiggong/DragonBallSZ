@@ -83,7 +83,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Avoid")
 	void OnRestoreAvoid();
 	UFUNCTION(BlueprintCallable, Category="Fly")
-	EMovementMode SetFlying();
+	void SetFlying();
 	
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
