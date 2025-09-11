@@ -73,10 +73,11 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsMoveEnable();
 
-
-	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Fly")
 	void OnFlyEnd();
+
+	UFUNCTION(BlueprintCallable, Category="Avoid")
+	void OnRestoreAvoid();
 	
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
@@ -126,5 +127,25 @@ public: // Control Interface
 
 
 private:
-	int JumpCount = 0;
+	FTimerHandle AvoidTimer;
+	float AvoidTime = 1.0f;
+	
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnDash(AActor* Target, bool IsDashing);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnTeleport(AActor* Target);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAttack(AActor* Target, int ComboCount);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnSpecialAttack(AActor* Target, int32 SpecialIndex);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnGuard(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAvoid(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnPowerCharge(AActor* Target, bool bState);
 };

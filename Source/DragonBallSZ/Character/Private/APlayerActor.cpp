@@ -15,7 +15,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
-
+// #include "TimerManager.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -73,13 +73,80 @@ void APlayerActor::BeginPlay()
 	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
-	
 	DashSystem->InitSystem(this, DashNiagaraSystem);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
+
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
+
+	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
+	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
+	EventManager->OnAttack.AddDynamic(this, &APlayerActor::OnAttack);
+	EventManager->OnSpecialAttack.AddDynamic(this, &APlayerActor::OnSpecialAttack);
+	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
+	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
+	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
+}
+
+void APlayerActor::OnDash(AActor* Target, bool IsDashing)
+{
+	if ( this != Target )
+		return;
+	const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnTeleport(AActor* Target)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("OnTeleport"));
+}
+
+void APlayerActor::OnAttack(AActor* Target, int ComboCount)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
+}
+
+void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
+}
+
+void APlayerActor::OnGuard(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
 	
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+	const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnAvoid(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -98,6 +165,11 @@ void APlayerActor::Landed(const FHitResult& Hit)
 
 	if (FlySystem)
 		FlySystem->OnLand(Hit);
+}
+
+void APlayerActor::OnRestoreAvoid()
+{
+	EventManager->SendAvoid(this, false);
 }
 
 bool APlayerActor::IsMoveEnable_Implementation()
@@ -195,7 +267,7 @@ void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendPowerCharge(this, bPressed);
 }
 
 void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
@@ -203,7 +275,7 @@ void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendGuard(this, bPressed);
 }
 
 void APlayerActor::Cmd_Vanish_Implementation()
@@ -211,7 +283,12 @@ void APlayerActor::Cmd_Vanish_Implementation()
 	if ( !IsControlEnable() )
 		return;
 	
-	PRINTINFO();
+	EventManager->SendAvoid(this, true);
+
+	GetWorld()->GetTimerManager().ClearTimer(AvoidTimer);
+	GetWorld()->GetTimerManager().SetTimer(
+		AvoidTimer, this, &APlayerActor::OnRestoreAvoid, AvoidTime, false
+	);
 }
 
 void APlayerActor::Cmd_RushAttack_Implementation()
@@ -235,5 +312,5 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendSpecialAttack(this, 1);
 }

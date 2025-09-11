@@ -81,4 +81,33 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendAttack(AActor* Target, int ComboCount);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSpecialAttack, AActor*, Target, int32, SpecialIndex);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnSpecialAttack OnSpecialAttack;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendSpecialAttack(AActor* Target, int32 SpecialIndex);
+	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGuard, AActor*, Target, bool, bState);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnGuard OnGuard;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendGuard(AActor* Target, bool bState);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAvoid, AActor*, Target, bool, bState);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnAvoid OnAvoid;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendAvoid(AActor* Target, bool bState);
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPowerCharge, AActor*, Target, bool, bState);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnPowerCharge OnPowerCharge;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendPowerCharge(AActor* Target, bool bState);
 };

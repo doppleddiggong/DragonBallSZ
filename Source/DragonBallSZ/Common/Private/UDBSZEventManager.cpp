@@ -49,3 +49,23 @@ void UDBSZEventManager::SendAttack(AActor* Target, int ComboCount)
 {
 	OnAttack.Broadcast(Target, ComboCount);
 }
+
+void UDBSZEventManager::SendSpecialAttack(AActor* Target, int32 SpecialIndex)
+{
+	OnSpecialAttack.Broadcast(Target, SpecialIndex);
+}
+
+void UDBSZEventManager::SendGuard(AActor* Target, bool bState )
+{
+	OnGuard.Broadcast(Target, bState);
+}
+
+void UDBSZEventManager::SendAvoid(AActor* Target, bool bState)
+{
+	OnAvoid.Broadcast(Target, bState);
+}
+
+void UDBSZEventManager::SendPowerCharge(AActor* Target, bool bState)
+{
+	OnPowerCharge.Broadcast(Target, bState);
+}
