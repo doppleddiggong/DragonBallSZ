@@ -38,8 +38,8 @@ void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)
 	if( CurHP > MaxHP )
 		CurHP = MaxHP;
 
-	if (auto EM = UDBSZEventManager::Get(GetWorld()) )
-		EM->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 }
 
 bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
@@ -52,8 +52,8 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 		this->IsDead = true;
 	}
 
-	if (auto EM = UDBSZEventManager::Get(GetWorld()) )
-		EM->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 
 	return IsDead;
 }

@@ -31,12 +31,16 @@ public: // Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UStatSystem* StatSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UHitStopSystem* HitStopSystem;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
+	class UKnockbackSystem* KnockbackSystem;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class URushAttackSystem* RushAttackSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UDashSystem* DashSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UFlySystem* FlySystem;
-
+	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UArrowComponent* LeftHandComp;
@@ -55,7 +59,7 @@ public:
 			case EBodyPartType::Hand_L: return LeftHandComp;
 			case EBodyPartType::Hand_R: return RightHandComp;
 			case EBodyPartType::Foot_L: return LeftFootComp;
-			case EBodyPartType::Foot_R: return LeftHandComp;
+			case EBodyPartType::Foot_R: return RightFootComp;
 			default:	return LeftHandComp;
 		}
 	}

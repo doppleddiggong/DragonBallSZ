@@ -10,6 +10,8 @@
 #include "UEnemyFSM.h"
 
 #include "UDBSZEventManager.h"
+#include "UHitStopSystem.h"
+#include "UKnockbackSystem.h"
 #include "Components/ArrowComponent.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -19,9 +21,12 @@ AEnemyActor::AEnemyActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	StatSystem = CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	SightSystem = CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
-	EnemyFSM = CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
+	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
+	SightSystem			= CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
+
+	EnemyFSM			= CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
 	
 	AutoPossessAI   = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AEnemyAIController::StaticClass();
@@ -45,8 +50,8 @@ void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
-		TargetActor = Cast<APlayerActor>(FoundActor);
+	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
+		TargetActor = Cast<APlayerActor>(Player);
 
 	StatSystem->InitStat(false);
 
@@ -58,8 +63,8 @@ void AEnemyActor::BeginPlay()
 	SightSystem->InitSightSystem(TargetActor, StatSystem->SightLength, StatSystem->SightAngle );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);
 
-	// TODO, 할것 있으면 하세요.
-	// EnemyFSM->
+	HitStopSystem->InitSystem(this);
+	KnockbackSystem->InitSystem(this);
 }
 
 void AEnemyActor::OnSightDetect(bool Target)

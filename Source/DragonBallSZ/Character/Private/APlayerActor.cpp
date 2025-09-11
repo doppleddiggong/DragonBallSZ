@@ -10,9 +10,11 @@
 #include "UDBSZEventManager.h"
 
 #include "UStatSystem.h"
+#include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
+#include "UKnockbackSystem.h"
 
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -26,6 +28,8 @@ APlayerActor::APlayerActor()
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
 
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
@@ -66,10 +70,14 @@ void APlayerActor::BeginPlay()
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
 	StatSystem->InitStat(true);
+	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
+	KnockbackSystem->InitSystem(this);
+	
 	DashSystem->InitSystem(this, DashNiagaraSystem);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
-
+	HitStopSystem->InitSystem(this);
+	
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
 }
@@ -132,14 +140,17 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
-	if (Controller)
-	{
-		// const FRotator ControlRot = Controller->GetControlRotation();
-		// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-		//
-		// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-		// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	// if (Controller)
+	// {
+	// 	// Move By Control
+	// 	// const FRotator ControlRot = Controller->GetControlRotation();
+	// 	// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+	// 	// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+	// 	// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	// }
 
+	{
+		// Move By Actor
 		const FVector Forward = GetActorForwardVector();
 		const FVector Right   = GetActorRightVector();
 

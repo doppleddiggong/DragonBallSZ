@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Core/Macro.h"
+#include "UHitStopSystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "UDBSZEventManager.generated.h"
 
@@ -34,5 +35,50 @@ public:
 	FOnUpdateHealth OnUpdateHealth;
 
 	UFUNCTION(BlueprintCallable, Category="Events")
-	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);	
+	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, EAttackPowerType, Type);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnHitStop OnHitStop;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendHitStop(AActor* Target, const EAttackPowerType Type);
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendHitStopPair(AActor* Attacker, const EAttackPowerType AttackerType,
+						 AActor* Target,   const EAttackPowerType TargetType);
+
+	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnKnockback,
+		AActor*,		   Target,
+		AActor*,           Instigator,
+		EAttackPowerType,  Type,
+		float,             Resistance );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnKnockback OnKnockback;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDash, AActor*, Target, bool, bIsDashing);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnDash OnDash;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendDash(AActor* Target, bool bIsDashing);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleport, AActor*, Target);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnTeleport OnTeleport;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendTeleport(AActor* Target);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttack, AActor*, Target, int, ComboCount );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnAttack OnAttack;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendAttack(AActor* Target, int ComboCount);
 };
