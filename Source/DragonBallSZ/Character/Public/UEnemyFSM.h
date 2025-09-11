@@ -6,8 +6,10 @@
 #include "GameFramework/Actor.h"
 #include "UEnemyFSM.generated.h"
 
+
 class AEnemyActor;
 class APlayerActor;
+
 // Enemy State
 UENUM(BlueprintType)
 enum class EEnemyState : uint8
@@ -39,7 +41,7 @@ class DRAGONBALLSZ_API UEnemyFSM : public UActorComponent
 
 public:
 	UEnemyFSM();
-
+	
 	UPROPERTY()
 	TObjectPtr<APlayerActor> Target;
 	UPROPERTY()
@@ -71,8 +73,15 @@ public:
 	
 	void Idle();
 	void Move();
+	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
+	TArray<float> ArcLength;
+	int Samples;
+	void BuildTable(FVector A, FVector P, FVector B);
+	float FindT(float s);
+	float CumulativeDistance = 0;
 	void TargetingDestination();
-	float AlphaProgress = 0;
+	float TargetDistance;
+	FVector Origin;
 	FVector Destination;
 	FVector CenterControlPoint;
 	UPROPERTY(EditAnywhere)
