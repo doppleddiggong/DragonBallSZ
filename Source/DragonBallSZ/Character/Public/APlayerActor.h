@@ -23,8 +23,6 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	virtual void Landed(const FHitResult& Hit) override;
 
 public: // Component
@@ -40,7 +38,6 @@ public: // Component
 	class UDashSystem* DashSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UFlySystem* FlySystem;
-	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
 	class UArrowComponent* LeftHandComp;
@@ -66,18 +63,24 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsMoveEnable();
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsAttackEnable();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsAttackIng();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsMoveEnable();
-
+	UFUNCTION(BlueprintPure, Category="Player|Sight")
+	bool IsInSight(const AActor* Other) const;
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="LookTarget")
+	void OnLookTarget();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Fly")
 	void OnFlyEnd();
-
 	UFUNCTION(BlueprintCallable, Category="Avoid")
 	void OnRestoreAvoid();
+	UFUNCTION(BlueprintCallable, Category="Fly")
+	EMovementMode SetFlying();
 	
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
@@ -125,6 +128,10 @@ public: // Control Interface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Player|Dash")
 	TObjectPtr<class UNiagaraSystem> DashNiagaraSystem = nullptr;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player|Sight", meta=(ClampMin="0"))
+    float SightRange = 1200.0f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player|Sight", meta=(ClampMin="0", ClampMax="180"))
+    float SightHalfFOVDeg = 60.0f; // half-angle degrees
 
 private:
 	FTimerHandle AvoidTimer;
@@ -146,6 +153,6 @@ public:
 	void OnGuard(AActor* Target, bool bState);
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnAvoid(AActor* Target, bool bState);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnPowerCharge(AActor* Target, bool bState);
+    UFUNCTION(BlueprintCallable, Category="Event")
+    void OnPowerCharge(AActor* Target, bool bState);
 };

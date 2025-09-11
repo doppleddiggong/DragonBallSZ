@@ -78,7 +78,6 @@ public: // Component
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
 	float RotateLerpSpeed = 5.0f;
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
 	float TraceLength  = 30.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")

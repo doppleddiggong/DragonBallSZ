@@ -9,12 +9,10 @@
 #include "UDBSZDataManager.h"
 #include "TimerManager.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
 URushAttackSystem::URushAttackSystem()
 {
@@ -38,11 +36,8 @@ void URushAttackSystem::EndPlay(const EEndPlayReason::Type Reason)
 
 void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if ( bIsAttacking || bIsDashing )
-		OnLookTarget();
-	
 	if (bIsDashing)
 	{
 		ElapsedTime += DeltaTime;
@@ -53,8 +48,29 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		Owner->SetActorLocation(Location, true);
         
 		const float Distance = FVector::Dist(Owner->GetActorLocation(), DashTargetLoc);
-		if ( Distance <= AttackRange || ElapsedTime >= DashDuration )
-			OnDashCompleted();
+        if ( Distance <= AttackRange || ElapsedTime >= DashDuration )
+            OnDashCompleted();
+    }
+
+    // 공격 중 자동 추적
+	if ( bEnableAutoTrackDuringAttack )
+	{
+		if ( bIsAttacking && !bIsDashing )
+		{
+			const FVector ToTarget = (Target->GetActorLocation() - Owner->GetActorLocation());
+			const FRotator CurRot = Owner->GetActorRotation();
+			const FRotator DesiredRot = ToTarget.Rotation();
+			const FRotator NewRot = FMath::RInterpConstantTo(CurRot, DesiredRot, DeltaTime, AutoTrackTurnRateDeg);
+
+			Owner->SetActorRotation(FRotator(0.f, NewRot.Yaw, 0.f));
+			const FVector MoveDir = Owner->GetActorForwardVector();
+
+			if (AutoTrackMoveSpeed > 0.f)
+			{
+				const FVector NewLoc = Owner->GetActorLocation() + MoveDir.GetSafeNormal() * (AutoTrackMoveSpeed * DeltaTime);
+				Owner->SetActorLocation(NewLoc, true);
+			}
+		}
 	}
 }
 
@@ -91,15 +107,14 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 	ComboCount++;
 	if ( ComboCount > AttackMontages.Num()-1 )
 		ComboCount = 0;
-	
-	ResetByHit();
 }
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (bInterrupted)
 	{
-		ResetByHit();
+		bIsAttacking = false;
+		ComboCount = 0;
 		return;
 	}
 
@@ -123,17 +138,6 @@ void URushAttackSystem::InitSystem(APlayerActor* InOwner)
 	BindMontageDelegates(AnimInstance);
 }
 
-void URushAttackSystem::OnLookTarget()
-{
-	if (!Owner || !Target)
-		return;
-
-	const FVector TargetLoc = Target->GetActorLocation();
-	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(Owner->GetActorLocation(), TargetLoc);
-	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
-	Owner->SetActorRotation(NewRot);
-}
-
 void URushAttackSystem::OnDashCompleted()
 {
 	bIsDashing = false;
@@ -150,8 +154,11 @@ void URushAttackSystem::OnDashCompleted()
 
 void URushAttackSystem::OnAttack()
 {
-    if (Owner->IsHit || bIsAttacking)
+	if (Owner->IsAttackEnable() == false )
         return;
+
+	if ( bIsAttacking )
+		return;
 
 	const FVector OwnerLoc = Owner->GetActorLocation();
 	const FVector TargetLoc = Target->GetActorLocation();
@@ -173,13 +180,13 @@ void URushAttackSystem::OnAttack()
 
 void URushAttackSystem::StartAttackTrace()
 {
-	GetWorld()->GetTimerManager().SetTimer(
-		TraceTimeHandler,
-		this,
-		&URushAttackSystem::AttackTrace,
-		0.01f,
-		false
-	);
+    GetWorld()->GetTimerManager().SetTimer(
+        TraceTimeHandler,
+        this,
+        &URushAttackSystem::AttackTrace,
+        0.01f,
+        false
+    );
 }
 
 void URushAttackSystem::StopAttackTrace()
@@ -189,99 +196,111 @@ void URushAttackSystem::StopAttackTrace()
 
 void URushAttackSystem::AttackTrace()
 {
-	FVector Start, End;
-	
-	GetBodyLocation( Owner->GetBodyPart(AttackPart[ComboCount]), Start, End );
-	AttackSphereTrace( Start, End, Damage, Owner);
-}
-
-void URushAttackSystem::GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const
-{
-	if (!SceneComp)
-	{
-		OutStart = FVector::ZeroVector;
-		OutEnd   = FVector::ZeroVector;
+	if ( !Owner->IsInSight( Target ))
 		return;
-	}
 
-	OutStart = SceneComp->GetComponentLocation();
-	OutEnd = OutStart + SceneComp->GetForwardVector() * TraceLength;
-}
+	const EAttackPowerType Type = AttackPowerType[ComboCount];
+	float DelayKnockback = 0.f;
+	if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
+		DelayKnockback = DataManager->GetHitStopDelayTime(Type);
 
-void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser)
-{
-	FHitResult OutHit;
-	TArray<AActor*> ActorsToIgnore;
+	EventManager->SendHitStopPair(Owner, Type, Target, Type);
 
-	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
-		this,
-		Start,							// 시작 위치
-		End,							// 끝 위치
-		TraceRadius,					// 반지름
-		UEngineTypes::ConvertToTraceType(ECC_EngineTraceChannel1), // TraceChannel
-		false,							// bTraceComplex
-		ActorsToIgnore,					// 무시할 액터들
-		DrawTraceState,					// 디버그 그리기 옵션
-		OutHit,                     // Hit 결과
-		true,							// Ignore Self
-		FLinearColor::Red,				// Trace 색상
-		FLinearColor::Green,			// Hit 색상
-		TraceDrawTime					// Draw Time
+	FTimerDelegate TimerDelegate = FTimerDelegate::CreateWeakLambda(this, [this, Type]()
+	{
+		EventManager->SendKnockback(Target, this->Owner, Type, 0.3f);
+	});
+
+	GetWorld()->GetTimerManager().SetTimer(KnockbackTimerHandler, TimerDelegate, DelayKnockback, false);
+
+	UGameplayStatics::ApplyDamage(
+		Target,
+		Damage,
+		nullptr,
+		Owner,
+		UDamageType::StaticClass()
 	);
-
-	if (bHit)
-	{
-		if (AActor* HitActor = OutHit.GetActor())
-		{
-			EAttackPowerType Type = AttackPowerType[ComboCount];
-			EventManager->SendHitStopPair(
-				Owner, Type,
-				HitActor, Type);
-
-			float DelayKnockback = 0.f;
-			if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
-				DelayKnockback = DataManager->GetHitStopDelayTime(Type);
-
-			FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([this, HitActor, Type]()
-			{
-				if ( !IsValid(this))
-					return;
-
-				EventManager->SendKnockback(HitActor, this->Owner, Type, 0.3f);
-			});
-			
-			FTimerHandle TimerHandler;
-			GetWorld()->GetTimerManager().SetTimer(TimerHandler, TimerDelegate, DelayKnockback, false);
-			
-			UGameplayStatics::ApplyDamage(
-				HitActor,
-				BaseDamage,
-				nullptr,
-				DamageCauser,
-				UDamageType::StaticClass()
-			);
-		}
-	}
 }
 
-void URushAttackSystem::ResetByHit()
-{
-	if( Owner->IsHit )
-	{
-		bIsAttacking = false;
-		ComboCount = 0;
-	}
-}
+// void URushAttackSystem::GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const
+// {
+// 	if (!SceneComp)
+// 	{
+// 		OutStart = FVector::ZeroVector;
+// 		OutEnd   = FVector::ZeroVector;
+// 		return;
+// 	}
+//
+// 	OutStart = SceneComp->GetComponentLocation();
+// 	OutEnd = OutStart + SceneComp->GetForwardVector() * TraceLength;
+// }
 
-void URushAttackSystem::SetOwnerFlying()
-{
-	PrevMovementMode = MoveComp->MovementMode;
-	MoveComp->SetMovementMode(MOVE_Flying);
+// void URushAttackSystem::AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser)
+// {
+// 	FHitResult OutHit;
+// 	TArray<AActor*> ActorsToIgnore;
+//
+// 	bool bHit = UKismetSystemLibrary::SphereTraceSingle(
+// 		this,
+// 		Start,							// 시작 위치
+// 		End,							// 끝 위치
+// 		TraceRadius,					// 반지름
+// 		UEngineTypes::ConvertToTraceType(ECC_EngineTraceChannel1), // TraceChannel
+// 		false,							// bTraceComplex
+// 		ActorsToIgnore,					// 무시할 액터들
+// 		DrawTraceState,					// 디버그 그리기 옵션
+// 		OutHit,                     // Hit 결과
+// 		true,							// Ignore Self
+// 		FLinearColor::Red,				// Trace 색상
+// 		FLinearColor::Green,			// Hit 색상
+// 		TraceDrawTime					// Draw Time
+// 	);
+//
+// 	if (bHit)
+// 	{
+// 		if (AActor* HitActor = OutHit.GetActor())
+// 		{
+// 			EAttackPowerType Type = AttackPowerType[ComboCount];
+// 			EventManager->SendHitStopPair(
+// 				Owner, Type,
+// 				HitActor, Type);
+//
+// 			float DelayKnockback = 0.f;
+// 			if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
+// 				DelayKnockback = DataManager->GetHitStopDelayTime(Type);
+//
+// 			FTimerDelegate TimerDelegate = FTimerDelegate::CreateLambda([this, HitActor, Type]()
+// 			{
+// 				if ( !IsValid(this))
+// 					return;
+//
+// 				EventManager->SendKnockback(HitActor, this->Owner, Type, 0.3f);
+// 			});
+// 			
+// 			FTimerHandle TimerHandler;
+// 			GetWorld()->GetTimerManager().SetTimer(TimerHandler, TimerDelegate, DelayKnockback, false);
+// 			
+// 			UGameplayStatics::ApplyDamage(
+// 				HitActor,
+// 				BaseDamage,
+// 				nullptr,
+// 				DamageCauser,
+// 				UDamageType::StaticClass()
+// 			);
+// 		}
+// 	}
+// }
 
-	Owner->bUseControllerRotationYaw = true;
-	Owner->bUseControllerRotationPitch = true;
-	MoveComp->bOrientRotationToMovement = false;
-}
+
+// EMovementMode URushAttackSystem::SetOwnerFlying()
+// {
+// 	PrevMovementMode = MoveComp->MovementMode;
+// 	MoveComp->SetMovementMode(MOVE_Flying);
+//
+// 	Owner->bUseControllerRotationYaw = true;
+// 	Owner->bUseControllerRotationPitch = true;
+// 	MoveComp->bOrientRotationToMovement = false;
+// }
 
 void URushAttackSystem::PlayMontage(int32 MontageIndex)
 {
@@ -299,9 +318,8 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		0.f,
 		true);
 
-	FTimerManager& TM = GetWorld()->GetTimerManager();
-	TM.ClearTimer(ComboTimeHandler);
-	TM.SetTimer(
+	GetWorld()->GetTimerManager().ClearTimer(ComboTimeHandler);
+	GetWorld()->GetTimerManager().SetTimer(
 		ComboTimeHandler,
 		this,
 		&URushAttackSystem::ResetCounter,
@@ -397,7 +415,9 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
 	
 	// 5. 공중 콤보 보조 로직 (별도로 분리 가능)
 	if (!bTargetOnGround)
-		SetOwnerFlying();
+	{
+		PrevMovementMode = Owner->SetFlying();
+	}
 	
     PlayMontage(MontageIndex);
 }

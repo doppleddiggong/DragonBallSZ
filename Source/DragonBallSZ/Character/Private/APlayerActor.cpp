@@ -19,6 +19,8 @@
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 APlayerActor::APlayerActor()
 {
@@ -69,6 +71,7 @@ void APlayerActor::BeginPlay()
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
+	// ActorComponent 초기화
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
@@ -77,10 +80,8 @@ void APlayerActor::BeginPlay()
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
 
-
+	// 이벤트 매니저를 통한 이벤트 등록및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
-
-	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
 	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
 	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
 	EventManager->OnAttack.AddDynamic(this, &APlayerActor::OnAttack);
@@ -88,6 +89,8 @@ void APlayerActor::BeginPlay()
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
+
+	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
 }
 
 void APlayerActor::OnDash(AActor* Target, bool IsDashing)
@@ -151,12 +154,10 @@ void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 
 void APlayerActor::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-}
+    Super::Tick(DeltaTime);
 
-void APlayerActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    if ( RushAttackSystem->ShouldLookAtTarget())
+        this->OnLookTarget();
 }
 
 void APlayerActor::Landed(const FHitResult& Hit)
@@ -167,9 +168,15 @@ void APlayerActor::Landed(const FHitResult& Hit)
 		FlySystem->OnLand(Hit);
 }
 
-void APlayerActor::OnRestoreAvoid()
+bool APlayerActor::IsControlEnable_Implementation()
 {
-	EventManager->SendAvoid(this, false);
+	if ( IsHit )
+		return false;
+
+	if ( StatSystem->IsDead )
+		return false;
+
+	return true;
 }
 
 bool APlayerActor::IsMoveEnable_Implementation()
@@ -183,13 +190,9 @@ bool APlayerActor::IsMoveEnable_Implementation()
 	return true;
 }
 
-
-bool APlayerActor::IsControlEnable_Implementation()
+bool APlayerActor::IsAttackEnable_Implementation()
 {
 	if ( IsHit )
-		return false;
-
-	if ( StatSystem->IsDead )
 		return false;
 
 	return true;
@@ -197,15 +200,78 @@ bool APlayerActor::IsControlEnable_Implementation()
 
 bool APlayerActor::IsAttackIng_Implementation()
 {
-	if ( RushAttackSystem->bIsAttacking || RushAttackSystem->bIsDashing )
-		return true;
-	return false;
+	return RushAttackSystem->IsAttackIng();
+}
+
+bool APlayerActor::IsInSight(const AActor* Other) const
+{
+	const FVector SelfLoc = GetActorLocation();
+	const FVector OtherLoc = Other->GetActorLocation();
+	const FVector ToOther = OtherLoc - SelfLoc;
+
+	const float Dist = ToOther.Size();
+	if (Dist > SightRange)
+		return false;
+
+	const FVector Fwd = GetActorForwardVector();
+	const float CosHalfFOV = FMath::Cos(FMath::DegreesToRadians(SightHalfFOVDeg));
+	const float CosAngle = FVector::DotProduct(Fwd, ToOther.GetSafeNormal());
+	if (CosAngle < CosHalfFOV)
+		return false;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(PlayerSightLOS), false, this);
+
+	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		SelfLoc + FVector(0,0,50),
+		OtherLoc + FVector(0,0,50),
+		ECC_Visibility,
+		Params
+	);
+    
+	if (bBlocked && Hit.GetActor() != Other)
+		return false;
+	
+	return true;
+}
+
+void APlayerActor::OnLookTarget_Implementation()
+{
+	if (!TargetActor)
+		return;
+
+	const FVector TargetLoc = TargetActor->GetActorLocation();
+	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
+	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
+
+	SetActorRotation(NewRot);
 }
 
 void APlayerActor::OnFlyEnd_Implementation()
 {
 	DashSystem->ActivateEffect(false);
 }
+
+void APlayerActor::OnRestoreAvoid()
+{
+	EventManager->SendAvoid(this, false);
+}
+
+EMovementMode APlayerActor::SetFlying()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	
+	auto PrevMode = MoveComp->MovementMode;
+	MoveComp->SetMovementMode(MOVE_Flying);
+
+	this->bUseControllerRotationYaw = true;
+	this->bUseControllerRotationPitch = true;
+	MoveComp->bOrientRotationToMovement = false;
+
+	return PrevMode;
+}
+
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
@@ -314,3 +380,5 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 
 	EventManager->SendSpecialAttack(this, 1);
 }
+
+
