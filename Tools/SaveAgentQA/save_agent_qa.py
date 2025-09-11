@@ -34,7 +34,8 @@ def main():
     if not args['Question'] or not args['Answer']:
         print('[AgentQA] Missing -Question or -Answer')
         return 1
-    doc_root = os.path.join(root, 'Document', 'AgentQA')
+    # Spec: Documents/AgentQA (versioned)
+    doc_root = os.path.join(root, 'Documents', 'AgentQA')
     os.makedirs(doc_root, exist_ok=True)
     now = kst_now()
     date = now.strftime('%Y-%m-%d')
