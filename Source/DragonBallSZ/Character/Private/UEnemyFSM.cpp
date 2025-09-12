@@ -60,11 +60,11 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (bMoving)
 	{
 		ElapsedMoving += DeltaTime;
-		if (TargetDistance > LongDistance)
-		{
-			MoveBeizer();
-			return;
-		}
+		// if (TargetDistance > LongDistance)
+		// {
+		// 	MoveBeizer();
+		// 	return;
+		// }
 		
 		if (ElapsedMoving > MovingTime)
 		{
@@ -174,7 +174,7 @@ void UEnemyFSM::Idle()
 
 void UEnemyFSM::Move()
 {
-	if (TargetDistance > LongDistance) TargetingDestination();
+	// if (TargetDistance > LongDistance) TargetingDestination();
 	
 	CurrentMove = SelectWeightedRandomMove();
 
