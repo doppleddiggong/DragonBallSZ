@@ -15,10 +15,12 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
-
+// #include "TimerManager.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 APlayerActor::APlayerActor()
 {
@@ -69,27 +71,93 @@ void APlayerActor::BeginPlay()
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
+	// ActorComponent 초기화
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
-	
 	DashSystem->InitSystem(this, DashNiagaraSystem);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
+
+	// 이벤트 매니저를 통한 이벤트 등록및 제어
+	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
+	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
+	EventManager->OnAttack.AddDynamic(this, &APlayerActor::OnAttack);
+	EventManager->OnSpecialAttack.AddDynamic(this, &APlayerActor::OnSpecialAttack);
+	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
+	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
+	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
+
+	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+}
+
+void APlayerActor::OnDash(AActor* Target, bool IsDashing)
+{
+	if ( this != Target )
+		return;
+	const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnTeleport(AActor* Target)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("OnTeleport"));
+}
+
+void APlayerActor::OnAttack(AActor* Target, int ComboCount)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
+}
+
+void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
+{
+	if ( this != Target )
+		return;
+
+	PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
+}
+
+void APlayerActor::OnGuard(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
 	
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+	const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnAvoid(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-}
+    Super::Tick(DeltaTime);
 
-void APlayerActor::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+    if ( RushAttackSystem->ShouldLookAtTarget())
+        this->OnLookTarget();
 }
 
 void APlayerActor::Landed(const FHitResult& Hit)
@@ -98,6 +166,17 @@ void APlayerActor::Landed(const FHitResult& Hit)
 
 	if (FlySystem)
 		FlySystem->OnLand(Hit);
+}
+
+bool APlayerActor::IsControlEnable_Implementation()
+{
+	if ( IsHit )
+		return false;
+
+	if ( StatSystem->IsDead )
+		return false;
+
+	return true;
 }
 
 bool APlayerActor::IsMoveEnable_Implementation()
@@ -111,28 +190,89 @@ bool APlayerActor::IsMoveEnable_Implementation()
 	return true;
 }
 
-
-bool APlayerActor::IsControlEnable_Implementation()
+bool APlayerActor::IsAttackEnable_Implementation()
 {
 	if ( IsHit )
-		return false;
-
-	if ( StatSystem->IsDead )
 		return false;
 
 	return true;
 }
 
+bool APlayerActor::IsHiting_Implementation()
+{
+	return IsHit;
+}
+
 bool APlayerActor::IsAttackIng_Implementation()
 {
-	if ( RushAttackSystem->bIsAttacking || RushAttackSystem->bIsDashing )
-		return true;
-	return false;
+	return RushAttackSystem->IsAttackIng();
+}
+
+
+bool APlayerActor::IsInSight(const AActor* Other) const
+{
+	const FVector SelfLoc = GetActorLocation();
+	const FVector OtherLoc = Other->GetActorLocation();
+	const FVector ToOther = OtherLoc - SelfLoc;
+
+	const float Dist = ToOther.Size();
+	if (Dist > SightRange)
+		return false;
+
+	const FVector Fwd = GetActorForwardVector();
+	const float CosHalfFOV = FMath::Cos(FMath::DegreesToRadians(SightHalfFOVDeg));
+	const float CosAngle = FVector::DotProduct(Fwd, ToOther.GetSafeNormal());
+	if (CosAngle < CosHalfFOV)
+		return false;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(PlayerSightLOS), false, this);
+
+	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		SelfLoc + FVector(0,0,50),
+		OtherLoc + FVector(0,0,50),
+		ECC_Visibility,
+		Params
+	);
+    
+	if (bBlocked && Hit.GetActor() != Other)
+		return false;
+	
+	return true;
+}
+
+void APlayerActor::OnLookTarget_Implementation()
+{
+	if (!TargetActor)
+		return;
+
+	const FVector TargetLoc = TargetActor->GetActorLocation();
+	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
+	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
+
+	SetActorRotation(NewRot);
 }
 
 void APlayerActor::OnFlyEnd_Implementation()
 {
 	DashSystem->ActivateEffect(false);
+}
+
+void APlayerActor::OnRestoreAvoid()
+{
+	EventManager->SendAvoid(this, false);
+}
+
+void APlayerActor::SetFlying()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	
+	MoveComp->SetMovementMode(MOVE_Flying);
+
+	this->bUseControllerRotationYaw = true;
+	this->bUseControllerRotationPitch = true;
+	MoveComp->bOrientRotationToMovement = false;
 }
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
@@ -195,7 +335,7 @@ void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendPowerCharge(this, bPressed);
 }
 
 void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
@@ -203,7 +343,7 @@ void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendGuard(this, bPressed);
 }
 
 void APlayerActor::Cmd_Vanish_Implementation()
@@ -211,7 +351,12 @@ void APlayerActor::Cmd_Vanish_Implementation()
 	if ( !IsControlEnable() )
 		return;
 	
-	PRINTINFO();
+	EventManager->SendAvoid(this, true);
+
+	GetWorld()->GetTimerManager().ClearTimer(AvoidTimer);
+	GetWorld()->GetTimerManager().SetTimer(
+		AvoidTimer, this, &APlayerActor::OnRestoreAvoid, AvoidTime, false
+	);
 }
 
 void APlayerActor::Cmd_RushAttack_Implementation()
@@ -235,5 +380,7 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	EventManager->SendSpecialAttack(this, 1);
 }
+
+

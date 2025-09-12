@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EBodyPartType.h"
 #include "EAttackPowerType.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Components/ActorComponent.h"
@@ -39,11 +38,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
-	FORCEINLINE void ResetCounter()	{ ComboCount = 0; }
+
+	UFUNCTION(BlueprintPure, Category="RushAttack")
+	FORCEINLINE bool IsAttackEnable() const { return !bIsAttacking && !bIsDashing; }
+	UFUNCTION(BlueprintPure, Category="RushAttack")
+	FORCEINLINE bool IsAttackIng() const { return bIsAttacking || bIsDashing; }
 	
+	UFUNCTION(BlueprintPure, Category="RushAttack")
+	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
+
+	FORCEINLINE void ResetCounter()	{ ComboCount = 0; }
+
 public:
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void OnLookTarget();
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void OnDashCompleted();
     UFUNCTION(BlueprintCallable, Category="RushAttack")
@@ -55,14 +61,6 @@ public:
 	void StopAttackTrace();
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void AttackTrace();
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const;
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void AttackSphereTrace(FVector Start, FVector End, float BaseDamage, AActor* DamageCauser);
-    UFUNCTION(BlueprintCallable, Category="RushAttack")
-    void ResetByHit();
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void SetOwnerFlying();
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void PlayMontage(int32 MontageIndex);
@@ -101,8 +99,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	float ComboAttackTime = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	TArray<EBodyPartType> AttackPart;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<EAttackPowerType> AttackPowerType;
@@ -124,9 +120,14 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
     bool bTeleportAlignToGround = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0"))
-    float TeleportFlyZThreshold = 120.0f; // 텔레포트 시 Z 상승이 이 값보다 크면 비행 보조
+    float TeleportFlyZThreshold = 120.0f; 	// 텔레포트 시 Z 상승이 이 값보다 크면 비행 보조
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
+	float AutoTrackTurnRateDeg = 540.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
+	float AutoTrackMoveSpeed = 900.0f;
 
+	
 private:
 	float ElapsedTime = 0.0f;
 	bool bDelegatesBound = false;
@@ -135,15 +136,14 @@ private:
 	float Damage = 30.0f;
 
 	int32 PendingMontageIndex = 0;
-	
+
+	FTimerHandle KnockbackTimerHandler;
     FTimerHandle ComboTimeHandler;
     FTimerHandle TraceTimeHandler;
 
-	TEnumAsByte<EMovementMode> PrevMovementMode;
-	
 	FVector DashStartLoc;
 	FVector DashTargetLoc;
 
-	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+    UPROPERTY()
+    class UDBSZEventManager* EventManager;
 };
