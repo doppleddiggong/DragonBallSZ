@@ -62,6 +62,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraResetTime = 5;
 
+
+	
 public:
 	UFUNCTION(BlueprintCallable)
 	void PlayerRotationLock();
@@ -79,4 +81,24 @@ public:
 	void ResetCameraRotation(float DeltaTime);
 
 	bool TargetDeadZoneCheck(const AActor &Target);
+
+
+public:// Event-Delegate
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnDash(AActor* Target, bool IsDashing);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnTeleport(AActor* Target);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAttack(AActor* Target, int ComboCount);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnSpecialAttack(AActor* Target, int32 SpecialIndex);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnGuard(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAvoid(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnPowerCharge(AActor* Target, bool bState);
+
+private:
+	class UDBSZEventManager* EventManager;
 };

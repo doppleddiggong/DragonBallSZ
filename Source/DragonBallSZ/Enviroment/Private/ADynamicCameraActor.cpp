@@ -5,6 +5,10 @@
 
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
+
+#include "DragonBallSZ.h"
+#include "UDBSZEventManager.h"
+
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -34,6 +38,17 @@ void ADynamicCameraActor::BeginPlay()
 	PlayerRef = Cast<APlayerActor>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerActor::StaticClass()));
 	TargetRef = Cast<AEnemyActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 
+	// 이벤트 매니저를 통한 이벤트 등록및 제어
+	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnDash.AddDynamic(this, &ADynamicCameraActor::OnDash);
+	EventManager->OnTeleport.AddDynamic(this, &ADynamicCameraActor::OnTeleport);
+	EventManager->OnAttack.AddDynamic(this, &ADynamicCameraActor::OnAttack);
+	EventManager->OnSpecialAttack.AddDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
+	EventManager->OnGuard.AddDynamic(this, &ADynamicCameraActor::OnGuard);
+	EventManager->OnAvoid.AddDynamic(this, &ADynamicCameraActor::OnAvoid);
+	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);
+
+	
 }
 
 // Called every frame
@@ -137,4 +152,66 @@ bool ADynamicCameraActor::TargetDeadZoneCheck(const AActor& Target)
 		return true;
 	}
 	return false;
+}
+
+
+
+void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing)
+{
+	if ( PlayerRef != Target )
+		return;
+
+	const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void ADynamicCameraActor::OnTeleport(AActor* Target)
+{
+	if ( PlayerRef != Target )
+		return;
+
+	PRINTLOG(TEXT("OnTeleport"));
+}
+
+void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
+{
+	if ( PlayerRef != Target )
+		return;
+
+	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
+}
+
+void ADynamicCameraActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
+{
+	if ( PlayerRef != Target )
+		return;
+
+	PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
+}
+
+void ADynamicCameraActor::OnGuard(AActor* Target, bool bState)
+{
+	if ( PlayerRef != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void ADynamicCameraActor::OnAvoid(AActor* Target, bool bState)
+{
+	if ( PlayerRef != Target )
+		return;
+
+	const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
+{
+	if ( PlayerRef != Target )
+		return;
+	
+	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
+	PRINTLOG(TEXT("%s"), PrintMsg);
 }
