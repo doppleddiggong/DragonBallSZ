@@ -34,7 +34,7 @@ private: // AnimNotify
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void InitSystem(class APlayerActor* InOwner);
+	void InitSystem(class ACombatCharacter* InOwner);
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
@@ -47,7 +47,7 @@ public:
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
 
-	FORCEINLINE void ResetCounter()	{ ComboCount = 0; }
+	FORCEINLINE void ResetCounter()	{ ComboCount = 0; bIsAttacking = false; }
 
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
@@ -71,7 +71,7 @@ public:
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class APlayerActor* Owner;
+	class ACombatCharacter* Owner;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
@@ -80,7 +80,7 @@ public:
 	class UCharacterMovementComponent* MoveComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
-	class AEnemyActor* Target;
+	class ACombatCharacter* Target;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
 	class UCharacterMovementComponent* TargetMoveComp;
 
@@ -93,11 +93,13 @@ public:
 	float TraceRadius  = 30.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
 	float TraceDrawTime = 1.5f;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	float ComboAttackTime = 1.0f;
+	float ComboResetTime = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	float MinAttackDelay = 0.75f;	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
@@ -127,15 +129,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
 	float AutoTrackMoveSpeed = 900.0f;
 
+
 	
 private:
 	float ElapsedTime = 0.0f;
+	float LastAttackTime = 0.0f;
 	bool bDelegatesBound = false;
 
 	int ComboCount = 0;
 	float Damage = 30.0f;
 
 	int32 PendingMontageIndex = 0;
+	TEnumAsByte<EMovementMode> PrevMovementMode;
 
 	FTimerHandle KnockbackTimerHandler;
     FTimerHandle ComboTimeHandler;

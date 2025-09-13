@@ -2,12 +2,10 @@
 
 #include "URushAttackSystem.h"
 
-#include "AEnemyActor.h"
-#include "APlayerActor.h"
-
 #include "UDBSZEventManager.h"
 #include "UDBSZDataManager.h"
 #include "TimerManager.h"
+#include "ACombatCharacter.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -107,14 +105,21 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (bInterrupted && Owner->IsHiting() )
+	if (bInterrupted && Owner->IsHitting() )
 	{
 		bIsAttacking = false;
 		ComboCount = 0;
 	}
+    // 몽타주가 정상적으로 끝났을 때 (중단되지 않았을 때)
+    if (!bInterrupted)
+    {
+        bIsAttacking = false;
+        ComboCount = 0;
+        Owner->RecoveryMovementMode(PrevMovementMode);
+    }
 }
 
-void URushAttackSystem::InitSystem(APlayerActor* InOwner)
+void URushAttackSystem::InitSystem(ACombatCharacter* InOwner)
 {
 	this->Owner = InOwner;
 
@@ -135,15 +140,21 @@ void URushAttackSystem::OnDashCompleted()
 	bIsDashing = false;
 	AnimInstance->Montage_Stop(0.1f, DashMontages);
 
-	if (Owner && !Owner->IsHit)
-	{
-		EventManager->SendDash(Owner, false);
+	if (!Owner->IsHit)
 		PlayMontage(PendingMontageIndex);
-	}
+
+	Owner->RecoveryMovementMode(PrevMovementMode);
+	EventManager->SendDash(Owner, false, FVector::ZeroVector );
 }
 
 void URushAttackSystem::OnAttack()
 {
+	if (0.f < LastAttackTime &&
+		GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
+	{
+		return;
+	}
+	
 	if (Owner->IsAttackEnable() == false )
         return;
 
@@ -219,6 +230,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 
 	bIsAttacking = true;
 
+	LastAttackTime = GetWorld()->GetTimeSeconds();
 	EventManager->SendAttack(Owner, MontageIndex);
 	
 	AnimInstance->Montage_Play(
@@ -233,7 +245,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		ComboTimeHandler,
 		this,
 		&URushAttackSystem::ResetCounter,
-		ComboAttackTime,
+		ComboResetTime,
 		false
 	);
 }
@@ -258,16 +270,17 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	// 대시 시작 위치와 목표 위치 저장
 	DashStartLoc = OwnerLoc;
 	DashTargetLoc = TargetDashWorld;
- 
+
 	bIsAttacking = true;
     bIsDashing = true;
 	
 	ElapsedTime = 0.0f;
     PendingMontageIndex = MontageIndex;
 
+	PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
 
-	EventManager->SendDash(Owner, true);
+	EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
     AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 
@@ -357,5 +370,6 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
         }
     }
 
-    PlayMontage(MontageIndex);
+	PrevMovementMode = MoveComp->MovementMode;
+	PlayMontage(MontageIndex);
 }

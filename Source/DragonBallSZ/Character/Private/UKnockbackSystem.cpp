@@ -2,11 +2,12 @@
 
 
 #include "UKnockbackSystem.h"
+#include "ACombatCharacter.h"
+
 #include "UDBSZDataManager.h"
 #include "FKnockbackData.h"
 #include "TimerManager.h"
 #include "UDBSZEventManager.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 static FORCEINLINE float Clamp01(float X){ return FMath::Clamp(X, 0.f, 1.f); }
@@ -28,7 +29,7 @@ void UKnockbackSystem::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-void UKnockbackSystem::InitSystem(ACharacter* InOwner)
+void UKnockbackSystem::InitSystem(ACombatCharacter* InOwner)
 {
     this->Owner = InOwner;
 	
