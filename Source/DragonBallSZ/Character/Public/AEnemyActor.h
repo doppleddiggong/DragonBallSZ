@@ -57,5 +57,9 @@ public: // Enemy Component
 
 private:
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;	
+	class UDBSZEventManager* EventManager;
+
+public:
+	UPROPERTY(EditAnywhere, Category=EnergyBlastFactory)
+	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
 };
