@@ -77,4 +77,7 @@ public:
 private:
 	UPROPERTY()
 	class UDBSZEventManager* EventManager;
+
+	UPROPERTY(EditAnywhere, Category=EnergyBlastFactory)
+	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
 };
