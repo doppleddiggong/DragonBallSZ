@@ -68,8 +68,8 @@ public:
 	EEnemyState SelectWeightedRandomState();	// EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 10.f},
-		{EEnemyState::Move, 10.f},
-		{EEnemyState::Attack, 70.f},
+		{EEnemyState::Move, 80.f},
+		{EEnemyState::Attack, 10.f},
 		{EEnemyState::Charge, 0.f},
 		{EEnemyState::Special, 0.f},
 	};
@@ -111,6 +111,10 @@ public:
 	void EnemyLose();
 
 	void SpawnEnergyBlast();
+	void SpawnEnergyBlastLoop(int32 Remaining);
+	FTimerHandle EnergyBlastTimer;
+	UPROPERTY(EditAnywhere)
+	float FireRate = 0.2f;
 	
 	void MoveBeizer();	// Beizer Move
 	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
@@ -128,6 +132,5 @@ public:
 	bool bMoving;
 	UPROPERTY(EditAnywhere)
 	bool bFlying = false;
-	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
 };

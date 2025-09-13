@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "EnergyBlastActor.generated.h"
 
+class USphereComponent;
+class UNiagaraSystem;
 class UBoxComponent;
 class UProjectileMovementComponent;
 class APlayerActor;
@@ -32,15 +34,15 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UBoxComponent> BoxComp;
+	TObjectPtr<USphereComponent> SphereComp;
 	UPROPERTY()
 	TObjectPtr<ACharacter> Target;
 	UPROPERTY()
 	TObjectPtr<ACharacter> Shooter;
 	
 	UPROPERTY(EditAnywhere, Category = "VFX")
-	TObjectPtr<UParticleSystem> Explosion; 
+	TObjectPtr<UNiagaraSystem> Explosion; 
 	
 	UPROPERTY(EditAnywhere)
-	float Speed = 1000;
+	float Speed = 4000;
 };

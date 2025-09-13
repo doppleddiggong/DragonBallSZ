@@ -9,6 +9,8 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Components/SphereComponent.h"
 
 
 // Sets default values
@@ -17,12 +19,12 @@ AEnergyBlastActor::AEnergyBlastActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
-	SetRootComponent(BoxComp);
+	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	SetRootComponent(SphereComp);
 
-	BoxComp->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
-	BoxComp->SetGenerateOverlapEvents(true);
-	BoxComp->SetCollisionProfileName(TEXT(""));
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+	SphereComp->SetGenerateOverlapEvents(true);
+	SphereComp->SetCollisionProfileName(TEXT(""));
 }
 
 void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -31,24 +33,37 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 {
 	if (Shooter->IsA(APlayerActor::StaticClass()))
 	{
-		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))
+		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
-			FString Str = FString::Printf(TEXT("Target: %s"), *TargetActor->GetName());
-			PRINTLOG(TEXT("%s"), *Str);
-			GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, Str);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				Explosion,
+				GetActorLocation(),
+				GetActorRotation(),
+				FVector(0.4f, 0.4f, 0.4f),
+				true,
+				true,
+				ENCPoolMethod::None,
+				true
+			);
 			this->Destroy();
 		}
 	}
 	else if (Shooter->IsA(AEnemyActor::StaticClass()))
 	{
-		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))
+		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
-			FString Str = FString::Printf(TEXT("Target: %s"), *TargetActor->GetName());
-			PRINTLOG(TEXT("%s"), *Str);
-			GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, Str);
-
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Explosion, this->GetActorLocation(),
-			                                         this->GetActorRotation(), FVector(1.1, 1.1, 1.1), true);
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				Explosion,
+				GetActorLocation(),
+				GetActorRotation(),
+				FVector(0.4f, 0.4f, 0.4f),
+				true,
+				true,
+				ENCPoolMethod::None,
+				true
+			);
 			this->Destroy();
 		}
 	}
@@ -62,21 +77,21 @@ void AEnergyBlastActor::BeginPlay()
 	Shooter = Cast<ACharacter>(GetOwner());
 	if (Shooter)
 	{
-		if (Shooter->IsA(APlayerActor::StaticClass()))
+		if (Shooter->IsA(APlayerActor::StaticClass()))	// Shooter: Player
 		{
-			// Player가 쏜 경우 → Enemy를 타겟
+			// Target: Enemy
 			Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 			ensureMsgf(Target, TEXT("AEnergyBlastActor: Target 캐스팅 실패! AEnemyActor 필요합니다!"));
 		}
-		else if (Shooter->IsA(AEnemyActor::StaticClass()))
+		else if (Shooter->IsA(AEnemyActor::StaticClass()))	// Shooter: Enemy
 		{
-			// Enemy가 쏜 경우 → Player를 타겟
+			// Target: Player
 			Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 			ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
 		}
 	}
 
-	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AEnergyBlastActor::OnOverlap);
+	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AEnergyBlastActor::OnOverlap);
 }
 
 // Called every frame

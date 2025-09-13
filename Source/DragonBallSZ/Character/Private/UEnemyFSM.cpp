@@ -65,7 +65,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		// 	MoveBeizer();
 		// 	return;
 		// }
-		
+
 		if (ElapsedMoving > MovingTime)
 		{
 			bMoving = false;
@@ -171,8 +171,14 @@ void UEnemyFSM::Idle()
 void UEnemyFSM::Move()
 {
 	// if (TargetDistance > LongDistance) TargetingDestination();
-	
+
 	CurrentMove = SelectWeightedRandomMove();
+
+	if (FMath::FRand() <= FireRate)
+	{
+		SpawnEnergyBlastLoop(FMath::RandRange(1, 6));
+	}
+	
 
 	switch (CurrentMove)
 	{
@@ -197,9 +203,8 @@ void UEnemyFSM::Move()
 void UEnemyFSM::Attack()
 {
 	bActing = true;
-	
-	SpawnEnergyBlast();
-	
+
+
 	PRINTINFO();
 	bActing = false;
 }
@@ -249,6 +254,26 @@ void UEnemyFSM::SpawnEnergyBlast()
 	);
 }
 
+void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
+{
+	if (Remaining <= 0) return;
+
+	SpawnEnergyBlast();
+	
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([this, Remaining]()
+	{
+		SpawnEnergyBlastLoop(Remaining - 1);
+	});
+
+	GetWorld()->GetTimerManager().SetTimer(
+		EnergyBlastTimer,
+		TimerDelegate,
+		0.17f,
+		false
+	);
+}
+
 void UEnemyFSM::MoveBeizer()
 {
 	// Flying
@@ -257,7 +282,7 @@ void UEnemyFSM::MoveBeizer()
 	{
 		return;
 	}
-	
+
 	CumulativeDistance += MoveSpeed * GetWorld()->GetDeltaSeconds();
 	float t = FindT(CumulativeDistance);
 	FVector Pos = Bezier(Origin, CenterControlPoint, Destination, t);
@@ -266,7 +291,7 @@ void UEnemyFSM::MoveBeizer()
 	FString DistStr = FString::Printf(TEXT("%.2f"), CumulativeDistance);
 	PRINTLOG(TEXT("%s"), *DistStr);
 	GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, DistStr);
-	
+
 	// Approach distance tolerance
 	if (ArcLength[Samples] < 10)
 	{
