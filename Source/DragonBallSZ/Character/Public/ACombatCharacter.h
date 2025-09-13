@@ -55,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Fly")
 	void SetFlying();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void RecoveryMovementMode(const EMovementMode InMovementMode);
 	
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")

@@ -83,6 +83,29 @@ void ACombatCharacter::SetFlying()
 	MoveComp->bOrientRotationToMovement = false;
 }
 
+void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
+{
+	if ( InMovementMode == MOVE_None)
+		return;
+	
+	auto Movement = this->GetCharacterMovement();
+
+	if ( InMovementMode == MOVE_Flying )
+	{
+		Movement->SetMovementMode( EMovementMode::MOVE_Flying );
+		this->bUseControllerRotationYaw = true;
+		this->bUseControllerRotationPitch = true;
+		Movement->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		Movement->SetMovementMode( InMovementMode );
+		this->bUseControllerRotationYaw = false;
+		this->bUseControllerRotationPitch = false;
+		Movement->bOrientRotationToMovement = true;
+	}
+}
+
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
 	if ( IsHit )

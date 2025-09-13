@@ -115,11 +115,7 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
     {
         bIsAttacking = false;
         ComboCount = 0;
-        if (MoveComp)
-        {
-        	// 이전 이동 모드 활성화
-            MoveComp->SetMovementMode(PrevMovementMode);
-        }
+        Owner->RecoveryMovementMode(PrevMovementMode);
     }
 }
 
@@ -144,16 +140,13 @@ void URushAttackSystem::OnDashCompleted()
 	bIsDashing = false;
 	AnimInstance->Montage_Stop(0.1f, DashMontages);
 
-	if (Owner && !Owner->IsHit)
+	if (!Owner->IsHit)
 	{
 		EventManager->SendDash(Owner, false);
 		PlayMontage(PendingMontageIndex);
 	}
-    // 대시 완료 후 이동 모드 활성화
-    if (MoveComp)
-    {
-        MoveComp->SetMovementMode(PrevMovementMode);
-    }
+
+	Owner->RecoveryMovementMode(PrevMovementMode);
 }
 
 void URushAttackSystem::OnAttack()
@@ -372,5 +365,6 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
         }
     }
 
-    PlayMontage(MontageIndex);
+	PrevMovementMode = MoveComp->MovementMode;
+	PlayMontage(MontageIndex);
 }
