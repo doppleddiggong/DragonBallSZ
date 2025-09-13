@@ -25,7 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Avoid")
 	void OnRestoreAvoid();
 	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnDash(AActor* Target, bool IsDashing);
+	void OnDash(AActor* Target, bool IsDashing, FVector Direction);
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnTeleport(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category="Event")

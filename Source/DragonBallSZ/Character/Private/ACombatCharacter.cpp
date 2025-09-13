@@ -75,12 +75,21 @@ void ACombatCharacter::OnFlyEnd_Implementation()
 void ACombatCharacter::SetFlying()
 {
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	
 	MoveComp->SetMovementMode(MOVE_Flying);
 
 	this->bUseControllerRotationYaw = true;
 	this->bUseControllerRotationPitch = true;
 	MoveComp->bOrientRotationToMovement = false;
+}
+
+void ACombatCharacter::SetFallingToWalk()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	MoveComp->SetMovementMode( EMovementMode::MOVE_Falling );
+
+	this->bUseControllerRotationYaw = false;
+	this->bUseControllerRotationPitch = false;
+	MoveComp->bOrientRotationToMovement = true;
 }
 
 void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)

@@ -2,8 +2,11 @@
 
 
 #include "UFlySystem.h"
+
+#include "UDBSZEventManager.h"
+#include "ACombatCharacter.h"
+
 #include "Features/UEaseFunctionLibrary.h"
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Shared/FEaseHelper.h"
 
@@ -24,6 +27,13 @@ void UFlySystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	UpstreamTick(DeltaTime);
 	DownstreamTick(DeltaTime);
 }
+void UFlySystem::InitSystem(class ACombatCharacter* InOwner, FEndCallback InCallback)
+{
+	this->Owner = InOwner;
+	this->Callback = InCallback;
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
+}
 
 void UFlySystem::OnJump()
 {
@@ -41,14 +51,9 @@ void UFlySystem::OnJump()
 
 	case 2:
 		{
-			auto Movement = Owner->GetCharacterMovement();
-
-			Movement->SetMovementMode( EMovementMode::MOVE_Flying );
 			this->ActivateUpstream();
 
-			Owner->bUseControllerRotationYaw = true;
-			Owner->bUseControllerRotationPitch = true;
-			Movement->bOrientRotationToMovement = false;
+			Owner->SetFlying();
 		}
 		break;
 
@@ -63,16 +68,10 @@ void UFlySystem::OnJump()
 
 void UFlySystem::OnLand(const FHitResult& Hit)
 {
-	auto Movement = Owner->GetCharacterMovement();
-	Movement->SetMovementMode( EMovementMode::MOVE_Falling );
-
+	Owner->SetFallingToWalk();
 	this->ActivateDownstream();
-	
-	Owner->bUseControllerRotationYaw = false;
-	Owner->bUseControllerRotationPitch = false;
-	Movement->bOrientRotationToMovement = true;
 
-	JumpCount = 0;;
+	JumpCount = 0;
 }
 
 
@@ -83,6 +82,8 @@ void UFlySystem::ActivateUpstream()
 
 	StartLocation = Owner->GetActorLocation();
 	EndLocation = StartLocation + FVector(0,0, UpstreamHeight);
+
+	EventManager->SendUpstream(Owner, true);
 }
 
 void UFlySystem::ActivateDownstream()
@@ -105,6 +106,8 @@ void UFlySystem::ActivateDownstream()
 
 	if ( bHit)
 		EndLocation = HitInfo.Location;
+
+	EventManager->SendDownstream(Owner, true);
 }
 
 void UFlySystem::UpstreamTick(float DeltaTime)
@@ -126,6 +129,8 @@ void UFlySystem::UpstreamTick(float DeltaTime)
 	{
 		bIsUpstream = false;
 		Owner->SetActorLocation(EndLocation, true);
+
+		EventManager->SendUpstream(Owner, false);
 	}
 }
 
@@ -149,6 +154,8 @@ void UFlySystem::DownstreamTick(float DeltaTime)
 		bIsDownstream = false;
 		Owner->SetActorLocation(EndLocation, true);
 
+		EventManager->SendDownstream(Owner, false);
+		
 		Callback.ExecuteIfBound();
 	}
 }

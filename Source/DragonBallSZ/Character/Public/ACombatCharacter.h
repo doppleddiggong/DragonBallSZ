@@ -55,6 +55,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Fly")
 	void SetFlying();
+	UFUNCTION(BlueprintCallable, Category="Fly")
+	void SetFallingToWalk();
 
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void RecoveryMovementMode(const EMovementMode InMovementMode);

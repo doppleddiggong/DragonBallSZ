@@ -96,7 +96,7 @@ void AEnemyActor::OnRestoreAvoid()
 	EventManager->SendAvoid(this, false);
 }
 
-void AEnemyActor::OnDash(AActor* Target, bool IsDashing)
+void AEnemyActor::OnDash(AActor* Target, bool IsDashing, FVector Direction )
 {
 	if ( this != Target )
 		return;

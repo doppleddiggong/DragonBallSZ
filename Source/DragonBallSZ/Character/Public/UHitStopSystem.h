@@ -21,7 +21,7 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
-	void InitSystem(ACharacter* InOwner);
+	void InitSystem(ACombatCharacter* InOwner);
 
 	UFUNCTION(BlueprintCallable, Category="HitStop")
 	void OnHitStop(AActor* Target, const EAttackPowerType Type);
@@ -35,7 +35,7 @@ private:
 
 private:
 	UPROPERTY()
-	class ACharacter* Owner;
+	class ACombatCharacter* Owner;
 	UPROPERTY()
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY()

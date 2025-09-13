@@ -89,7 +89,7 @@ void APlayerActor::OnRestoreAvoid()
 	EventManager->SendAvoid(this, false);
 }
 
-void APlayerActor::OnDash(AActor* Target, bool IsDashing)
+void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( this != Target )
 		return;

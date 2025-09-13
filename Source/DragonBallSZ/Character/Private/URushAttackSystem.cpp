@@ -142,7 +142,7 @@ void URushAttackSystem::OnDashCompleted()
 
 	if (!Owner->IsHit)
 	{
-		EventManager->SendDash(Owner, false);
+		EventManager->SendDash(Owner, false, FVector::ZeroVector );
 		PlayMontage(PendingMontageIndex);
 	}
 
@@ -265,7 +265,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	// 대시 시작 위치와 목표 위치 저장
 	DashStartLoc = OwnerLoc;
 	DashTargetLoc = TargetDashWorld;
- 
+
 	bIsAttacking = true;
     bIsDashing = true;
 	
@@ -275,7 +275,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
 
-	EventManager->SendDash(Owner, true);
+	EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
     AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 

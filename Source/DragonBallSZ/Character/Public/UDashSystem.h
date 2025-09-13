@@ -22,33 +22,28 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Dash")
-	void InitSystem(ACharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem);
+	void InitSystem(ACombatCharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem);
 
 	UFUNCTION(BlueprintCallable, Category="Dash")
-	FORCEINLINE void ActivateEffect(bool bState)
-	{
-		if ( ActivateState == bState )
-			return;
+	void ActivateEffect(const bool bState);
 
-		ActivateState = bState;
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnUpstream(AActor* Target, bool bState);
 
-		if (bState)
-			NiagaraComp->Activate(true);
-		else
-			NiagaraComp->Deactivate();
-	}
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnDownstream(AActor* Target, bool bState);
+
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnDash(AActor* Target, bool bState, FVector Direction);
 
 public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
-	class ACharacter* Owner;
+	class ACombatCharacter* Owner;
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
 	class UNiagaraComponent* NiagaraComp = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Dash")
-	float DashActivateScale = 1.25f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Dash")
 	float DashActivateValue = 1000.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Dash")

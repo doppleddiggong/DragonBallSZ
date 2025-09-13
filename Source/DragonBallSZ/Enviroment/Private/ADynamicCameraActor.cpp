@@ -156,7 +156,7 @@ bool ADynamicCameraActor::TargetDeadZoneCheck(const AActor& Target)
 
 
 
-void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing)
+void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( PlayerRef != Target )
 		return;
