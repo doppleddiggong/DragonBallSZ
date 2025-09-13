@@ -141,12 +141,10 @@ void URushAttackSystem::OnDashCompleted()
 	AnimInstance->Montage_Stop(0.1f, DashMontages);
 
 	if (!Owner->IsHit)
-	{
-		EventManager->SendDash(Owner, false, FVector::ZeroVector );
 		PlayMontage(PendingMontageIndex);
-	}
 
 	Owner->RecoveryMovementMode(PrevMovementMode);
+	EventManager->SendDash(Owner, false, FVector::ZeroVector );
 }
 
 void URushAttackSystem::OnAttack()

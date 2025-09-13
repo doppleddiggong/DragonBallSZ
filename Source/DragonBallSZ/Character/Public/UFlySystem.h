@@ -56,6 +56,9 @@ public:
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Fly")
 	class ACombatCharacter* Owner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fly")
+	float AlmostDist = 50.0f;
 	
 private:
 	UPROPERTY()
@@ -67,6 +70,7 @@ private:
 	FVector EndLocation;
 
 	int JumpCount = 0;
+
 
 	UPROPERTY()
 	class UDBSZEventManager* EventManager;

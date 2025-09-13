@@ -6,9 +6,9 @@
 #include "UDBSZEventManager.h"
 #include "ACombatCharacter.h"
 
-#include "Features/UEaseFunctionLibrary.h"
-#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Shared/FEaseHelper.h"
+#include "Features/UEaseFunctionLibrary.h"
 
 UFlySystem::UFlySystem()
 {
@@ -105,7 +105,14 @@ void UFlySystem::ActivateDownstream()
 		ECC_Visibility, CollisionParam);
 
 	if ( bHit)
-		EndLocation = HitInfo.Location;
+		{
+			const float CapsuleHalfHeight = Owner->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+			EndLocation = HitInfo.Location + FVector(0, 0, CapsuleHalfHeight);
+		}
+	else
+	{
+		EndLocation = TempEndPos;
+	}
 
 	EventManager->SendDownstream(Owner, true);
 }
@@ -125,7 +132,7 @@ void UFlySystem::UpstreamTick(float DeltaTime)
 	Owner->SetActorLocation(ResultLocation, true);
 
 	float Dist = FVector::Dist(  Owner->GetActorLocation(), EndLocation );
-	if ( Dist < 10.0f || ElapsedTime > UpstreamDuration )
+	if ( Dist < AlmostDist || ElapsedTime > UpstreamDuration )
 	{
 		bIsUpstream = false;
 		Owner->SetActorLocation(EndLocation, true);
@@ -149,7 +156,7 @@ void UFlySystem::DownstreamTick(float DeltaTime)
 	Owner->SetActorLocation(ResultLocation, true);
 
 	float Dist = FVector::Dist( Owner->GetActorLocation(), EndLocation );
-	if ( Dist < 10.0f || ElapsedTime > DownstreamDuration )
+	if ( Dist < AlmostDist || ElapsedTime > DownstreamDuration )
 	{
 		bIsDownstream = false;
 		Owner->SetActorLocation(EndLocation, true);
@@ -159,4 +166,3 @@ void UFlySystem::DownstreamTick(float DeltaTime)
 		Callback.ExecuteIfBound();
 	}
 }
-

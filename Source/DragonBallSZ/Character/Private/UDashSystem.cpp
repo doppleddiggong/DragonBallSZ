@@ -1,6 +1,5 @@
 ﻿// Copyright (c) 2025 Doppleddiggong. All rights reserved. Unauthorized copying, modification, or distribution of this file, via any medium is strictly prohibited. Proprietary and confidential.
 
-
 #include "UDashSystem.h"
 
 #include "ACombatCharacter.h"
@@ -14,23 +13,6 @@
 UDashSystem::UDashSystem()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-}
-
-void UDashSystem::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void UDashSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	float MoveSpeed = Owner->GetVelocity().Length();
-
-	if ( MoveSpeed > DashActivateValue )
-		PRINTLOG( TEXT("Dash Activate : %f, %f"), MoveSpeed, DashActivateValue);
-	
-	this->ActivateEffect(MoveSpeed > DashActivateValue);
 }
 
 void UDashSystem::InitSystem(ACombatCharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem)
@@ -80,6 +62,9 @@ void UDashSystem::OnUpstream(AActor* Target, bool bState)
 {
 	if( Target != Owner )
 		return;
+
+	if ( bState )
+		NiagaraComp->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
 	
 	ActivateEffect(bState);
 }
@@ -89,6 +74,9 @@ void UDashSystem::OnDownstream(AActor* Target, bool bState)
 	if( Target != Owner )
 		return;
 
+	if ( bState )
+		NiagaraComp->SetRelativeRotation(FRotator(-90.0f, 0.0f, 0.0f));
+	
 	ActivateEffect(bState);
 }
 
@@ -97,5 +85,6 @@ void UDashSystem::OnDash(AActor* Target, bool bState, FVector Direction)
 	if( Target != Owner )
 		return;
 
+	NiagaraComp->SetRelativeRotation( Direction.Rotation() );
 	ActivateEffect(bState);
 }
