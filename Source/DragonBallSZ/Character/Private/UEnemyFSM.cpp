@@ -8,9 +8,11 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
+#include "EnergyBlastActor.h"
 #include "VectorTypes.h"
 #include "Features/UEaseFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Runtime/MovieSceneTracks/Private/MovieSceneTracksCustomAccessors.h"
 #include "Shared/FEaseHelper.h"
 
 UEnemyFSM::UEnemyFSM()
@@ -22,12 +24,12 @@ void UEnemyFSM::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//Target = Cast<APlayerActor>(GetWorld()->GetFirstPlayerController());
-
 	Itself = Cast<AEnemyActor>(GetOwner());
 
 	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
+
+	EnergyBlast = Cast<AEnergyBlastActor>(UGameplayStatics::GetActorOfClass(GetWorld(),AEnergyBlastActor::StaticClass()));
 }
 
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -92,10 +94,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// Distance between Target
 	TargetDistance = FVector::Dist(Itself->GetActorLocation(), Target->GetActorLocation());
-	// 현재 상태 출력
-	FString DistStr = FString::Printf(TEXT("%.2f"), TargetDistance);
-	PRINTLOG(TEXT("%s"), *DistStr);
-	GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, DistStr);
 
 	CurrentTime += DeltaTime;
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
@@ -201,7 +199,12 @@ void UEnemyFSM::Move()
 void UEnemyFSM::Attack()
 {
 	bActing = true;
+	
+	AEnergyBlastActor::SpawnEnergyBlast(GetWorld(),Itself,Itself->GetActorTransform());
+	
+	
 	PRINTINFO();
+	bActing = false;
 }
 
 void UEnemyFSM::Charge()

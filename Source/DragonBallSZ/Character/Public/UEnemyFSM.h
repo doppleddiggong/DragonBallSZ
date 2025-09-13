@@ -68,8 +68,8 @@ public:
 	EEnemyState SelectWeightedRandomState();	// EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 10.f},
-		{EEnemyState::Move, 150.f},
-		{EEnemyState::Attack, 0.f},
+		{EEnemyState::Move, 10.f},
+		{EEnemyState::Attack, 70.f},
 		{EEnemyState::Charge, 0.f},
 		{EEnemyState::Special, 0.f},
 	};
@@ -128,4 +128,8 @@ public:
 	bool bFlying = false;
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
+
+
+	UPROPERTY(EditAnywhere)
+	class AEnergyBlastActor* EnergyBlast;
 };
