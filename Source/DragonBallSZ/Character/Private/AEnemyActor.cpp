@@ -46,7 +46,7 @@ void AEnemyActor::BeginPlay()
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	
 
 	// ActorComponent 초기화
-	StatSystem->InitStat(true);
+	StatSystem->InitStat(false);
 	RushAttackSystem->InitSystem(this);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
