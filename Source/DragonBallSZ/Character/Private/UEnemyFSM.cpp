@@ -200,8 +200,15 @@ void UEnemyFSM::Attack()
 {
 	bActing = true;
 	
-	AEnergyBlastActor::SpawnEnergyBlast(GetWorld(),Itself,Itself->GetActorTransform());
-	
+	FActorSpawnParameters Params;
+	Params.Owner = Itself;
+	Params.Instigator = Itself;
+
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		Itself->EnergyBlastFactory.Get(),
+		Itself->GetActorTransform(),
+		Params
+	);
 	
 	PRINTINFO();
 	bActing = false;
