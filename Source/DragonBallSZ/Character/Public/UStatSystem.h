@@ -22,6 +22,12 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE bool IsPlayer()
+	{
+		return bIsPlayer;
+	}
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void InitStat(bool IsPlayer);	
 	
@@ -31,6 +37,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	bool DecreaseHealth(float InDamagePoint);	
 
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	bool bIsPlayer = false;

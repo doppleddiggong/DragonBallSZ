@@ -11,6 +11,8 @@
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
 
+#include "DragonBallSZ.h"
+
 #include "Components/ArrowComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -49,15 +51,27 @@ void ACombatCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-	{
-		// EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
-	}
+		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
 }
 
-void ACombatCharacter::OnRecvMessage(const FString& InMsg)
+void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 		bIsCombatStart = true;
+	else if ( InMsg == GameEvent::PlayerWin )
+	{
+		bIsCombatResult = true;
+		bIsWinner = this->IsPlayer();
+
+		PRINT_STRING(TEXT("WINNER IS PLAYER"));
+	}
+	else if ( InMsg == GameEvent::EnemyWin )
+	{
+		bIsCombatResult = true;
+		bIsWinner = this->IsEnemy();
+
+		PRINT_STRING(TEXT("ENEMY IS PLAYER"));
+	}
 }
 
 void ACombatCharacter::Tick(float DeltaTime)
@@ -130,8 +144,12 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
-	if ( !IsCombatStart() )
+	if ( IsCombatStart() == false || IsCombatResult())
+	{
+		// 전투 시작 전
+		// 전투 결과 후
 		return false;
+	}
 	
 	if ( IsHit )
 		return false;

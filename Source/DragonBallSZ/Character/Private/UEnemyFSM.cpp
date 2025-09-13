@@ -36,6 +36,14 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	if (bDefeated) return; // Return if the Game is Over
 
+	if (Itself->IsCombatStart() == false ||
+		Itself->IsCombatResult() )
+	{
+		// 전투 시작전
+		// 전투 결과후
+		return;
+	}
+	
 	if (CurrentState == EEnemyState::Damaged)
 	{
 		void Damaged();

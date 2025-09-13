@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "EBodyPartType.h"
+#include "UStatSystem.h"
 #include "ACombatCharacter.generated.h"
 
 UCLASS()
@@ -33,6 +34,37 @@ public:
 		}
 	}
 
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsCombatStart() const
+	{
+		return bIsCombatStart;
+	};
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsCombatResult() const
+	{
+		return bIsCombatResult;
+	};
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsPlayer() const
+	{
+		return StatSystem->IsPlayer();
+	};
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsEnemy() const
+	{
+		return StatSystem->IsPlayer() == false;
+	};
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsWinner() const
+	{
+		return bIsWinner;
+	};
+	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
@@ -48,15 +80,10 @@ public:
 	UFUNCTION(BlueprintPure, Category="Player|Sight")
 	bool IsInSight(const AActor* Other) const;
 
-	UFUNCTION(BlueprintPure, Category="CombatStart")
-	FORCEINLINE bool IsCombatStart() const
-	{
-		return true;
-		// return bIsCombatStart;
-	};
-
+	
+	
 	UFUNCTION(BlueprintCallable, Category="Command")
-	void OnRecvMessage(const FString& InMsg);
+	void OnRecvMessage(FString InMsg);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void OnLookTarget();
@@ -120,6 +147,12 @@ protected:
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatStart")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsCombatStart = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
+	bool bIsCombatResult = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
+	bool bIsWinner = false;
 };
