@@ -24,10 +24,20 @@ enum class EEnemyState : uint8
 	EnemyLose UMETA(DisplayName = "EnemyLoseState"),
 };
 
+UENUM(BlueprintType)
+enum class EMoveInputType : uint8
+{
+	Forward UMETA(DisplayName = "MoveForward"),
+	Backward UMETA(DisplayName = "MoveBackward"),
+	Left UMETA(DisplayName = "MoveLeft"),
+	Right UMETA(DisplayName = "MoveRight"),
+};
+
+
 // MoveType
 // (Sub State of ActDecision)
 UENUM(BlueprintType)
-enum class SpecialType : uint8
+enum class ESpecialType : uint8
 {
 	Kamehameha UMETA(DisplayName = "Kamehameha"),
 	ReleaseKi UMETA(DisplayName = "ReleaseKnockbackKi"),
@@ -55,24 +65,52 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	// EEnemyState Weights
-	EEnemyState SelectWeightedRandomState();
+	EEnemyState SelectWeightedRandomState();	// EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 10.f},
-		{EEnemyState::Move, 150.f},
-		{EEnemyState::Attack, 10.f},
-		{EEnemyState::Charge, 10.f},
+		{EEnemyState::Move, 10.f},
+		{EEnemyState::Attack, 70.f},
+		{EEnemyState::Charge, 0.f},
 		{EEnemyState::Special, 0.f},
 	};
 	EEnemyState CurrentState = EEnemyState::Idle;
+	void ChangeState(EEnemyState NewState);
 	bool bDamaged = false;
 	bool bDefeated = false;
 	bool bActing = false;
 	float CurrentTime = 0;
-	float DecisionTime = 1.5f;
+	float ElapsedMoving = 0;
+	float DecisionTime = 1.f;
+	float MovingTime;
+	float TargetDistance;
+	UPROPERTY(EditAnywhere)
+	float LongDistance = 2000;
 	
 	void Idle();
+	
 	void Move();
+	EMoveInputType SelectWeightedRandomMove();	// EEnemyState Weights
+	TArray<TPair<EMoveInputType, float>> Moves = {
+		{EMoveInputType::Forward, 150.f},
+		{EMoveInputType::Backward, 20.f},
+		{EMoveInputType::Left, 90.f},
+		{EMoveInputType::Right, 90.f},
+	};
+	EMoveInputType CurrentMove;
+	
+	void Attack();
+	
+	void Charge();
+	
+	void Special();
+	
+	void Damaged();
+	
+	void EnemyWin();
+	
+	void EnemyLose();
+	
+	void MoveBeizer();	// Beizer Move
 	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
 	TArray<float> ArcLength;
 	int Samples;
@@ -80,7 +118,7 @@ public:
 	float FindT(float s);
 	float CumulativeDistance = 0;
 	void TargetingDestination();
-	float TargetDistance;
+	float DestinationDistance;
 	FVector Origin;
 	FVector Destination;
 	FVector CenterControlPoint;
@@ -90,15 +128,8 @@ public:
 	bool bFlying = false;
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
-	void Attack();
-	void Charge();
-	void Special();
-	void Damaged();
-	void EnemyWin();
-	void EnemyLose();
 
-	UPROPERTY(EditAnywhere, Category="TestTarget")
-	TSubclassOf<AActor> TestFactory;
-	UPROPERTY()
-	TObjectPtr<AActor> TestTarget;
+
+	UPROPERTY(EditAnywhere)
+	class AEnergyBlastActor* EnergyBlast;
 };
