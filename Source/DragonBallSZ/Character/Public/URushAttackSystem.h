@@ -47,7 +47,7 @@ public:
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
 
-	FORCEINLINE void ResetCounter()	{ ComboCount = 0; }
+	FORCEINLINE void ResetCounter()	{ ComboCount = 0; bIsAttacking = false; }
 
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
@@ -137,6 +137,7 @@ private:
 	float Damage = 30.0f;
 
 	int32 PendingMontageIndex = 0;
+	TEnumAsByte<EMovementMode> PrevMovementMode;
 
 	FTimerHandle KnockbackTimerHandler;
     FTimerHandle ComboTimeHandler;

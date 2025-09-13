@@ -110,6 +110,17 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 		bIsAttacking = false;
 		ComboCount = 0;
 	}
+    // 몽타주가 정상적으로 끝났을 때 (중단되지 않았을 때)
+    if (!bInterrupted)
+    {
+        bIsAttacking = false;
+        ComboCount = 0;
+        if (MoveComp)
+        {
+        	// 이전 이동 모드 활성화
+            MoveComp->SetMovementMode(PrevMovementMode);
+        }
+    }
 }
 
 void URushAttackSystem::InitSystem(ACombatCharacter* InOwner)
@@ -138,6 +149,11 @@ void URushAttackSystem::OnDashCompleted()
 		EventManager->SendDash(Owner, false);
 		PlayMontage(PendingMontageIndex);
 	}
+    // 대시 완료 후 이동 모드 활성화
+    if (MoveComp)
+    {
+        MoveComp->SetMovementMode(PrevMovementMode);
+    }
 }
 
 void URushAttackSystem::OnAttack()
@@ -263,6 +279,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	ElapsedTime = 0.0f;
     PendingMontageIndex = MontageIndex;
 
+	PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
 
 	EventManager->SendDash(Owner, true);
