@@ -47,6 +47,16 @@ public:
 	bool IsAttackIng();
 	UFUNCTION(BlueprintPure, Category="Player|Sight")
 	bool IsInSight(const AActor* Other) const;
+
+	UFUNCTION(BlueprintPure, Category="CombatStart")
+	FORCEINLINE bool IsCombatStart() const
+	{
+		return true;
+		// return bIsCombatStart;
+	};
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void OnRecvMessage(const FString& InMsg);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void OnLookTarget();
@@ -109,4 +119,7 @@ protected:
 	
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatStart")
+	bool bIsCombatStart = false;
 };
