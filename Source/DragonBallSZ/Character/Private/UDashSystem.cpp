@@ -21,7 +21,7 @@ void UDashSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	float MoveSpeed =  Owner->GetVelocity().Length();
+	float MoveSpeed = Owner->GetVelocity().Length();
 
 	this->ActivateEffect(MoveSpeed > DashActivateValue);
 }

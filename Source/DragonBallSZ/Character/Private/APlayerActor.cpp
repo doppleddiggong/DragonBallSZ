@@ -2,65 +2,40 @@
 
 
 #include "APlayerActor.h"
-#include "AEnemyActor.h"
 
-#include "Core/Macro.h"
-
-#include "DragonBallSZ.h"
-#include "UDBSZEventManager.h"
-
+// CombatCharacter Shared
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
+#include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
-#include "UKnockbackSystem.h"
-// #include "TimerManager.h"
-#include "Components/ArrowComponent.h"
+
+// PlayerActor Only
+#include "AEnemyActor.h"
+
+// Shared
+#include "Core/Macro.h"
+#include "DragonBallSZ.h"
+#include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetMathLibrary.h"
 
 APlayerActor::APlayerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
-	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
-
-	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
-	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
-	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
-	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
-	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
-
-	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
-	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightHandComp"));
-	RightHandComp->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	RightHandComp->SetRelativeRotation(FRotator(0, -180.f, 0.f));
-
-	LeftFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootComp"));
-	LeftFootComp->SetupAttachment(GetMesh(), TEXT("foot_l"));
-	LeftFootComp->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
-	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
-	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
-	
 	bUseControllerRotationYaw = true;
-	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	if (auto* Movecomp = GetCharacterMovement())
 	{
-		Move->bOrientRotationToMovement = false;
+		Movecomp->bOrientRotationToMovement = false;
 
 		// 플라잉 모드 미끄러짐 방지 설정
 		// 높은 값으로 설정하여 즉시 멈추도록 함
-		Move->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
+		Movecomp->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
     
 		// 추가적으로 마찰력도 조정 가능
-		Move->BrakingFriction = 4.0f; // 기본값 0.0f
+		Movecomp->BrakingFriction = 4.0f; // 기본값 0.0f
 	}
 }
 
@@ -68,9 +43,10 @@ void APlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// PlayerActor Only
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
-
+	
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this);
@@ -80,7 +56,7 @@ void APlayerActor::BeginPlay()
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
 
-	// 이벤트 매니저를 통한 이벤트 등록및 제어
+	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
 	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
@@ -89,8 +65,28 @@ void APlayerActor::BeginPlay()
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
-
 	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+}
+
+void APlayerActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if ( RushAttackSystem->ShouldLookAtTarget())
+		this->OnLookTarget();
+}
+
+void APlayerActor::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (FlySystem)
+		FlySystem->OnLand(Hit);
+}
+
+void APlayerActor::OnRestoreAvoid()
+{
+	EventManager->SendAvoid(this, false);
 }
 
 void APlayerActor::OnDash(AActor* Target, bool IsDashing)
@@ -152,128 +148,9 @@ void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 	PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
-void APlayerActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-
-    if ( RushAttackSystem->ShouldLookAtTarget())
-        this->OnLookTarget();
-}
-
-void APlayerActor::Landed(const FHitResult& Hit)
-{
-	Super::Landed(Hit);
-
-	if (FlySystem)
-		FlySystem->OnLand(Hit);
-}
-
-bool APlayerActor::IsControlEnable_Implementation()
-{
-	if ( IsHit )
-		return false;
-
-	if ( StatSystem->IsDead )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsMoveEnable_Implementation()
-{
-	if ( !IsControlEnable() )
-		return false;
-
-	if ( IsAttackIng() )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsAttackEnable_Implementation()
-{
-	if ( IsHit )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsHiting_Implementation()
-{
-	return IsHit;
-}
-
-bool APlayerActor::IsAttackIng_Implementation()
-{
-	return RushAttackSystem->IsAttackIng();
-}
 
 
-bool APlayerActor::IsInSight(const AActor* Other) const
-{
-	const FVector SelfLoc = GetActorLocation();
-	const FVector OtherLoc = Other->GetActorLocation();
-	const FVector ToOther = OtherLoc - SelfLoc;
 
-	const float Dist = ToOther.Size();
-	if (Dist > SightRange)
-		return false;
-
-	const FVector Fwd = GetActorForwardVector();
-	const float CosHalfFOV = FMath::Cos(FMath::DegreesToRadians(SightHalfFOVDeg));
-	const float CosAngle = FVector::DotProduct(Fwd, ToOther.GetSafeNormal());
-	if (CosAngle < CosHalfFOV)
-		return false;
-
-	FHitResult Hit;
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(PlayerSightLOS), false, this);
-
-	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		SelfLoc + FVector(0,0,50),
-		OtherLoc + FVector(0,0,50),
-		ECC_Visibility,
-		Params
-	);
-    
-	if (bBlocked && Hit.GetActor() != Other)
-		return false;
-	
-	return true;
-}
-
-void APlayerActor::OnLookTarget_Implementation()
-{
-	if (!TargetActor)
-		return;
-
-	const FVector TargetLoc = TargetActor->GetActorLocation();
-	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
-	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
-
-	SetActorRotation(NewRot);
-}
-
-void APlayerActor::OnFlyEnd_Implementation()
-{
-	DashSystem->ActivateEffect(false);
-}
-
-void APlayerActor::OnRestoreAvoid()
-{
-	EventManager->SendAvoid(this, false);
-}
-
-void APlayerActor::SetFlying()
-{
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	
-	MoveComp->SetMovementMode(MOVE_Flying);
-
-	this->bUseControllerRotationYaw = true;
-	this->bUseControllerRotationPitch = true;
-	MoveComp->bOrientRotationToMovement = false;
-}
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
@@ -382,5 +259,3 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 
 	EventManager->SendSpecialAttack(this, 1);
 }
-
-

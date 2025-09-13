@@ -3,12 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EBodyPartType.h"
-#include "GameFramework/Character.h"
+#include "ACombatCharacter.h"
 #include "AEnemyActor.generated.h"
 
 UCLASS()
-class DRAGONBALLSZ_API AEnemyActor : public ACharacter
+class DRAGONBALLSZ_API AEnemyActor : public ACombatCharacter
 {
 	GENERATED_BODY()
 
@@ -18,73 +17,45 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+public:
+	virtual void Tick(float DeltaTime) override;
+	virtual void Landed(const FHitResult& Hit) override;
+	
+public:
+	UFUNCTION(BlueprintCallable, Category="Avoid")
+	void OnRestoreAvoid();
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnDash(AActor* Target, bool IsDashing);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnTeleport(AActor* Target);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAttack(AActor* Target, int ComboCount);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnSpecialAttack(AActor* Target, int32 SpecialIndex);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnGuard(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnAvoid(AActor* Target, bool bState);
+	UFUNCTION(BlueprintCallable, Category="Event")
+	void OnPowerCharge(AActor* Target, bool bState);
+
 	UFUNCTION(BlueprintCallable, Category="Enemy")
 	void OnSightDetect(bool Target);
 
-public:
-	virtual void Tick(float DeltaTime) override;
-
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* LeftHandComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* RightHandComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* LeftFootComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* RightFootComp;
-
-public:
-	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
-	{
-		switch (Part)
-		{
-		case EBodyPartType::Hand_L: return LeftHandComp;
-		case EBodyPartType::Hand_R: return RightHandComp;
-		case EBodyPartType::Foot_L: return LeftFootComp;
-		case EBodyPartType::Foot_R: return RightFootComp;
-		default:	return LeftHandComp;
-		}
-	}
-
-	UFUNCTION(BlueprintCallable, Category="Enemy|Attack")
-	void GetBodyLocation(USceneComponent* SceneComp, FVector& OutStart, FVector& OutEnd) const;
 	
-public: // Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
-	class UStatSystem* StatSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UHitStopSystem* HitStopSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UKnockbackSystem* KnockbackSystem;
+public: // Enemy Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class USightSystem* SightSystem;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UEnemyFSM* EnemyFSM;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class UEnemyAnimInstance* AnimBP;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
 	class AEnemyAIController* AIEnemy;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
-	class APlayerActor* TargetActor;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
-	bool IsHit = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
 	float RotateLerpSpeed = 5.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
-	float TraceLength  = 30.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
-	float TraceRadius  = 30.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy|Attack")
-	float TraceDrawTime = 1.5f;
+private:
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;	
 };
-
-
-

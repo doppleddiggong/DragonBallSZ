@@ -2,12 +2,10 @@
 
 #include "URushAttackSystem.h"
 
-#include "AEnemyActor.h"
-#include "APlayerActor.h"
-
 #include "UDBSZEventManager.h"
 #include "UDBSZDataManager.h"
 #include "TimerManager.h"
+#include "ACombatCharacter.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -107,14 +105,14 @@ void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingP
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (bInterrupted && Owner->IsHiting() )
+	if (bInterrupted && Owner->IsHitting() )
 	{
 		bIsAttacking = false;
 		ComboCount = 0;
 	}
 }
 
-void URushAttackSystem::InitSystem(APlayerActor* InOwner)
+void URushAttackSystem::InitSystem(ACombatCharacter* InOwner)
 {
 	this->Owner = InOwner;
 

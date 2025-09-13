@@ -34,7 +34,7 @@ private: // AnimNotify
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void InitSystem(class APlayerActor* InOwner);
+	void InitSystem(class ACombatCharacter* InOwner);
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
@@ -71,7 +71,7 @@ public:
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class APlayerActor* Owner;
+	class ACombatCharacter* Owner;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
@@ -80,7 +80,8 @@ public:
 	class UCharacterMovementComponent* MoveComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
-	class AEnemyActor* Target;
+	class ACombatCharacter* Target;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
 	class UCharacterMovementComponent* TargetMoveComp;
 
