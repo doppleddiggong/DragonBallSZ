@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "EnergyBlastActor.generated.h"
 
+class UBoxComponent;
 class UProjectileMovementComponent;
 class APlayerActor;
 
@@ -20,6 +21,8 @@ public:
 
 
 protected:
+	UFUNCTION()
+	void OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -28,13 +31,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UBoxComponent> BoxComp;
 	UPROPERTY()
 	TObjectPtr<ACharacter> Target;
 	UPROPERTY()
 	TObjectPtr<ACharacter> Shooter;
 	
-	static AEnergyBlastActor* SpawnEnergyBlast(UWorld* World, ACharacter* Shooter, const FTransform& SpawnTransform);
-
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<UParticleSystem> Explosion; 
+	
 	UPROPERTY(EditAnywhere)
-	float Speed = 500;
+	float Speed = 1000;
 };

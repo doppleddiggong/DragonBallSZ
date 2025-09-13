@@ -28,8 +28,6 @@ void UEnemyFSM::BeginPlay()
 
 	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
-
-	EnergyBlast = Cast<AEnergyBlastActor>(UGameplayStatics::GetActorOfClass(GetWorld(),AEnergyBlastActor::StaticClass()));
 }
 
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -200,15 +198,7 @@ void UEnemyFSM::Attack()
 {
 	bActing = true;
 	
-	FActorSpawnParameters Params;
-	Params.Owner = Itself;
-	Params.Instigator = Itself;
-
-	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		Itself->EnergyBlastFactory.Get(),
-		Itself->GetActorTransform(),
-		Params
-	);
+	SpawnEnergyBlast();
 	
 	PRINTINFO();
 	bActing = false;
@@ -244,6 +234,19 @@ void UEnemyFSM::EnemyLose()
 {
 	bDefeated = true;
 	PRINTINFO();
+}
+
+void UEnemyFSM::SpawnEnergyBlast()
+{
+	FActorSpawnParameters Params;
+	Params.Owner = Itself;
+	Params.Instigator = Itself;
+
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		Itself->EnergyBlastFactory,
+		Itself->GetActorTransform(),
+		Params
+	);
 }
 
 void UEnemyFSM::MoveBeizer()

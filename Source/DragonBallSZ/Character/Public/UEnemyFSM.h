@@ -109,6 +109,8 @@ public:
 	void EnemyWin();
 	
 	void EnemyLose();
+
+	void SpawnEnergyBlast();
 	
 	void MoveBeizer();	// Beizer Move
 	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
@@ -128,8 +130,4 @@ public:
 	bool bFlying = false;
 	UPROPERTY(EditAnywhere)
 	float MoveSpeed;
-
-
-	UPROPERTY(EditAnywhere)
-	class AEnergyBlastActor* EnergyBlast;
 };
