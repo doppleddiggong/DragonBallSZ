@@ -81,7 +81,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
 	class ACombatCharacter* Target;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
 	class UCharacterMovementComponent* TargetMoveComp;
 
@@ -94,11 +93,13 @@ public:
 	float TraceRadius  = 30.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")
 	float TraceDrawTime = 1.5f;
-	
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	float ComboAttackTime = 1.0f;
+	float ComboResetTime = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	float MinAttackDelay = 0.75f;	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	TArray<UAnimMontage*> AttackMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
@@ -128,9 +129,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
 	float AutoTrackMoveSpeed = 900.0f;
 
+
 	
 private:
 	float ElapsedTime = 0.0f;
+	float LastAttackTime = 0.0f;
 	bool bDelegatesBound = false;
 
 	int ComboCount = 0;
