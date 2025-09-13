@@ -149,6 +149,12 @@ void URushAttackSystem::OnDashCompleted()
 
 void URushAttackSystem::OnAttack()
 {
+	if (0.f < LastAttackTime &&
+		GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
+	{
+		return;
+	}
+	
 	if (Owner->IsAttackEnable() == false )
         return;
 
@@ -224,6 +230,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 
 	bIsAttacking = true;
 
+	LastAttackTime = GetWorld()->GetTimeSeconds();
 	EventManager->SendAttack(Owner, MontageIndex);
 	
 	AnimInstance->Montage_Play(
@@ -238,7 +245,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		ComboTimeHandler,
 		this,
 		&URushAttackSystem::ResetCounter,
-		ComboAttackTime,
+		ComboResetTime,
 		false
 	);
 }

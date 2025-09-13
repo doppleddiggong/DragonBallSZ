@@ -31,69 +31,73 @@ void UEnemyFSM::BeginPlay()
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	// CurrentTime += DeltaTime;
-	//
-	// if (bDamaged) // 피격 중에는 선택하지 않는다.
-	// {
-	// 	return;
-	// }
-	// else if (CurrentState == EEnemyState::Damaged) // 피격 시 행동 취소
-	// {
-	// 	void Damaged();
-	// 	return;
-	// }
-	//
-	// if (bDefeated)
-	// {
-	// 	return;
-	// }
-	// else if (CurrentState == EEnemyState::EnemyWin)
-	// {
-	// 	void EnemyWin();
-	// 	return;
-	// }
-	// else if (CurrentState == EEnemyState::EnemyLose)
-	// {
-	// 	void EnemyLose();
-	// 	return;
-	// }
-	//
-	// if (bActing) // 행동 수행 중에는 선택하지 않는다.
-	// {
-	// 	return;
-	// }
-	//
-	// if (CurrentTime > DecisionTime) // 시간이 됐으면 행동을 선택한다.
-	// {
-	// 	return;
-	// }
-	// CurrentTime = 0;
-	//
-	// // States.Add({EEnemyState::Act, 100.f});	// 가중치 추가
-	// if (!bMoving)
-	// {
-	// 	CurrentState = SelectWeightedRandomState();
-	// }
-	//
-	// switch (CurrentState)
-	// {
-	// case EEnemyState::Idle:
-	// 	Idle();
-	// 	break;
-	// case EEnemyState::Move:
-	// 	TargetingDestination();
-	// 	Move();
-	// 	break;
-	// case EEnemyState::Attack:
-	// 	Attack();
-	// 	break;
-	// case EEnemyState::Charge:
-	// 	Charge();
-	// 	break;
-	// case EEnemyState::Special:
-	// 	Special();
-	// 	break;
-	// }
+
+	if ( !Itself->IsCombatStart() )
+		return;
+	
+	CurrentTime += DeltaTime;
+	
+	if (bDamaged) // 피격 중에는 선택하지 않는다.
+	{
+		return;
+	}
+	else if (CurrentState == EEnemyState::Damaged) // 피격 시 행동 취소
+	{
+		void Damaged();
+		return;
+	}
+	
+	if (bDefeated)
+	{
+		return;
+	}
+	else if (CurrentState == EEnemyState::EnemyWin)
+	{
+		void EnemyWin();
+		return;
+	}
+	else if (CurrentState == EEnemyState::EnemyLose)
+	{
+		void EnemyLose();
+		return;
+	}
+	
+	if (bActing) // 행동 수행 중에는 선택하지 않는다.
+	{
+		return;
+	}
+	
+	if (CurrentTime > DecisionTime) // 시간이 됐으면 행동을 선택한다.
+	{
+		return;
+	}
+	CurrentTime = 0;
+	
+	// States.Add({EEnemyState::Act, 100.f});	// 가중치 추가
+	if (!bMoving)
+	{
+		CurrentState = SelectWeightedRandomState();
+	}
+	
+	switch (CurrentState)
+	{
+	case EEnemyState::Idle:
+		Idle();
+		break;
+	case EEnemyState::Move:
+		TargetingDestination();
+		Move();
+		break;
+	case EEnemyState::Attack:
+		Attack();
+		break;
+	case EEnemyState::Charge:
+		Charge();
+		break;
+	case EEnemyState::Special:
+		Special();
+		break;
+	}
 }
 
 EEnemyState UEnemyFSM::SelectWeightedRandomState()

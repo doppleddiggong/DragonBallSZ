@@ -2,10 +2,12 @@
 
 #include "ACombatCharacter.h"
 
+#include "GameEvent.h"
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
+#include "UDBSZEventManager.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
 
@@ -45,6 +47,17 @@ ACombatCharacter::ACombatCharacter()
 void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+	{
+		// EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+	}
+}
+
+void ACombatCharacter::OnRecvMessage(const FString& InMsg)
+{
+	if ( InMsg == GameEvent::CombatStart )
+		bIsCombatStart = true;
 }
 
 void ACombatCharacter::Tick(float DeltaTime)
@@ -117,6 +130,9 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
+	if ( !IsCombatStart() )
+		return false;
+	
 	if ( IsHit )
 		return false;
 

@@ -52,6 +52,11 @@ void ACombatLevelScript::GameStart()
 		true,
 		0.0f 
 	);
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+	{
+		EventManager->SendMessage( GameEvent::CombatStart.ToString() );
+	}
 }
 
 void ACombatLevelScript::OnTimerTick()
