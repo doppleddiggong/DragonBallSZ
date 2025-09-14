@@ -77,6 +77,7 @@ public:
 	void ChangeState(EEnemyState NewState);
 	bool bDamaged = false;
 	bool bDefeated = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stop")
 	bool bActing = false;
 	float CurrentTime = 0;
 	float ElapsedMoving = 0;
