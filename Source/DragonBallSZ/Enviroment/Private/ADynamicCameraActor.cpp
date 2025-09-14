@@ -56,31 +56,59 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CurrentDistance = FVector::Dist(PlayerRef->GetActorLocation(), TargetRef->GetActorLocation());
-	// if (!PlayerRef->GetCharacterMovement()->IsFlying())
-	// {
-	// }
+	if (!PlayerRef || !TargetRef)
+	{
+		return;
+	}
 
-		PlayerRotationLock();
+	CurrentDistance = FVector::Dist(PlayerRef->GetActorLocation(), TargetRef->GetActorLocation());
+
+	PlayerRotationLock();
+
+	// 근접 상태일 때는 이전과 동일하게 플레이어 등 뒤를 따라갑니다.
 	if (CurrentDistance < TargetDistance)
 	{
-		CloseCameraRotation(DeltaTime);
 		ResetCameraLocation(DeltaTime);
+		CloseCameraRotation(DeltaTime);
 	}
+	// 원거리 상태일 때의 로직
 	else
 	{
-		if (TargetDeadZoneCheck(*PlayerRef))
+		// ✅ 이 프레임에서 카메라를 리셋해야 하는지 결정할 변수
+		bool bShouldResetCameraNow = false;
+
+		// 조건 1: 플레이어가 카메라-타겟 직선에서 너무 멀리 벗어났는가?
+		if (ShouldResetByAlignment())
 		{
-			ResetCameraLocation(DeltaTime);
-			if (TargetDeadZoneCheck(*TargetRef))
+			bShouldResetCameraNow = true;
+		}
+
+		// 조건 2: (위 조건에 해당하지 않을 때) 플레이어가 앞 또는 뒤로 움직이는가?
+		if (!bShouldResetCameraNow)
+		{
+			const FVector PlayerVelocity = PlayerRef->GetVelocity();
+			if (!PlayerVelocity.IsNearlyZero())
 			{
-				ResetCameraRotation(DeltaTime);
+				const FVector DirectionToTarget = (TargetRef->GetActorLocation() - PlayerRef->GetActorLocation()).GetSafeNormal();
+				const float ForwardDot = FVector::DotProduct(PlayerVelocity.GetSafeNormal(), DirectionToTarget);
+				
+				// 전후방 움직임 감지
+				if (FMath::Abs(ForwardDot) > 0.5f)
+				{
+					bShouldResetCameraNow = true;
+				}
 			}
 		}
-		else
+		
+		// ✅ 위 조건 중 하나라도 만족하면 카메라를 움직입니다.
+		if (bShouldResetCameraNow)
 		{
-			ResetCameraForwardLocation(DeltaTime);
+			// 카메라를 플레이어 등 뒤로 부드럽게 이동시킵니다.
+			ResetCameraLocation(DeltaTime);
+			CloseCameraRotation(DeltaTime);
 		}
+		// 모든 조건에 해당하지 않으면(예: 얼라인먼트 안에서 옆으로 움직일 때)
+		// 카메라는 완벽하게 고정됩니다.
 	}
 }
 
@@ -99,9 +127,11 @@ void ADynamicCameraActor::CloseCameraRotation(float DeltaTime)
 
 void ADynamicCameraActor::ResetCameraLocation(float DeltaTime)
 {
-	FVector PlayerLocation = PlayerRef->GetActorLocation();
-	FVector TargetLocation = TargetRef->GetActorLocation();
-	FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * 300) + FVector(0, 0, 100), DeltaTime, 5);
+	// ✅ 타겟 가림 회피가 적용된 최종 목표 위치를 가져옵니다.
+	FVector TargetCameraLocation = GetAvoidanceAdjustedCameraLocation();
+	
+	// 목표 위치로 부드럽게 이동합니다.
+	FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), TargetCameraLocation, DeltaTime, 5.f);
 	SetActorLocation(NewLocation);
 }
 
@@ -144,17 +174,76 @@ bool ADynamicCameraActor::TargetDeadZoneCheck(const AActor& Target)
 	}
 	
 	FVector2D ScreenPos;
-
-	bool result = UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), Target.GetActorLocation(), ScreenPos, true );
-
-	if (MinX < ScreenPos.X || MaxX > ScreenPos.X || MinY < ScreenPos.Y || MaxY > ScreenPos.Y)
+	if (!UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), Target.GetActorLocation(), ScreenPos, true))
 	{
 		return true;
 	}
-	return false;
+	
+	FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(GetWorld());
+	
+	// 뷰포트 크기가 0이 되어 나누기 오류가 발생하는 것을 방지합니다.
+	if (ViewportSize.X < 1.f || ViewportSize.Y < 1.f)
+	{
+		return false;
+	}
+	
+	ScreenPos.X /= ViewportSize.X;
+	ScreenPos.Y /= ViewportSize.Y;
+
+	// 캐릭터가 데드존 '밖'에 있는지 확인합니다.
+	if (ScreenPos.X < MinX || ScreenPos.X > MaxX || ScreenPos.Y < MinY || ScreenPos.Y > MaxY)
+	{
+		return true; // 데드존 밖에 있으므로 true를 반환
+	}
+
+	return false; // 데드존 안에 있으므로 false를 반환
 }
 
+bool ADynamicCameraActor::ShouldResetByAlignment() const
+{
+	// 계산에 필요한 세 지점의 위치를 가져옵니다.
+	const FVector CameraLocation = GetActorLocation();
+	const FVector PlayerLocation = PlayerRef->GetActorLocation();
+	const FVector TargetLocation = TargetRef->GetActorLocation();
 
+	// 카메라->타겟 벡터와 카메라->플레이어 벡터를 계산합니다.
+	const FVector CamToTarget = TargetLocation - CameraLocation;
+	const FVector CamToPlayer = PlayerLocation - CameraLocation;
+
+	// 두 벡터의 외적(Cross Product)을 이용해 플레이어와 직선 사이의 거리를 계산합니다.
+	// 거리 = |(카메라->플레이어) X (카메라->타겟)| / |카메라->타겟|
+	const float Distance = FVector::CrossProduct(CamToPlayer, CamToTarget).Size() / CamToTarget.Size();
+
+	// 계산된 거리가 설정된 임계값보다 크면 true를 반환합니다.
+	return Distance > AlignmentResetThreshold;
+}
+
+FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
+{
+	FVector PlayerLocation = PlayerRef->GetActorLocation();
+	FVector TargetLocation = TargetRef->GetActorLocation();
+
+	// 1. 기본 목표 위치를 계산합니다 (플레이어의 등 뒤).
+	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * 300) + FVector(0, 0, 100);
+
+	// 2. 이 '기본 위치'에서 플레이어와 타겟이 일직선인지 확인합니다.
+	FVector DirToPlayer = (PlayerLocation - BaseCameraLocation).GetSafeNormal();
+	FVector DirToTarget = (TargetLocation - BaseCameraLocation).GetSafeNormal();
+	float AlignmentDot = FVector::DotProduct(DirToPlayer, DirToTarget);
+
+	// 3. 만약 일직선에 가깝다면 (Dot Product 결과가 임계값보다 크다면)
+	if (AlignmentDot > ObstructionDotThreshold)
+	{
+		// 4. 카메라의 '오른쪽' 방향 벡터를 계산합니다.
+		FVector RightVector = FVector::CrossProduct(DirToPlayer, FVector::UpVector).GetSafeNormal();
+
+		// 5. 기본 위치에 '오른쪽' 벡터와 오프셋 거리를 곱한 값을 더해 목표 위치를 보정합니다.
+		BaseCameraLocation += RightVector * ObstructionAvoidanceOffset;
+	}
+
+	// 6. 최종적으로 계산된 목표 위치를 반환합니다.
+	return BaseCameraLocation;
+}
 
 void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing)
 {
