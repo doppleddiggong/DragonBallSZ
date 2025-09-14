@@ -2,15 +2,15 @@
 
 #include "ACombatCharacter.h"
 
-#include "GameEvent.h"
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
 #include "UDashSystem.h"
-#include "UDBSZEventManager.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
 
+#include "GameEvent.h"
+#include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 
 #include "Components/ArrowComponent.h"

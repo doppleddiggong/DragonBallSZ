@@ -6,11 +6,10 @@
 #include "UCombatUI.h"
 #include "UDBSZEventManager.h"
 #include "Blueprint/UserWidget.h"
+#include "Features/UDelayTaskManager.h"
 #include "Shared/FComponentHelper.h"
 
 #define COMBAT_WIDGET_PATH TEXT("/Game/CustomContents/UI/WB_Combat.WB_Combat_C")
-
-class UCombatUI;
 
 ACombatLevelScript::ACombatLevelScript()
 {
@@ -53,9 +52,13 @@ void ACombatLevelScript::GameStart()
 		0.0f 
 	);
 
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+	if ( auto DelayTaskManager = UDelayTaskManager::Get(GetWorld()) )
 	{
-		EventManager->SendMessage( GameEvent::CombatStart.ToString() );
+		DelayTaskManager->Delay(this, CombatStartDelay, [this]()
+		{
+			if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+				EventManager->SendMessage( GameEvent::CombatStart.ToString() );
+		});
 	}
 }
 
