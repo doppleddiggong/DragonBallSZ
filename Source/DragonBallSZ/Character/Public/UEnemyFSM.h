@@ -31,6 +31,7 @@ enum class EMoveInputType : uint8
 	Backward UMETA(DisplayName = "MoveBackward"),
 	Left UMETA(DisplayName = "MoveLeft"),
 	Right UMETA(DisplayName = "MoveRight"),
+	Jump UMETA(DisplayName = "Jump&Fly"),
 };
 
 
@@ -51,7 +52,7 @@ class DRAGONBALLSZ_API UEnemyFSM : public UActorComponent
 
 public:
 	UEnemyFSM();
-	
+
 	UPROPERTY()
 	TObjectPtr<APlayerActor> Target;
 	UPROPERTY()
@@ -65,7 +66,9 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	EEnemyState SelectWeightedRandomState();	// EEnemyState Weights
+	// States.Add({EEnemyState::Move, 100.f});	// 가중치 추가
+	void ModifyWeightArray();
+	EEnemyState SelectWeightedRandomState(); // EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 10.f},
 		{EEnemyState::Move, 80.f},
@@ -80,34 +83,35 @@ public:
 	bool bActing = false;
 	float CurrentTime = 0;
 	float ElapsedMoving = 0;
-	float DecisionTime = 1.f;
+	float DecisionTime = 0.8f;
 	float MovingTime;
 	float TargetDistance;
 	UPROPERTY(EditAnywhere)
-	float LongDistance = 2000;
-	
+	float LongDistance = 4500;
+
 	void Idle();
-	
+
 	void Move();
-	EMoveInputType SelectWeightedRandomMove();	// EEnemyState Weights
+	EMoveInputType SelectWeightedRandomMove(); // EEnemyState Weights
 	TArray<TPair<EMoveInputType, float>> Moves = {
-		{EMoveInputType::Forward, 150.f},
-		{EMoveInputType::Backward, 20.f},
-		{EMoveInputType::Left, 90.f},
-		{EMoveInputType::Right, 90.f},
+		{EMoveInputType::Forward, 90.f},
+		{EMoveInputType::Backward, 10.f},
+		{EMoveInputType::Left, 50.f},
+		{EMoveInputType::Right, 50.f},
+		{EMoveInputType::Jump, 0.f},
 	};
 	EMoveInputType CurrentMove;
-	
+
 	void Attack();
-	
+
 	void Charge();
-	
+
 	void Special();
-	
+
 	void Damaged();
-	
+
 	void EnemyWin();
-	
+
 	void EnemyLose();
 
 	void SpawnEnergyBlast();
@@ -115,9 +119,11 @@ public:
 	FTimerHandle EnergyBlastTimer;
 	UPROPERTY(EditAnywhere)
 	float FireRate = 0.2f;
-	
-	void MoveBeizer();	// Beizer Move
+
+	void ActivateDashVFX(bool Active);
+	void CheckToLand();
 	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
+	void BeizerMove();
 	TArray<float> ArcLength;
 	int Samples;
 	void BuildTable(FVector A, FVector P, FVector B);
@@ -125,12 +131,9 @@ public:
 	float CumulativeDistance = 0;
 	void TargetingDestination();
 	float DestinationDistance;
-	FVector Origin;
 	FVector Destination;
+	FVector OriginLocation;
 	FVector CenterControlPoint;
-	UPROPERTY(EditAnywhere)
 	bool bMoving;
-	UPROPERTY(EditAnywhere)
-	bool bFlying = false;
-	float MoveSpeed;
+	float MoveSpeed = 1700.f;
 };

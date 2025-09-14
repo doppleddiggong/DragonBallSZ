@@ -45,7 +45,9 @@ public:
 	TObjectPtr<ACharacter> Shooter;
 	
 	UPROPERTY(EditAnywhere, Category = "VFX")
-	TObjectPtr<UNiagaraSystem> Explosion; 
+	TObjectPtr<UNiagaraSystem> Explosion;
+
+	void SpawnExplosionVFX();
 	
 	UPROPERTY(EditAnywhere)
 	float Speed = 4000;
