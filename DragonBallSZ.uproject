@@ -37,7 +37,7 @@
   ],
   "PreBuildSteps": {
     "Windows": [
-      "cmd /c \"$(ProjectDir)Tools\\RunDevLogPy.cmd\""
+      "powershell -NoProfile -ExecutionPolicy Bypass -File \"$(ProjectDir)Tools\\run_generate_daily_devlog_once.ps1\" -BackfillDays 30 -BuildSummary"
     ]
   }
 }

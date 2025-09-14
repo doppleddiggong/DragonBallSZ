@@ -1,8 +1,8 @@
-﻿## 30-Day Briefing 2025-09-11
+## 30-Day Briefing 2025-09-14
 
 ### Overview / 개요
-- Daily files: 30 (last 30 days)
-- 일자 파일 수: 30 (최근 30일)
+- Daily files: 28 (last 30 days)
+- 일자 파일 수: 28 (최근 30일)
 - TODO outstanding (est.): 0
 - TODO 미완료(추정): 0
 
