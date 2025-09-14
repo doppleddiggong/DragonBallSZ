@@ -17,6 +17,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
 ACombatCharacter::ACombatCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -78,8 +79,8 @@ void ACombatCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if ( RushAttackSystem->ShouldLookAtTarget())
-		this->OnLookTarget();
+	// if ( RushAttackSystem->ShouldLookAtTarget())
+	// 	this->OnLookTarget();
 }
 
 void ACombatCharacter::OnLookTarget_Implementation()

@@ -48,6 +48,12 @@ public:
 	void SendHitStopPair(AActor* Attacker, const EAttackPowerType AttackerType,
 						 AActor* Target,   const EAttackPowerType TargetType);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCameraShake, AActor*, Target, EAttackPowerType, Type);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCameraShake OnCameraShake;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendCameraShake(AActor* Target, const EAttackPowerType Type);
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnKnockback,
 		AActor*,		   Target,

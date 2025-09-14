@@ -33,6 +33,11 @@ void UDBSZEventManager::SendHitStopPair(
 	OnHitStop.Broadcast(Target,   TargetType);
 }
 
+void UDBSZEventManager::SendCameraShake(AActor* Target, const EAttackPowerType Type)
+{
+	OnCameraShake.Broadcast(Target, Type);
+}
+
 void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
 	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);

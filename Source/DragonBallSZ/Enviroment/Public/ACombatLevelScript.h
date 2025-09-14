@@ -25,7 +25,7 @@ private:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GameState")
-	float CombatStartDelay = 3.0f;
+	float CombatStartDelay = 0.5f;
 
 	
 	UPROPERTY(EditDefaultsOnly, Category="UI")

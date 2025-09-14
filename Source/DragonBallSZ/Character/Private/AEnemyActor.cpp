@@ -9,6 +9,7 @@
 #include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
+#include "UCharacterData.h"
 
 // EnemyActor Only
 #include "AEnemyAIController.h"
@@ -22,15 +23,24 @@
 #include "UDBSZEventManager.h"
 #include "Kismet/GameplayStatics.h"
 
+#define VEGE_DATA	TEXT("/Game/CustomContents/MasterData/Vege_Data.Vege_Data")
+
+
 AEnemyActor::AEnemyActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	EnemyFSM			= CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
 	SightSystem			= CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
-	
+
 	AutoPossessAI   = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AEnemyAIController::StaticClass();
+
+	{
+		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( VEGE_DATA );
+		if (CD.Succeeded())
+			CharacterData = CD.Object;
+	}
 }
 
 void AEnemyActor::BeginPlay()
@@ -47,7 +57,7 @@ void AEnemyActor::BeginPlay()
 
 	// ActorComponent 초기화
 	StatSystem->InitStat(false);
-	RushAttackSystem->InitSystem(this);
+	RushAttackSystem->InitSystem(this, CharacterData);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashNiagaraSystem);

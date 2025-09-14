@@ -22,7 +22,10 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Landed(const FHitResult& Hit) override;
-	
+
+public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
+	class UCameraShakeSystem* CameraShakeSystem;
 
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")

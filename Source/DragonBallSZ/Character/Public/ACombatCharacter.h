@@ -155,4 +155,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
+	class UCharacterData* CharacterData = nullptr;
 };

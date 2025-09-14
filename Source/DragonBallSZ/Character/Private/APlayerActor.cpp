@@ -10,9 +10,11 @@
 #include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
+#include "UCharacterData.h"
 
 // PlayerActor Only
 #include "AEnemyActor.h"
+#include "UCameraShakeSystem.h"
 
 // Shared
 #include "Core/Macro.h"
@@ -22,9 +24,19 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+#define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
+
 APlayerActor::APlayerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	CameraShakeSystem = CreateDefaultSubobject<UCameraShakeSystem>(TEXT("CameraShakeSystem"));
+
+	{
+		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
+		if (CD.Succeeded())
+			CharacterData = CD.Object;
+	}
 
 	bUseControllerRotationYaw = true;
 	if (auto* Movecomp = GetCharacterMovement())
@@ -47,10 +59,12 @@ void APlayerActor::BeginPlay()
 	// PlayerActor Only
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
-	
+
+	CameraShakeSystem->InitSystem(this);	
+
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
-	RushAttackSystem->InitSystem(this);
+	RushAttackSystem->InitSystem(this, CharacterData);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashNiagaraSystem);
@@ -280,6 +294,8 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 		LastBlastShotTime = GetWorld()->GetTimeSeconds();
 		BlastShotRechargeTime = 0.0f;
 
+		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+		
 		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
 	}
 	else
