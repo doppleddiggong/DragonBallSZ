@@ -19,6 +19,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="Utils|Array", meta=(CompactNodeTitle="RandElem", ArrayParm="TargetArray", ArrayTypeDependentParams="ReturnValue"))
 	static int32 GetRandomIndex(const TArray<int32>& TargetArray, bool& bIsValid);
+
+	UFUNCTION(BlueprintPure, Category="Utils|Array", meta=(CompactNodeTitle="RandElem", ArrayParm="TargetArray", ArrayTypeDependentParams="ReturnValue"))
+	static UAnimMontage* GetRandomMontage(const TArray<UAnimMontage*>& Montages);
 	
 	UFUNCTION(BlueprintPure, Category = "CoffeeLibrary|Utilities", meta = (DisplayName = "NowTimestamp"))
 	static int64 GetNowTimestamp();	

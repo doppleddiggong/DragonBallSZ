@@ -6,6 +6,9 @@
 #include "UDBSZDataManager.h"
 #include "TimerManager.h"
 #include "ACombatCharacter.h"
+#include "UCharacterData.h"
+
+#include "DragonBallSZ.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -93,7 +96,6 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 
 	bDelegatesBound = false;
 }
-
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
 	bIsAttacking = false;
@@ -119,7 +121,7 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
     }
 }
 
-void URushAttackSystem::InitSystem(ACombatCharacter* InOwner)
+void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* InData)
 {
 	this->Owner = InOwner;
 
@@ -132,13 +134,23 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner)
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 
+	if (IsValid(InData))
+	{
+		InData->LoadRushAttackMontage(AttackMontages, AttackPowerType);
+		InData->LoadDashMontage(DashMontage);
+	}
+	else
+	{
+		PRINTLOG( TEXT("InitSystem: InData is not valid."));
+	}
+	
 	BindMontageDelegates(AnimInstance);
 }
 
 void URushAttackSystem::OnDashCompleted()
 {
 	bIsDashing = false;
-	AnimInstance->Montage_Stop(0.1f, DashMontages);
+	AnimInstance->Montage_Stop(0.1f, DashMontage);
 
 	if (!Owner->IsHit)
 		PlayMontage(PendingMontageIndex);
@@ -281,7 +293,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	MoveComp->DisableMovement();
 
 	EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
-    AnimInstance->Montage_Play(DashMontages, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+    AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 
 void URushAttackSystem::TeleportToTarget(int32 MontageIndex)

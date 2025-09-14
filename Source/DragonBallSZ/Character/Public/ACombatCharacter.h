@@ -77,10 +77,10 @@ public:
 	bool IsHitting();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsAttackIng();
-	UFUNCTION(BlueprintPure, Category="Player|Sight")
+	UFUNCTION(BlueprintPure, Category="Character|Sight")
 	bool IsInSight(const AActor* Other) const;
-
-	
+	UFUNCTION(BlueprintCallable, Category="Character|Montage")
+	UAnimMontage* GetRandomHitAnim();
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void OnRecvMessage(FString InMsg);
@@ -113,10 +113,10 @@ public: // Combat Character ShaderComp
 	class UFlySystem* FlySystem;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	class ACombatCharacter* TargetActor;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	bool IsHit = false;
 
 protected:
@@ -128,9 +128,6 @@ protected:
 	class UArrowComponent* LeftFootComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
 	class UArrowComponent* RightFootComp;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
-	TObjectPtr<class UNiagaraSystem> DashNiagaraSystem = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character|Sight", meta=(ClampMin="0"))
 	float SightRange = 1200.0f;
@@ -143,9 +140,6 @@ protected:
 	float TraceRadius  = 30.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character|Trace")
 	float TraceDrawTime = 1.5f;
-	
-	FTimerHandle AvoidTimer;
-	float AvoidTime = 1.0f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsCombatStart = false;
@@ -155,4 +149,21 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
+
+	FTimerHandle AvoidTimer;
+	float AvoidTime = 1.0f;
+	
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
+	class UCharacterData* CharacterData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
+	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<class UNiagaraSystem> DashVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TArray<TObjectPtr<UAnimMontage>> HitMontages;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> DeathMontage;
 };

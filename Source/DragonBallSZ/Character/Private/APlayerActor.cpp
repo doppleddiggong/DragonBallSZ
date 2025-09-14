@@ -10,9 +10,11 @@
 #include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
+#include "UCharacterData.h"
 
 // PlayerActor Only
 #include "AEnemyActor.h"
+#include "UCameraShakeSystem.h"
 
 // Shared
 #include "Core/Macro.h"
@@ -21,10 +23,21 @@
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
 
 APlayerActor::APlayerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	CameraShakeSystem = CreateDefaultSubobject<UCameraShakeSystem>(TEXT("CameraShakeSystem"));
+
+	{
+		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
+		if (CD.Succeeded())
+			CharacterData = CD.Object;
+	}
 
 	bUseControllerRotationYaw = true;
 	if (auto* Movecomp = GetCharacterMovement())
@@ -47,13 +60,21 @@ void APlayerActor::BeginPlay()
 	// PlayerActor Only
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
+
+	// AsyncLoad
+	CharacterData->LoadHitMontage(HitMontages);
+	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
 	
+	CameraShakeSystem->InitSystem(this);	
+
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
-	RushAttackSystem->InitSystem(this);
+	RushAttackSystem->InitSystem(this, CharacterData);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
-	DashSystem->InitSystem(this, DashNiagaraSystem);
+	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
 
@@ -166,15 +187,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
-	// if (Controller)
-	// {
-	// 	// Move By Control
-	// 	// const FRotator ControlRot = Controller->GetControlRotation();
-	// 	// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-	// 	// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-	// 	// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
-	// }
-
 	{
 		// Move By Actor
 		const FVector Forward = GetActorForwardVector();
@@ -183,6 +195,70 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		AddMovementInput(Forward, Axis.Y);
 		AddMovementInput(Right,   Axis.X);
 	}
+	
+	// const FRotator ActorRot = GetActorRotation();
+	//
+	// auto MoveComp = GetCharacterMovement();
+	// if ( MoveComp->MovementMode == MOVE_Walking || MoveComp->MovementMode == MOVE_Falling )
+	// {
+	// 	// Right : XZ
+	// 	// Forward : Z
+	// 	UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
+	// 	UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
+	// }
+	// else if ( MoveComp->MovementMode == MOVE_Flying )
+	// {
+	// 	// Right : YZ
+	// 	// Forward : YZ
+	// 	UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
+	// 	UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
+	// }
+
+	
+	
+	// const FRotator YawOnly(0.f, ActorRot.Yaw, 0.f);
+	// const FVector Fwd_Yaw   = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::X);
+	// const FVector Right_Yaw = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::Y);
+	//
+	// // 모드별 방향 선택
+	// FVector FwdDir  = FVector::ZeroVector;
+	// FVector RightDir= FVector::ZeroVector;
+	//
+	// switch (Move->MovementMode)
+	// {
+	// case MOVE_Flying:
+	// 	FwdDir   = GetActorForwardVector(); // 피치 포함
+	// 	RightDir = GetActorRightVector();
+	// 	break;
+	//
+	// case MOVE_Walking:
+	// case MOVE_NavWalking:
+	// case MOVE_Falling:
+	// case MOVE_Swimming:
+	// default:
+	// 	FwdDir   = Fwd_Yaw;                 // 피치 제거
+	// 	RightDir = Right_Yaw;
+	// 	break;
+	// }
+	//
+	// // 좌우
+	// if (FMath::Abs(AxisY) > KINDA_SMALL_NUMBER && !RightDir.IsNearlyZero())
+	// {
+	// 	AddMovementInput(RightDir, AxisY);
+	// }
+	//
+	// // 전후
+	// if (FMath::Abs(AxisX) > KINDA_SMALL_NUMBER && !FwdDir.IsNearlyZero())
+	// {
+	// 	AddMovementInput(FwdDir, AxisX);
+	// }
+	//
+	// // 수직(입력이 있을 때만, 비행/수영에서만)
+	// if (FMath::Abs(AxisZ) > KINDA_SMALL_NUMBER &&
+	// 	(Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming))
+	// {
+	// 	AddMovementInput(FVector::UpVector, AxisZ);
+	// }
 }
 
 void APlayerActor::Cmd_Look_Implementation(const FVector2D& Axis)
@@ -280,6 +356,8 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 		LastBlastShotTime = GetWorld()->GetTimeSeconds();
 		BlastShotRechargeTime = 0.0f;
 
+		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+		
 		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
 	}
 	else

@@ -31,10 +31,10 @@ private: // AnimNotify
 
 	void BindMontageDelegates(UAnimInstance* Anim);
 	void UnbindMontageDelegates(UAnimInstance* Anim);
-	
+
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void InitSystem(class ACombatCharacter* InOwner);
+	void InitSystem(class ACombatCharacter* InOwner, class UCharacterData* InData);
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
@@ -100,16 +100,10 @@ public:
 	float ComboResetTime = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	float MinAttackDelay = 0.75f;	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	TArray<UAnimMontage*> AttackMontages;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	TArray<EAttackPowerType> AttackPowerType;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
 	bool bIsDashing = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
-	UAnimMontage* DashMontages = nullptr;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.05", ClampMax="3.0", AllowPrivateAccess="true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.05", ClampMax="3.0", AllowPrivateAccess="true"))
     float DashDuration = 0.5f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
@@ -151,4 +145,9 @@ private:
 
     UPROPERTY()
     class UDBSZEventManager* EventManager;
+
+	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
+	TArray<EAttackPowerType> AttackPowerType;
+	
+	TObjectPtr<UAnimMontage> DashMontage;
 };
