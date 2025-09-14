@@ -152,53 +152,6 @@ void ADynamicCameraActor::ResetCameraRotation(float DeltaTime)
 	SetActorRotation(NewRotation);
 }
 
-bool ADynamicCameraActor::TargetDeadZoneCheck(const AActor& Target)
-{
-	const ACombatCharacter* TargetIsPlayer = Cast<ACombatCharacter>(&Target);
-
-	float MinX, MaxX, MinY, MaxY;
-	
-	if (TargetIsPlayer)
-	{
-		MinX = DeadZonePlayer_X_Min;
-		MaxX = DeadZonePlayer_X_Max;
-		MinY = DeadZonePlayer_Y_Min;
-		MaxY = DeadZonePlayer_Y_Max;
-	}
-	else
-	{
-		MinX = DeadZoneTarget_X_Min;
-		MaxX = DeadZoneTarget_X_Max;
-		MinY = DeadZoneTarget_Y_Min;
-		MaxY = DeadZoneTarget_Y_Max;
-	}
-	
-	FVector2D ScreenPos;
-	if (!UGameplayStatics::ProjectWorldToScreen(GetWorld()->GetFirstPlayerController(), Target.GetActorLocation(), ScreenPos, true))
-	{
-		return true;
-	}
-	
-	FVector2D ViewportSize = UWidgetLayoutLibrary::GetViewportSize(GetWorld());
-	
-	// 뷰포트 크기가 0이 되어 나누기 오류가 발생하는 것을 방지합니다.
-	if (ViewportSize.X < 1.f || ViewportSize.Y < 1.f)
-	{
-		return false;
-	}
-	
-	ScreenPos.X /= ViewportSize.X;
-	ScreenPos.Y /= ViewportSize.Y;
-
-	// 캐릭터가 데드존 '밖'에 있는지 확인합니다.
-	if (ScreenPos.X < MinX || ScreenPos.X > MaxX || ScreenPos.Y < MinY || ScreenPos.Y > MaxY)
-	{
-		return true; // 데드존 밖에 있으므로 true를 반환
-	}
-
-	return false; // 데드존 안에 있으므로 false를 반환
-}
-
 bool ADynamicCameraActor::ShouldResetByAlignment() const
 {
 	// 계산에 필요한 세 지점의 위치를 가져옵니다.
@@ -264,8 +217,13 @@ void ADynamicCameraActor::OnTeleport(AActor* Target)
 
 void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
 {
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	
 	if ( PlayerRef != Target )
 		return;
+
+	ResetCameraLocation(DeltaTime);
+	CloseCameraRotation(DeltaTime);
 
 	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
 }

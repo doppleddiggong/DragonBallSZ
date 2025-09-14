@@ -41,25 +41,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TargetDistance = 500;
 	float CurrentDistance;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_X_Min = 0.2f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_X_Max = 0.8f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_Y_Min = 0.1f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_Y_Max = 0.9f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_X_Min = 0.3f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_X_Max = 0.7f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_Y_Min = 0.2f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_Y_Max = 0.8f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraResetTime = 5;
 
