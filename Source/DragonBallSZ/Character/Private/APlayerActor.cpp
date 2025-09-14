@@ -186,7 +186,16 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
 	if ( !IsMoveEnable() )
 		return;
+	
+	{
+		// Move By Actor
+		const FVector Forward = GetActorForwardVector();
+		const FVector Right   = GetActorRightVector();
 
+		AddMovementInput(Forward, Axis.Y);
+		AddMovementInput(Right,   Axis.X);
+	}
+	
 	// const FRotator ActorRot = GetActorRotation();
 	//
 	// auto MoveComp = GetCharacterMovement();
