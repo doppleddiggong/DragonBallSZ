@@ -12,6 +12,10 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
 
+#include "EAttackPowerType.h"
+#include "UDBSZEventManager.h"
+#include "UDBSZVFXManager.h"
+
 
 // Sets default values
 AEnergyBlastActor::AEnergyBlastActor()
@@ -35,8 +39,7 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
-			
-			SpawnExplosionVFX();
+			// SpawnExplosionVFX();
 			this->Destroy();
 		}
 	}
@@ -44,8 +47,7 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
-			
-			SpawnExplosionVFX();
+			// SpawnExplosionVFX();
 			this->Destroy();
 		}
 	}
@@ -86,18 +88,40 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 
 	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed);
 }
+//
+// void AEnergyBlastActor::SpawnExplosionVFX()
+// {
+// 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+// 				GetWorld(),
+// 				Explosion,
+// 				GetActorLocation(),
+// 				GetActorRotation(),
+// 				FVector(0.4f, 0.4f, 0.4f),
+// 				true,
+// 				true,
+// 				ENCPoolMethod::None,
+// 				true
+// 			);
+// }
 
-void AEnergyBlastActor::SpawnExplosionVFX()
+void AEnergyBlastActor::HitProcess(AActor* DamagedActor, EVFXType VFXType)
 {
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				GetActorLocation(),
-				GetActorRotation(),
-				FVector(0.4f, 0.4f, 0.4f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
+	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+		VFXType,
+		GetActorLocation(), GetActorRotation(),FVector(0.4f) );
+
+	const EAttackPowerType Type = EAttackPowerType::Small;
+	if( auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+	{
+		EventManager->SendHitStop(DamagedActor, Type);
+		EventManager->SendKnockback(DamagedActor, this->Owner, Type, 0.3f);
+	}
+	
+	UGameplayStatics::ApplyDamage(
+		DamagedActor,
+		Damage,
+		nullptr,
+		Owner,
+		UDamageType::StaticClass()
+	);
 }
