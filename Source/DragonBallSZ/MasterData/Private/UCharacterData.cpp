@@ -2,6 +2,9 @@
 
 #include "UCharacterData.h"
 #include "DragonBallSZ.h"
+#include "EnergyBlastActor.h"
+
+#include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"
 
 bool UCharacterData::LoadRushAttackMontage(
@@ -38,5 +41,58 @@ bool UCharacterData::LoadDashMontage( TObjectPtr<UAnimMontage>& OutDashMontage )
 		return false;
 	}
 
+	return true;
+}
+
+bool UCharacterData::LoadHitMontage(TArray<TObjectPtr<UAnimMontage>>& OutHitMontage) const
+{
+	OutHitMontage.Empty();
+
+	for (const TSoftObjectPtr<UAnimMontage>& HitAssetPtr : HitAsset)
+	{
+		UAnimMontage* LoadedMontage = HitAssetPtr.LoadSynchronous();
+		if (LoadedMontage)
+		{
+			OutHitMontage.Add(LoadedMontage);
+		}
+		else
+		{
+			PRINTLOG(TEXT("Failed to LoadHitMontage"));
+			return false;
+		}
+	}
+	return true;
+}
+
+bool UCharacterData::LoadDeathMontage(TObjectPtr<UAnimMontage>& OutDeathMontage) const
+{
+	OutDeathMontage = DeathAsset.LoadSynchronous();
+	if (!OutDeathMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadDeathMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutDashVFX) const
+{
+	OutDashVFX = DashVFX.LoadSynchronous();
+	if (!OutDashVFX)
+	{
+		PRINTLOG(TEXT("Failed to LoadDashVFX"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadEnergyBlast(TSubclassOf<AEnergyBlastActor>& OutEnergyBlast)
+{
+	if ( !EnergyBlast)
+	{
+		PRINTLOG(TEXT("Failed to LoadEnergyBlast"));
+	}
+
+	OutEnergyBlast = this->EnergyBlast;
 	return true;
 }

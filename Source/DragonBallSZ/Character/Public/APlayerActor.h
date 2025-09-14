@@ -78,10 +78,6 @@ public:
     void OnPowerCharge(AActor* Target, bool bState);
 
 public:
-	// 에너지탄 생산 공장
-	UPROPERTY(EditAnywhere, Category="EnergyBlastFactory")
-	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
-
 	// 에너지탄 발사 딜레이
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
 	float BlastShotDelay = 0.5;

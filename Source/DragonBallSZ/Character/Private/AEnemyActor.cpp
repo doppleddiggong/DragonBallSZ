@@ -55,12 +55,18 @@ void AEnemyActor::BeginPlay()
 	SightSystem->InitSightSystem(TargetActor, StatSystem->SightLength, StatSystem->SightAngle );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	
 
+	// AsyncLoad
+	CharacterData->LoadHitMontage(HitMontages);
+	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+
 	// ActorComponent 초기화
 	StatSystem->InitStat(false);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
-	DashSystem->InitSystem(this, DashNiagaraSystem);
+	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, AEnemyActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
 

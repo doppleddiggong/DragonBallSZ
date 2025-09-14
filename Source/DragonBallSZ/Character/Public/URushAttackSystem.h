@@ -148,5 +148,6 @@ private:
 
 	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
 	TArray<EAttackPowerType> AttackPowerType;
+	
 	TObjectPtr<UAnimMontage> DashMontage;
 };

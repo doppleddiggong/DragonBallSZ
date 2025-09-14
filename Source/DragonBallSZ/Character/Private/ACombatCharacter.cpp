@@ -14,6 +14,7 @@
 #include "DragonBallSZ.h"
 
 #include "Components/ArrowComponent.h"
+#include "Features/UCommonFunctionLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -55,92 +56,14 @@ void ACombatCharacter::BeginPlay()
 		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
 }
 
-void ACombatCharacter::OnRecvMessage(FString InMsg)
-{
-	if ( InMsg == GameEvent::CombatStart )
-		bIsCombatStart = true;
-	else if ( InMsg == GameEvent::PlayerWin )
-	{
-		bIsCombatResult = true;
-		bIsWinner = this->IsPlayer();
-
-		PRINT_STRING(TEXT("WINNER IS PLAYER"));
-	}
-	else if ( InMsg == GameEvent::EnemyWin )
-	{
-		bIsCombatResult = true;
-		bIsWinner = this->IsEnemy();
-
-		PRINT_STRING(TEXT("ENEMY IS PLAYER"));
-	}
-}
 
 void ACombatCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// ACombatCharacter 상속 객체에서 각자 합시다.
 	// if ( RushAttackSystem->ShouldLookAtTarget())
 	// 	this->OnLookTarget();
-}
-
-void ACombatCharacter::OnLookTarget_Implementation()
-{
-	if (!TargetActor)
-		return;
-
-	const FVector TargetLoc = TargetActor->GetActorLocation();
-	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
-	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
-
-	SetActorRotation(NewRot);
-}
-
-void ACombatCharacter::OnFlyEnd_Implementation()
-{
-	DashSystem->ActivateEffect(false);
-}
-
-void ACombatCharacter::SetFlying()
-{
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	MoveComp->SetMovementMode(MOVE_Flying);
-
-	this->bUseControllerRotationYaw = true;
-	this->bUseControllerRotationPitch = true;
-	MoveComp->bOrientRotationToMovement = false;
-}
-
-void ACombatCharacter::SetFallingToWalk()
-{
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	MoveComp->SetMovementMode( EMovementMode::MOVE_Falling );
-
-	this->bUseControllerRotationYaw = false;
-	this->bUseControllerRotationPitch = false;
-	MoveComp->bOrientRotationToMovement = true;
-}
-
-void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
-{
-	if ( InMovementMode == MOVE_None)
-		return;
-	
-	auto Movement = this->GetCharacterMovement();
-
-	if ( InMovementMode == MOVE_Flying )
-	{
-		Movement->SetMovementMode( EMovementMode::MOVE_Flying );
-		this->bUseControllerRotationYaw = true;
-		this->bUseControllerRotationPitch = true;
-		Movement->bOrientRotationToMovement = false;
-	}
-	else
-	{
-		Movement->SetMovementMode( InMovementMode );
-		this->bUseControllerRotationYaw = false;
-		this->bUseControllerRotationPitch = false;
-		Movement->bOrientRotationToMovement = true;
-	}
 }
 
 bool ACombatCharacter::IsControlEnable_Implementation()
@@ -221,4 +144,91 @@ bool ACombatCharacter::IsInSight(const AActor* Other) const
 		return false;
 	
 	return true;
+}
+
+
+UAnimMontage* ACombatCharacter::GetRandomHitAnim()
+{
+	return UCommonFunctionLibrary::GetRandomMontage(HitMontages);
+}
+
+void ACombatCharacter::OnRecvMessage(FString InMsg)
+{
+	if ( InMsg == GameEvent::CombatStart )
+		bIsCombatStart = true;
+	else if ( InMsg == GameEvent::PlayerWin )
+	{
+		bIsCombatResult = true;
+		bIsWinner = this->IsPlayer();
+
+		PRINT_STRING(TEXT("WINNER IS PLAYER"));
+	}
+	else if ( InMsg == GameEvent::EnemyWin )
+	{
+		bIsCombatResult = true;
+		bIsWinner = this->IsEnemy();
+
+		PRINT_STRING(TEXT("ENEMY IS PLAYER"));
+	}
+}
+
+void ACombatCharacter::OnLookTarget_Implementation()
+{
+	if (!TargetActor)
+		return;
+
+	const FVector TargetLoc = TargetActor->GetActorLocation();
+	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
+	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
+
+	SetActorRotation(NewRot);
+}
+
+
+void ACombatCharacter::OnFlyEnd_Implementation()
+{
+	DashSystem->ActivateEffect(false);
+}
+
+void ACombatCharacter::SetFlying()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	MoveComp->SetMovementMode(MOVE_Flying);
+
+	this->bUseControllerRotationYaw = true;
+	this->bUseControllerRotationPitch = true;
+	MoveComp->bOrientRotationToMovement = false;
+}
+
+void ACombatCharacter::SetFallingToWalk()
+{
+	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+	MoveComp->SetMovementMode( EMovementMode::MOVE_Falling );
+
+	this->bUseControllerRotationYaw = false;
+	this->bUseControllerRotationPitch = false;
+	MoveComp->bOrientRotationToMovement = true;
+}
+
+void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
+{
+	if ( InMovementMode == MOVE_None)
+		return;
+	
+	auto Movement = this->GetCharacterMovement();
+
+	if ( InMovementMode == MOVE_Flying )
+	{
+		Movement->SetMovementMode( EMovementMode::MOVE_Flying );
+		this->bUseControllerRotationYaw = true;
+		this->bUseControllerRotationPitch = true;
+		Movement->bOrientRotationToMovement = false;
+	}
+	else
+	{
+		Movement->SetMovementMode( InMovementMode );
+		this->bUseControllerRotationYaw = false;
+		this->bUseControllerRotationPitch = false;
+		Movement->bOrientRotationToMovement = true;
+	}
 }

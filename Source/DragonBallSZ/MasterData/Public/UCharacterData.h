@@ -27,22 +27,28 @@ class DRAGONBALLSZ_API UCharacterData : public UDataAsset
 public:
 	bool LoadRushAttackMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage, TArray<EAttackPowerType>& OutPowerType ) const;
 	bool LoadDashMontage( TObjectPtr<UAnimMontage>& OutDashMontage) const;
-	
+	bool LoadHitMontage( TArray<TObjectPtr<UAnimMontage>>& OutHitMontage) const;
+	bool LoadDeathMontage( TObjectPtr<UAnimMontage>& OutDeathMontage) const;
+
+	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutDashVFX) const;
+	bool LoadEnergyBlast(TSubclassOf<class AEnergyBlastActor>& OutEnergyBlast);
+
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<FRushData> RushData;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DashAsset;
 
-	/*
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSoftObjectPtr<UAnimMontage> EnergyBlastAsset;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<TSoftObjectPtr<UAnimMontage>> HitAsset;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DeathAsset;
-	*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
+	TSoftObjectPtr<class UNiagaraSystem> DashVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Actor)
+	TSubclassOf<class AEnergyBlastActor> EnergyBlast;
 };
