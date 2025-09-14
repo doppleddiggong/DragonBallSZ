@@ -75,6 +75,9 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
+	if ( this->IsHold() )
+		return false;
+	
 	if ( IsCombatStart() == false || IsCombatResult())
 	{
 		// 전투 시작 전

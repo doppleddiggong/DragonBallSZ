@@ -39,7 +39,11 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (bDefeated) return; // Return if the Game is Over
+	if (Itself->IsHold() )
+		return;
+	
+	if (bDefeated)
+		return; // Return if the Game is Over
 
 	if (Itself->IsCombatStart() == false ||
 		Itself->IsCombatResult())
