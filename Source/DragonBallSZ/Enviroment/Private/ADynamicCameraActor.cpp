@@ -4,6 +4,8 @@
 #include "ADynamicCameraActor.h"
 
 #include "ACombatCharacter.h"
+#include "AEnemyActor.h"
+#include "APlayerActor.h"
 
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
@@ -33,8 +35,8 @@ void ADynamicCameraActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PlayerRef = Cast<ACombatCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACombatCharacter::StaticClass()));
-	TargetRef = Cast<ACombatCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACombatCharacter::StaticClass()));
+	PlayerRef = Cast<APlayerActor>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerActor::StaticClass()));
+	TargetRef = Cast<AEnemyActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 
 	// 이벤트 매니저를 통한 이벤트 등록및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
@@ -301,4 +303,16 @@ void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
 	
 	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
 	PRINTLOG(TEXT("%s"), PrintMsg);
+}
+
+void ADynamicCameraActor::SetPlayerHold( bool bState)
+{
+	if ( IsValid(PlayerRef))
+		PlayerRef->bIsHold = bState;
+}
+
+void ADynamicCameraActor::SetTargetHold( bool bState )
+{
+	if ( IsValid(TargetRef))
+		TargetRef->bIsHold = bState;
 }

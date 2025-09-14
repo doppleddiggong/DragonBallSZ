@@ -100,18 +100,10 @@ public:// Event-Delegate
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnPowerCharge(AActor* Target, bool bState);
 
-
 	UFUNCTION(BlueprintCallable, Category="Command")
-	FORCEINLINE void SetPlayerHold( bool bState)
-	{
-		PlayerRef->bIsHold = bState;
-	}
-
+	void SetPlayerHold( bool bState);
 	UFUNCTION(BlueprintCallable, Category="Command")
-	FORCEINLINE void SetTargetHold( bool bState )
-	{
-		TargetRef->bIsHold = bState;
-	}
+	void SetTargetHold( bool bState );
 	
 private:
 	class UDBSZEventManager* EventManager;
