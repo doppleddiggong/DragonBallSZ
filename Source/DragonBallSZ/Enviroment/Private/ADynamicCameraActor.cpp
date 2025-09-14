@@ -3,15 +3,13 @@
 
 #include "ADynamicCameraActor.h"
 
-#include "AEnemyActor.h"
-#include "APlayerActor.h"
+#include "ACombatCharacter.h"
 
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -35,8 +33,8 @@ void ADynamicCameraActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PlayerRef = Cast<APlayerActor>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerActor::StaticClass()));
-	TargetRef = Cast<AEnemyActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
+	PlayerRef = Cast<ACombatCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACombatCharacter::StaticClass()));
+	TargetRef = Cast<ACombatCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), ACombatCharacter::StaticClass()));
 
 	// 이벤트 매니저를 통한 이벤트 등록및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
@@ -154,7 +152,7 @@ void ADynamicCameraActor::ResetCameraRotation(float DeltaTime)
 
 bool ADynamicCameraActor::TargetDeadZoneCheck(const AActor& Target)
 {
-	const APlayerActor * TargetIsPlayer = Cast<APlayerActor>(&Target);
+	const ACombatCharacter* TargetIsPlayer = Cast<ACombatCharacter>(&Target);
 
 	float MinX, MaxX, MinY, MaxY;
 	

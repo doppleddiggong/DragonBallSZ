@@ -71,7 +71,6 @@ public:
 		return bIsHold;
 	};
 	
-	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
@@ -129,6 +128,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	bool IsHit = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsHold = false;
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
@@ -165,8 +167,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
-	bool bIsHold = false;
 
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;

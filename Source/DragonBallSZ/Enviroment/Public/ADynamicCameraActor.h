@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ACombatCharacter.h"
 #include "GameFramework/Actor.h"
 #include "ADynamicCameraActor.generated.h"
 
@@ -30,9 +31,9 @@ public:
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class ACharacter* PlayerRef;
+	class ACombatCharacter* PlayerRef;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class AActor* TargetRef;
+	class ACombatCharacter* TargetRef;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraDistance = 300;
@@ -99,6 +100,19 @@ public:// Event-Delegate
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnPowerCharge(AActor* Target, bool bState);
 
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	FORCEINLINE void SetPlayerHold( bool bState)
+	{
+		PlayerRef->bIsHold = bState;
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	FORCEINLINE void SetTargetHold( bool bState )
+	{
+		TargetRef->bIsHold = bState;
+	}
+	
 private:
 	class UDBSZEventManager* EventManager;
 	bool bIsCameraResetting = false;
