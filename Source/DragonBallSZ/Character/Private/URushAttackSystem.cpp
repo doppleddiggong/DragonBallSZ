@@ -292,7 +292,12 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
 
-	EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
+
+	if ( TravelXY > 450.0f )
+	{
+		EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
+	}
+	
     AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
 }
 

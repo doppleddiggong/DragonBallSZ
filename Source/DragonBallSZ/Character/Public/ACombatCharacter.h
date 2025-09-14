@@ -90,6 +90,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void OnFlyEnd();
 
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void OnDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	
 	UFUNCTION(BlueprintCallable, Category="Fly")
 	void SetFlying();
 	UFUNCTION(BlueprintCallable, Category="Fly")
@@ -120,6 +123,11 @@ public:
 	bool IsHit = false;
 
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
+	class USkeletalMeshComponent* MeshComp;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
+	class UAnimInstance* AnimInstance;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
 	class UArrowComponent* LeftHandComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")

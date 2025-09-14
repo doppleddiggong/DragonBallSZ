@@ -187,78 +187,52 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
+	// {
+	// 	// Move By Actor
+	// 	const FVector Forward = GetActorForwardVector();
+	// 	const FVector Right   = GetActorRightVector();
+	//
+	// 	AddMovementInput(Forward, Axis.Y);
+	// 	AddMovementInput(Right,   Axis.X);
+	// }
+
+	// MOVE_Walking, MOVE_Falling	Yaw만 사용	Yaw + Roll 사용 (시각 효과용 가능)	수평 (XZ) 이동
+	// MOVE_Flying	Pitch + Yaw	Pitch + Yaw	3D 이동 (YZ 포함)
+
+	const FRotator ActorRot = GetActorRotation();
+	
+	auto MoveComp = GetCharacterMovement();
+	if ( MoveComp->MovementMode == MOVE_Walking || MoveComp->MovementMode == MOVE_Falling )
 	{
-		// Move By Actor
-		const FVector Forward = GetActorForwardVector();
-		const FVector Right   = GetActorRightVector();
+		// Right : XZ
+		// Forward : Z
+		const FRotator YawOnlyRot(0.0f, ActorRot.Yaw, 0.0f);
+		const FRotator YawWithRollRot(ActorRot.Roll, ActorRot.Yaw, 0.0f); // Roll은 시각 효과용일 수 있음
 
-		AddMovementInput(Forward, Axis.Y);
-		AddMovementInput(Right,   Axis.X);
+		const FVector RightDir   = FRotationMatrix(YawWithRollRot).GetUnitAxis(EAxis::Y);
+		const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
+
+		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
+		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
+
+		AddMovementInput(RightDir, Axis.X);
+		AddMovementInput(ForwardDir, Axis.Y);
 	}
-	
-	// const FRotator ActorRot = GetActorRotation();
-	//
-	// auto MoveComp = GetCharacterMovement();
-	// if ( MoveComp->MovementMode == MOVE_Walking || MoveComp->MovementMode == MOVE_Falling )
-	// {
-	// 	// Right : XZ
-	// 	// Forward : Z
-	// 	UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
-	// 	UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
-	// }
-	// else if ( MoveComp->MovementMode == MOVE_Flying )
-	// {
-	// 	// Right : YZ
-	// 	// Forward : YZ
-	// 	UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
-	// 	UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
-	// }
+	else if ( MoveComp->MovementMode == MOVE_Flying )
+	{
+		// Right : YZ
+		// Forward : YZ
+		// 공중 이동: Pitch + Yaw 기준 3D 방향
+		const FRotator FullRot(0.0f, ActorRot.Pitch, ActorRot.Yaw);  // Roll은 보통 생략
+		const FVector RightDir   = FRotationMatrix(FullRot).GetUnitAxis(EAxis::Y);
+		const FVector ForwardDir = FRotationMatrix(FullRot).GetUnitAxis(EAxis::X);
 
-	
-	
-	// const FRotator YawOnly(0.f, ActorRot.Yaw, 0.f);
-	// const FVector Fwd_Yaw   = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::X);
-	// const FVector Right_Yaw = FRotationMatrix(YawOnly).GetUnitAxis(EAxis::Y);
-	//
-	// // 모드별 방향 선택
-	// FVector FwdDir  = FVector::ZeroVector;
-	// FVector RightDir= FVector::ZeroVector;
-	//
-	// switch (Move->MovementMode)
-	// {
-	// case MOVE_Flying:
-	// 	FwdDir   = GetActorForwardVector(); // 피치 포함
-	// 	RightDir = GetActorRightVector();
-	// 	break;
-	//
-	// case MOVE_Walking:
-	// case MOVE_NavWalking:
-	// case MOVE_Falling:
-	// case MOVE_Swimming:
-	// default:
-	// 	FwdDir   = Fwd_Yaw;                 // 피치 제거
-	// 	RightDir = Right_Yaw;
-	// 	break;
-	// }
-	//
-	// // 좌우
-	// if (FMath::Abs(AxisY) > KINDA_SMALL_NUMBER && !RightDir.IsNearlyZero())
-	// {
-	// 	AddMovementInput(RightDir, AxisY);
-	// }
-	//
-	// // 전후
-	// if (FMath::Abs(AxisX) > KINDA_SMALL_NUMBER && !FwdDir.IsNearlyZero())
-	// {
-	// 	AddMovementInput(FwdDir, AxisX);
-	// }
-	//
-	// // 수직(입력이 있을 때만, 비행/수영에서만)
-	// if (FMath::Abs(AxisZ) > KINDA_SMALL_NUMBER &&
-	// 	(Move->MovementMode == MOVE_Flying || Move->MovementMode == MOVE_Swimming))
-	// {
-	// 	AddMovementInput(FVector::UpVector, AxisZ);
-	// }
+		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
+		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
+		
+		AddMovementInput(RightDir, Axis.X);
+		AddMovementInput(ForwardDir, Axis.Y);
+	}
 }
 
 void APlayerActor::Cmd_Look_Implementation(const FVector2D& Axis)

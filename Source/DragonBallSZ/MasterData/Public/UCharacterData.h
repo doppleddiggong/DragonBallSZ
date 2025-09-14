@@ -19,7 +19,7 @@ struct FRushData
 	TSoftObjectPtr<UAnimMontage> AttackAsset;
 };
 
-UCLASS()
+UCLASS(BlueprintType)
 class DRAGONBALLSZ_API UCharacterData : public UDataAsset
 {
 	GENERATED_BODY()

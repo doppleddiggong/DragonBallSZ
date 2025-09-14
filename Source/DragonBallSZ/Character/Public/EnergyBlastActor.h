@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EVFXType.h"
 #include "GameFramework/Actor.h"
 #include "EnergyBlastActor.generated.h"
 
@@ -32,6 +33,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+private:
+	void HitProcess(AActor* DamagedActor, EVFXType VFXType);
+	
 public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USphereComponent> SphereComp;

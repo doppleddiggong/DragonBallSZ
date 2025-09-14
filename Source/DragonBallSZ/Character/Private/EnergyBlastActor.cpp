@@ -10,7 +10,13 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
+#include "UDBSZDataManager.h"
 #include "Components/SphereComponent.h"
+
+#include "EAttackPowerType.h"
+#include "UDBSZEventManager.h"
+#include "UDBSZVFXManager.h"
+#include "Features/UDelayTaskManager.h"
 
 
 // Sets default values
@@ -35,17 +41,24 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				GetActorLocation(),
-				GetActorRotation(),
-				FVector(0.4f, 0.4f, 0.4f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
+			// UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			// 	GetWorld(),
+			// 	Explosion,
+			// 	GetActorLocation(),
+			// 	GetActorRotation(),
+			// 	FVector(0.4f, 0.4f, 0.4f),
+			// 	true,
+			// 	true,
+			// 	ENCPoolMethod::None,
+			// 	true
+			// );
+
+			// UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+			// 	EVFXType::Explosion_Yellow,
+			// 	GetActorLocation(), GetActorRotation(),FVector(0.4f) );
+
+			this->HitProcess(TargetActor, EVFXType::Explosion_Yellow);
+
 			this->Destroy();
 		}
 	}
@@ -53,17 +66,20 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				GetActorLocation(),
-				GetActorRotation(),
-				FVector(0.4f, 0.4f, 0.4f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
+			// UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			// 	GetWorld(),
+			// 	Explosion,
+			// 	GetActorLocation(),
+			// 	GetActorRotation(),
+			// 	FVector(0.4f, 0.4f, 0.4f),
+			// 	true,
+			// 	true,
+			// 	ENCPoolMethod::None,
+			// 	true
+			// );
+
+			this->HitProcess(TargetActor, EVFXType::Explosion_Blue);
+
 			this->Destroy();
 		}
 	}
@@ -103,4 +119,28 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 	Direction.Normalize();
 
 	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed);
+}
+
+
+void AEnergyBlastActor::HitProcess(AActor* DamagedActor, EVFXType VFXType)
+{
+	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+		VFXType,
+		GetActorLocation(), GetActorRotation(),FVector(0.4f) );
+
+	
+	const EAttackPowerType Type = EAttackPowerType::Small;
+	if( auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+	{
+		EventManager->SendHitStop(DamagedActor, Type);
+		EventManager->SendKnockback(DamagedActor, this->Owner, Type, 0.3f);
+	}
+	
+	UGameplayStatics::ApplyDamage(
+		DamagedActor,
+		3.0f,
+		nullptr,
+		Owner,
+		UDamageType::StaticClass()
+	);
 }

@@ -12,12 +12,14 @@
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
+#include "UDBSZVFXManager.h"
 
 #include "Components/ArrowComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Features/UCommonFunctionLibrary.h"
+#include "Features/UDelayTaskManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
 
 ACombatCharacter::ACombatCharacter()
 {
@@ -54,6 +56,11 @@ void ACombatCharacter::BeginPlay()
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+
+	MeshComp = this->GetMesh();
+	AnimInstance = MeshComp->GetAnimInstance();
+	
+	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
 }
 
 
@@ -189,6 +196,56 @@ void ACombatCharacter::OnFlyEnd_Implementation()
 {
 	DashSystem->ActivateEffect(false);
 }
+
+void ACombatCharacter::OnDamage(
+	AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatedBy, AActor* DamageCauser )
+{
+	if ( DamagedActor != this)
+		return;
+	
+	PRINT_STRING(TEXT("OnDamage"));
+	
+	IsHit = true;
+
+	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+					EVFXType::Hit_Small,
+					GetActorLocation(),
+					GetActorRotation(),
+					FVector(0.05f) );
+	
+	bool IsDie = StatSystem->DecreaseHealth(Damage);
+	
+	if ( IsDie )
+	{
+		AnimInstance->Montage_Play(
+			DeathMontage,
+			1.0f,
+			EMontagePlayReturnType::MontageLength,
+			0.f,
+			true);
+	
+		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+	}
+	else
+	{
+		auto HitAnim = GetRandomHitAnim();
+		float HitEndTime = HitAnim->GetPlayLength();
+		AnimInstance->Montage_Play(
+			HitAnim,
+			1.0f,
+			EMontagePlayReturnType::MontageLength,
+			0.f,
+			true);
+	
+		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this](){
+			IsHit = false;
+		});
+	}
+}
+
+
+
 
 void ACombatCharacter::SetFlying()
 {
