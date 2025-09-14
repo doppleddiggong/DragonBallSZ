@@ -24,12 +24,14 @@ private:
 	void OnTimerTick();
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GameState")
+	float CombatStartDelay = 0.5f;
+
+	
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UUserWidget> CombatUIFactory;
-
 	UPROPERTY()
 	class UCombatUI* CombatUI;
-
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="UI")
 	float CombatTime = 0.0f;
 };

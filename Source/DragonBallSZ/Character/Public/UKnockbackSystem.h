@@ -22,7 +22,7 @@ protected:
 
 public:	 
     UFUNCTION(BlueprintCallable, Category="Knockback")
-    void InitSystem(ACharacter* InOwner);
+    void InitSystem(ACombatCharacter* InOwner);
 
     UFUNCTION(BlueprintCallable, Category="Knockback")
     void OnKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
@@ -35,7 +35,7 @@ private:
 
 private:
 	UPROPERTY()
-	class ACharacter* Owner;
+	class ACombatCharacter* Owner;
 	UPROPERTY()
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY()

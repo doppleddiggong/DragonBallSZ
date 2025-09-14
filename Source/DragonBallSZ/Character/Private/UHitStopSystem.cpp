@@ -3,10 +3,9 @@
 
 #include "UHitStopSystem.h"
 
+#include "ACombatCharacter.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZDataManager.h"
-
-#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 UHitStopSystem::UHitStopSystem()
@@ -20,7 +19,7 @@ void UHitStopSystem::BeginPlay()
 	Super::BeginPlay();
 }
 
-void UHitStopSystem::InitSystem(ACharacter* InOwner )
+void UHitStopSystem::InitSystem(ACombatCharacter* InOwner )
 {
 	this->Owner = InOwner;
 	

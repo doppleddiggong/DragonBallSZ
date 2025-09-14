@@ -25,11 +25,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category="Fly")
-	FORCEINLINE void InitSystem(class ACharacter* InOwner, FEndCallback InCallback)
-	{
-		this->Owner = InOwner;
-		this->Callback = InCallback;
-	}
+	void InitSystem(class ACombatCharacter* InOwner, FEndCallback InCallback);
 
 	UFUNCTION(BlueprintCallable, Category="Fly")
 	void OnJump();
@@ -59,7 +55,10 @@ public:
 	float DownstreamDuration = 1.5f;
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Fly")
-	class ACharacter* Owner;
+	class ACombatCharacter* Owner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fly")
+	float AlmostDist = 50.0f;
 	
 private:
 	UPROPERTY()
@@ -71,4 +70,8 @@ private:
 	FVector EndLocation;
 
 	int JumpCount = 0;
+
+
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
 };

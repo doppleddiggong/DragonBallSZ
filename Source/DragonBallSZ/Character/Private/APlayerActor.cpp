@@ -2,65 +2,54 @@
 
 
 #include "APlayerActor.h"
-#include "AEnemyActor.h"
 
-#include "Core/Macro.h"
-
-#include "DragonBallSZ.h"
-#include "UDBSZEventManager.h"
-
+// CombatCharacter Shared
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
+#include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
-#include "UKnockbackSystem.h"
-// #include "TimerManager.h"
-#include "Components/ArrowComponent.h"
+#include "UCharacterData.h"
+
+// PlayerActor Only
+#include "AEnemyActor.h"
+#include "UCameraShakeSystem.h"
+
+// Shared
+#include "Core/Macro.h"
+#include "DragonBallSZ.h"
+#include "EnergyBlastActor.h"
+#include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetMathLibrary.h"
+
+#define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
 
 APlayerActor::APlayerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
-	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
+	CameraShakeSystem = CreateDefaultSubobject<UCameraShakeSystem>(TEXT("CameraShakeSystem"));
 
-	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
-	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
-	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
-	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
-	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
-
-	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
-	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
-	RightHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightHandComp"));
-	RightHandComp->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	RightHandComp->SetRelativeRotation(FRotator(0, -180.f, 0.f));
-
-	LeftFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootComp"));
-	LeftFootComp->SetupAttachment(GetMesh(), TEXT("foot_l"));
-	LeftFootComp->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
-	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
-	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
-	
-	bUseControllerRotationYaw = true;
-	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
-		Move->bOrientRotationToMovement = false;
+		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
+		if (CD.Succeeded())
+			CharacterData = CD.Object;
+	}
+
+	bUseControllerRotationYaw = true;
+	if (auto* Movecomp = GetCharacterMovement())
+	{
+		Movecomp->bOrientRotationToMovement = false;
 
 		// 플라잉 모드 미끄러짐 방지 설정
 		// 높은 값으로 설정하여 즉시 멈추도록 함
-		Move->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
+		Movecomp->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
     
 		// 추가적으로 마찰력도 조정 가능
-		Move->BrakingFriction = 4.0f; // 기본값 0.0f
+		Movecomp->BrakingFriction = 4.0f; // 기본값 0.0f
 	}
 }
 
@@ -68,19 +57,28 @@ void APlayerActor::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// PlayerActor Only
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
+	// AsyncLoad
+	CharacterData->LoadHitMontage(HitMontages);
+	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	
+	CameraShakeSystem->InitSystem(this);	
+
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
-	RushAttackSystem->InitSystem(this);
+	RushAttackSystem->InitSystem(this, CharacterData);
 	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
-	DashSystem->InitSystem(this, DashNiagaraSystem);
+	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
 
-	// 이벤트 매니저를 통한 이벤트 등록및 제어
+	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
 	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
@@ -89,11 +87,43 @@ void APlayerActor::BeginPlay()
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
-
 	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
 }
 
-void APlayerActor::OnDash(AActor* Target, bool IsDashing)
+void APlayerActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if ( RushAttackSystem->ShouldLookAtTarget())
+		this->OnLookTarget();
+
+	// 에너지탄 재장전 로직
+	if (RemainBlastShot < MaxRepeatBlastShot)
+	{
+		BlastShotRechargeTime += DeltaTime;
+		if (BlastShotRechargeTime >= BlastShotRechargeDuration)
+		{
+			RemainBlastShot = MaxRepeatBlastShot;
+			BlastShotRechargeTime = 0.0f;
+			PRINT_STRING(TEXT("Energy Blast Recharged"));
+		}
+	}
+}
+
+void APlayerActor::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (FlySystem)
+		FlySystem->OnLand(Hit);
+}
+
+void APlayerActor::OnRestoreAvoid()
+{
+	EventManager->SendAvoid(this, false);
+}
+
+void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( this != Target )
 		return;
@@ -152,150 +182,56 @@ void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 	PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
-void APlayerActor::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-
-    if ( RushAttackSystem->ShouldLookAtTarget())
-        this->OnLookTarget();
-}
-
-void APlayerActor::Landed(const FHitResult& Hit)
-{
-	Super::Landed(Hit);
-
-	if (FlySystem)
-		FlySystem->OnLand(Hit);
-}
-
-bool APlayerActor::IsControlEnable_Implementation()
-{
-	if ( IsHit )
-		return false;
-
-	if ( StatSystem->IsDead )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsMoveEnable_Implementation()
-{
-	if ( !IsControlEnable() )
-		return false;
-
-	if ( IsAttackIng() )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsAttackEnable_Implementation()
-{
-	if ( IsHit )
-		return false;
-
-	return true;
-}
-
-bool APlayerActor::IsHiting_Implementation()
-{
-	return IsHit;
-}
-
-bool APlayerActor::IsAttackIng_Implementation()
-{
-	return RushAttackSystem->IsAttackIng();
-}
-
-
-bool APlayerActor::IsInSight(const AActor* Other) const
-{
-	const FVector SelfLoc = GetActorLocation();
-	const FVector OtherLoc = Other->GetActorLocation();
-	const FVector ToOther = OtherLoc - SelfLoc;
-
-	const float Dist = ToOther.Size();
-	if (Dist > SightRange)
-		return false;
-
-	const FVector Fwd = GetActorForwardVector();
-	const float CosHalfFOV = FMath::Cos(FMath::DegreesToRadians(SightHalfFOVDeg));
-	const float CosAngle = FVector::DotProduct(Fwd, ToOther.GetSafeNormal());
-	if (CosAngle < CosHalfFOV)
-		return false;
-
-	FHitResult Hit;
-	FCollisionQueryParams Params(SCENE_QUERY_STAT(PlayerSightLOS), false, this);
-
-	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		SelfLoc + FVector(0,0,50),
-		OtherLoc + FVector(0,0,50),
-		ECC_Visibility,
-		Params
-	);
-    
-	if (bBlocked && Hit.GetActor() != Other)
-		return false;
-	
-	return true;
-}
-
-void APlayerActor::OnLookTarget_Implementation()
-{
-	if (!TargetActor)
-		return;
-
-	const FVector TargetLoc = TargetActor->GetActorLocation();
-	const FRotator LookAt = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetLoc);
-	const FRotator NewRot(0.f, LookAt.Yaw, 0.f);
-
-	SetActorRotation(NewRot);
-}
-
-void APlayerActor::OnFlyEnd_Implementation()
-{
-	DashSystem->ActivateEffect(false);
-}
-
-void APlayerActor::OnRestoreAvoid()
-{
-	EventManager->SendAvoid(this, false);
-}
-
-void APlayerActor::SetFlying()
-{
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	
-	MoveComp->SetMovementMode(MOVE_Flying);
-
-	this->bUseControllerRotationYaw = true;
-	this->bUseControllerRotationPitch = true;
-	MoveComp->bOrientRotationToMovement = false;
-}
-
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
 	if ( !IsMoveEnable() )
 		return;
 	
-	// if (Controller)
 	// {
-	// 	// Move By Control
-	// 	// const FRotator ControlRot = Controller->GetControlRotation();
-	// 	// const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-	// 	// const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-	// 	// const FVector Right   = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+	// 	// Move By Actor
+	// 	const FVector Forward = GetActorForwardVector();
+	// 	const FVector Right   = GetActorRightVector();
+	//
+	// 	AddMovementInput(Forward, Axis.Y);
+	// 	AddMovementInput(Right,   Axis.X);
 	// }
 
-	{
-		// Move By Actor
-		const FVector Forward = GetActorForwardVector();
-		const FVector Right   = GetActorRightVector();
+	// MOVE_Walking, MOVE_Falling	Yaw만 사용	Yaw + Roll 사용 (시각 효과용 가능)	수평 (XZ) 이동
+	// MOVE_Flying	Pitch + Yaw	Pitch + Yaw	3D 이동 (YZ 포함)
 
-		AddMovementInput(Forward, Axis.Y);
-		AddMovementInput(Right,   Axis.X);
+	const FRotator ActorRot = GetActorRotation();
+	
+	auto MoveComp = GetCharacterMovement();
+	if ( MoveComp->MovementMode == MOVE_Walking || MoveComp->MovementMode == MOVE_Falling )
+	{
+		// Right : XZ
+		// Forward : Z
+		const FRotator YawOnlyRot(0.0f, ActorRot.Yaw, 0.0f);
+		const FRotator YawWithRollRot(ActorRot.Roll, ActorRot.Yaw, 0.0f); // Roll은 시각 효과용일 수 있음
+
+		const FVector RightDir   = FRotationMatrix(YawWithRollRot).GetUnitAxis(EAxis::Y);
+		const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
+
+		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
+		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
+
+		AddMovementInput(RightDir, Axis.X);
+		AddMovementInput(ForwardDir, Axis.Y);
+	}
+	else if ( MoveComp->MovementMode == MOVE_Flying )
+	{
+		// Right : YZ
+		// Forward : YZ
+		// 공중 이동: Pitch + Yaw 기준 3D 방향
+		const FRotator FullRot(0.0f, ActorRot.Pitch, ActorRot.Yaw);  // Roll은 보통 생략
+		const FVector RightDir   = FRotationMatrix(FullRot).GetUnitAxis(EAxis::Y);
+		const FVector ForwardDir = FRotationMatrix(FullRot).GetUnitAxis(EAxis::X);
+
+		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
+		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
+		
+		AddMovementInput(RightDir, Axis.X);
+		AddMovementInput(ForwardDir, Axis.Y);
 	}
 }
 
@@ -372,7 +308,36 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	// 발사 딜레이 체크
+	if (GetWorld()->GetTimeSeconds() < LastBlastShotTime + BlastShotDelay)
+		return;
+
+	// 잔탄 체크
+	if (RemainBlastShot > 0)
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = this;
+		Params.Instigator = this;
+
+		GetWorld()->SpawnActor<AEnergyBlastActor>(
+			EnergyBlastFactory,
+			this->GetActorTransform(),
+			Params
+		);
+
+		// 발사 처리
+		RemainBlastShot--;
+		LastBlastShotTime = GetWorld()->GetTimeSeconds();
+		BlastShotRechargeTime = 0.0f;
+
+		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+		
+		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
+	}
+	else
+	{
+		PRINT_STRING(TEXT("Out of Energy Blast"));
+	}
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
@@ -382,5 +347,3 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 
 	EventManager->SendSpecialAttack(this, 1);
 }
-
-

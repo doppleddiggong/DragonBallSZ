@@ -64,6 +64,16 @@ int32 UCommonFunctionLibrary::GetRandomIndex(const TArray<int32>& TargetArray, b
 	return TargetArray[FMath::RandRange(0, TargetArray.Num() - 1)];
 }
 
+UAnimMontage* UCommonFunctionLibrary::GetRandomMontage(const TArray<UAnimMontage*>& Montages)
+{
+	const int32 Num = Montages.Num();
+	if (Num <= 0)
+		return nullptr;
+
+	const int32 Idx = FMath::RandRange(0, Num - 1);
+	return Montages[Idx];
+}
+
 int64 UCommonFunctionLibrary::GetNowTimestamp()
 {
 	const auto DataTime = FDateTime::UtcNow();

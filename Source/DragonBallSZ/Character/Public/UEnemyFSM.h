@@ -24,10 +24,21 @@ enum class EEnemyState : uint8
 	EnemyLose UMETA(DisplayName = "EnemyLoseState"),
 };
 
+UENUM(BlueprintType)
+enum class EMoveInputType : uint8
+{
+	Forward UMETA(DisplayName = "MoveForward"),
+	Backward UMETA(DisplayName = "MoveBackward"),
+	Left UMETA(DisplayName = "MoveLeft"),
+	Right UMETA(DisplayName = "MoveRight"),
+	Jump UMETA(DisplayName = "Jump&Fly"),
+};
+
+
 // MoveType
 // (Sub State of ActDecision)
 UENUM(BlueprintType)
-enum class SpecialType : uint8
+enum class ESpecialType : uint8
 {
 	Kamehameha UMETA(DisplayName = "Kamehameha"),
 	ReleaseKi UMETA(DisplayName = "ReleaseKnockbackKi"),
@@ -41,7 +52,7 @@ class DRAGONBALLSZ_API UEnemyFSM : public UActorComponent
 
 public:
 	UEnemyFSM();
-	
+
 	UPROPERTY()
 	TObjectPtr<APlayerActor> Target;
 	UPROPERTY()
@@ -55,50 +66,74 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	// EEnemyState Weights
-	EEnemyState SelectWeightedRandomState();
+	// States.Add({EEnemyState::Move, 100.f});	// 가중치 추가
+	void ModifyWeightArray();
+	EEnemyState SelectWeightedRandomState(); // EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 10.f},
-		{EEnemyState::Move, 150.f},
+		{EEnemyState::Move, 80.f},
 		{EEnemyState::Attack, 10.f},
-		{EEnemyState::Charge, 10.f},
+		{EEnemyState::Charge, 0.f},
 		{EEnemyState::Special, 0.f},
 	};
 	EEnemyState CurrentState = EEnemyState::Idle;
+	void ChangeState(EEnemyState NewState);
 	bool bDamaged = false;
 	bool bDefeated = false;
 	bool bActing = false;
 	float CurrentTime = 0;
-	float DecisionTime = 1.5f;
-	
+	float ElapsedMoving = 0;
+	float DecisionTime = 0.8f;
+	float MovingTime;
+	float TargetDistance;
+	UPROPERTY(EditAnywhere)
+	float LongDistance = 4500;
+
 	void Idle();
+
 	void Move();
+	EMoveInputType SelectWeightedRandomMove(); // EEnemyState Weights
+	TArray<TPair<EMoveInputType, float>> Moves = {
+		{EMoveInputType::Forward, 90.f},
+		{EMoveInputType::Backward, 10.f},
+		{EMoveInputType::Left, 50.f},
+		{EMoveInputType::Right, 50.f},
+		{EMoveInputType::Jump, 0.f},
+	};
+	EMoveInputType CurrentMove;
+
+	void Attack();
+
+	void Charge();
+
+	void Special();
+
+	void Damaged();
+
+	void EnemyWin();
+
+	void EnemyLose();
+
+	void SpawnEnergyBlast();
+	void SpawnEnergyBlastLoop(int32 Remaining);
+	FTimerHandle EnergyBlastTimer;
+	UPROPERTY(EditAnywhere)
+	float FireRate = 0.2f;
+
+	void ActivateDashVFX(bool Active);
+	void CheckToLand();
 	FVector Bezier(FVector Pa, FVector ControlPoint, FVector Pb, float t);
+	void BeizerMove();
 	TArray<float> ArcLength;
 	int Samples;
 	void BuildTable(FVector A, FVector P, FVector B);
 	float FindT(float s);
 	float CumulativeDistance = 0;
 	void TargetingDestination();
-	float TargetDistance;
-	FVector Origin;
+	float DestinationDistance;
 	FVector Destination;
+	FVector OriginLocation;
 	FVector CenterControlPoint;
-	UPROPERTY(EditAnywhere)
 	bool bMoving;
-	UPROPERTY(EditAnywhere)
-	bool bFlying = false;
-	UPROPERTY(EditAnywhere)
-	float MoveSpeed;
-	void Attack();
-	void Charge();
-	void Special();
-	void Damaged();
-	void EnemyWin();
-	void EnemyLose();
-
-	UPROPERTY(EditAnywhere, Category="TestTarget")
-	TSubclassOf<AActor> TestFactory;
-	UPROPERTY()
-	TObjectPtr<AActor> TestTarget;
+	float MoveSpeed = 1700.f;
 };

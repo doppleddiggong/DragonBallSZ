@@ -88,7 +88,7 @@ def render_day_md(root, date_str, commits, out_path, template_tools, template_do
     addsT = sum(c['adds'] for c in commits)
     delsT = sum(c['dels'] for c in commits)
     filesT = sum(c['files'] for c in commits)
-    done=[]; prog=[]; need=[]; todos_list=[]
+    done=[]; prog=[]; need=[]; todos_list=[]; details_lines=[]
     for c in commits:
         cl, scope, clean_sub = classify(c['subject'])
         sha7 = c['sha'][:7]
@@ -100,6 +100,13 @@ def render_day_md(root, date_str, commits, out_path, template_tools, template_do
             need.append(f"주의: 호환성 변경/마이그레이션 필요 ({sha7})")
         for t in c.get('todos',[]):
             todos_list.append(f"- [ ] {t} (출처: {sha7})")
+        # Commit body details (quoted lines)
+        body_text = "\n".join(c.get("body", [])).strip()
+        if body_text:
+            details_lines.append(f"- {scope_tag}{clean_sub} ({sha7}) — {c['author']} @ {c['date']}")
+            for bl in body_text.splitlines():
+                details_lines.append(f"  > {bl}")
+            details_lines.append("")
 
     title_en = f"# Daily DevLog {date_str} (KST 09:00 boundary)"
     title_ko = f"# 일일 개발 로그 {date_str} (KST 09:00 경계)"
@@ -116,6 +123,9 @@ def render_day_md(root, date_str, commits, out_path, template_tools, template_do
     prog_body = "(none) / (없음)" if not prog else "\r\n".join(prog)
     need_body = "(none) / (없음)" if not need else "\r\n".join(need)
     todo_body = "(none) / (없음)" if not todos_list else "\r\n".join(todos_list)
+
+    details_head_en, details_head_ko = '## Commit Details','## 커밋 상세'
+    details_body = "(none) / (?�음)" if not details_lines else "\r\n".join(details_lines)
 
     metrics_en = "\r\n".join([
         f"Commits: {len(commits)}",
@@ -177,6 +187,7 @@ def render_day_md(root, date_str, commits, out_path, template_tools, template_do
             prog_head_en, prog_head_ko, prog_body, "",
             need_head_en, need_head_ko, need_body, "",
             todo_head_en, todo_head_ko, todo_body, "",
+            details_head_en, details_head_ko, details_body, "",
             "## Metrics (approx)", "## 메트릭(추정)", metrics_en, metrics_ko, ""
         ]
         md = "\r\n".join(parts)

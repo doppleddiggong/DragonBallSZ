@@ -1,0 +1,7 @@
+[submodule "AgentRule"]
+	path = AgentRule
+	url = https://github.com/doppleddiggong/AgentRule.git
+	branch = main
+[submodule "Plugins/CoffeeToolbar"]
+	path = Plugins/CoffeeToolbar
+	url = https://github.com/doppleddiggong/CoffeeToolbar

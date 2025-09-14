@@ -1,9 +1,12 @@
 ﻿// Copyright (c) 2025 Doppleddiggong. All rights reserved. Unauthorized copying, modification, or distribution of this file, via any medium is strictly prohibited. Proprietary and confidential.
 
 #include "UDBSZEventManager.h"
+#include "DragonBallSZ.h"
 
 void UDBSZEventManager::SendMessage(const FString& InMsg)
 {
+	PRINTLOG(TEXT("SendMessage(%s)"), *InMsg );
+	
 	OnMessage.Broadcast(InMsg);
 }
 
@@ -30,14 +33,19 @@ void UDBSZEventManager::SendHitStopPair(
 	OnHitStop.Broadcast(Target,   TargetType);
 }
 
+void UDBSZEventManager::SendCameraShake(AActor* Target, const EAttackPowerType Type)
+{
+	OnCameraShake.Broadcast(Target, Type);
+}
+
 void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
 	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);
 }
 
-void UDBSZEventManager::SendDash(AActor* Target, bool bIsDashing)
+void UDBSZEventManager::SendDash(AActor* Target, bool bIsDashing, FVector Direction)
 {
-	OnDash.Broadcast(Target, bIsDashing);
+	OnDash.Broadcast(Target, bIsDashing, Direction );
 }
 
 void UDBSZEventManager::SendTeleport(AActor* Target)
@@ -68,4 +76,14 @@ void UDBSZEventManager::SendAvoid(AActor* Target, bool bState)
 void UDBSZEventManager::SendPowerCharge(AActor* Target, bool bState)
 {
 	OnPowerCharge.Broadcast(Target, bState);
+}
+
+void UDBSZEventManager::SendUpstream(AActor* Target, bool bStart)
+{
+	OnUpstream.Broadcast(Target, bStart);
+}
+
+void UDBSZEventManager::SendDownstream(AActor* Target, bool bStart)
+{
+	OnDownstream.Broadcast(Target, bStart);
 }

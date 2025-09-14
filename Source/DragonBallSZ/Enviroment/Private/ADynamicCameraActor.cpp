@@ -245,7 +245,7 @@ FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
 	return BaseCameraLocation;
 }
 
-void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing)
+void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( PlayerRef != Target )
 		return;

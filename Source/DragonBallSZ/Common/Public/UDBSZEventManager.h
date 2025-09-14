@@ -37,7 +37,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
 
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, EAttackPowerType, Type);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnHitStop OnHitStop;
@@ -49,6 +48,12 @@ public:
 	void SendHitStopPair(AActor* Attacker, const EAttackPowerType AttackerType,
 						 AActor* Target,   const EAttackPowerType TargetType);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCameraShake, AActor*, Target, EAttackPowerType, Type);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnCameraShake OnCameraShake;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendCameraShake(AActor* Target, const EAttackPowerType Type);
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnKnockback,
 		AActor*,		   Target,
@@ -61,12 +66,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance);
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDash, AActor*, Target, bool, bIsDashing);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDash, AActor*, Target, bool, bIsDashing, FVector, Direction);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnDash OnDash;
 
 	UFUNCTION(BlueprintCallable, Category="Events")
-	void SendDash(AActor* Target, bool bIsDashing);
+	void SendDash(AActor* Target, bool bIsDashing, FVector Direction);
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeleport, AActor*, Target);
 	UPROPERTY(BlueprintAssignable, Category="Events")
@@ -110,4 +115,22 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendPowerCharge(AActor* Target, bool bState);
+
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpstream, AActor*, Target, bool, bStart );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnUpstream OnUpstream;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendUpstream(AActor* Target, bool bStart);
+
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDownstream, AActor*, Target, bool, bStart);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnDownstream OnDownstream;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendDownstream(AActor* Target, bool bStart);
+
 };

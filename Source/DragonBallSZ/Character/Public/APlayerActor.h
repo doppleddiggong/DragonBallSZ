@@ -4,14 +4,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "ACombatCharacter.h"
 #include "IControllable.h"
-#include "EBodyPartType.h"
-#include "URushAttackSystem.h"
 #include "APlayerActor.generated.h"
 
 UCLASS()
-class DRAGONBALLSZ_API APlayerActor : public ACharacter, public IControllable
+class DRAGONBALLSZ_API APlayerActor : public ACombatCharacter, public IControllable
 {
 	GENERATED_BODY()
 
@@ -25,66 +23,10 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Landed(const FHitResult& Hit) override;
 
-public: // Component
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UStatSystem* StatSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UHitStopSystem* HitStopSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UKnockbackSystem* KnockbackSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class URushAttackSystem* RushAttackSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UDashSystem* DashSystem;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UFlySystem* FlySystem;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* LeftHandComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* RightHandComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* LeftFootComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
-	class UArrowComponent* RightFootComp;
-
 public:
-	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
-	{
-		switch (Part)
-		{
-			case EBodyPartType::Hand_L: return LeftHandComp;
-			case EBodyPartType::Hand_R: return RightHandComp;
-			case EBodyPartType::Foot_L: return LeftFootComp;
-			case EBodyPartType::Foot_R: return RightFootComp;
-			default:	return LeftHandComp;
-		}
-	}
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
+	class UCameraShakeSystem* CameraShakeSystem;
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsControlEnable();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsMoveEnable();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsAttackEnable();
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsHiting();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
-	bool IsAttackIng();
-	UFUNCTION(BlueprintPure, Category="Player|Sight")
-	bool IsInSight(const AActor* Other) const;
-
-	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="LookTarget")
-	void OnLookTarget();
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Fly")
-	void OnFlyEnd();
-	UFUNCTION(BlueprintCallable, Category="Avoid")
-	void OnRestoreAvoid();
-	UFUNCTION(BlueprintCallable, Category="Fly")
-	void SetFlying();
-	
 public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void Cmd_Move(const FVector2D& Axis) override;
@@ -117,35 +59,11 @@ public: // Control Interface
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void Cmd_Kamehameha() override;
 
-	
-public: // Control Interface
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
-	bool IsSprinting = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
-	bool IsHit = false;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player")
-	class AEnemyActor* TargetActor;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Player|Dash")
-	TObjectPtr<class UNiagaraSystem> DashNiagaraSystem = nullptr;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player|Sight", meta=(ClampMin="0"))
-    float SightRange = 1200.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Player|Sight", meta=(ClampMin="0", ClampMax="180"))
-    float SightHalfFOVDeg = 60.0f; // half-angle degrees
-
-private:
-	FTimerHandle AvoidTimer;
-	float AvoidTime = 1.0f;
-	
-	UPROPERTY()
-	class UDBSZEventManager* EventManager;
-	
 public:
+	UFUNCTION(BlueprintCallable, Category="Avoid")
+	void OnRestoreAvoid();
 	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnDash(AActor* Target, bool IsDashing);
+	void OnDash(AActor* Target, bool IsDashing, FVector Direction);
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnTeleport(AActor* Target);
 	UFUNCTION(BlueprintCallable, Category="Event")
@@ -158,4 +76,33 @@ public:
 	void OnAvoid(AActor* Target, bool bState);
     UFUNCTION(BlueprintCallable, Category="Event")
     void OnPowerCharge(AActor* Target, bool bState);
+
+public:
+	// 에너지탄 발사 딜레이
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float BlastShotDelay = 0.5;
+
+	// 에너지탄 최대 발사 연속 발사
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnergyBlastFactory")
+	int MaxRepeatBlastShot = 5;
+	
+	// 재충전 딜레이
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float BlastShotRechargeDuration = 5.0;
+
+	// 현재 남은 잔탄
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnergyBlastFactory")
+	int RemainBlastShot  = MaxRepeatBlastShot;
+
+	// 마지막 발사 시간
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float LastBlastShotTime = 0;
+
+	// 재충전 시간
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float BlastShotRechargeTime = 0;
+
+private:
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
 };
