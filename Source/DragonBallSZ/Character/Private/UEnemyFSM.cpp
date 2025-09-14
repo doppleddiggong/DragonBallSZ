@@ -49,19 +49,19 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		return;
 	}
 
-	if (CurrentState == EEnemyState::Damaged)
+	if (Itself->IsHit)
 	{
 		void Damaged();
 		return;
 	}
 
-	if (CurrentState == EEnemyState::EnemyWin)
+	if (Target->StatSystem->IsDead)
 	{
 		void EnemyWin();
 		bDefeated = true;
 		return;
 	}
-	else if (CurrentState == EEnemyState::EnemyLose)
+	else if (Itself->StatSystem->IsDead)
 	{
 		void EnemyLose();
 		bDefeated = true;
@@ -133,7 +133,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// 현재 상태 출력
 	FString distStr = FString::Printf(TEXT("%f"), TargetDistance);
-	PRINTLOG(TEXT("%s"), *distStr);
+	PRINTLOG(TEXT("Distance: %s"), *distStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
 
 	CurrentTime += DeltaTime;
@@ -146,7 +146,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// 현재 상태 출력
 	FString stateStr = UEnum::GetValueAsString(CurrentState);
-	PRINTLOG(TEXT("%s"), *stateStr);
+	PRINTLOG(TEXT("EnemyState %s"), *stateStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, stateStr);
 
 	switch (CurrentState)
@@ -171,8 +171,20 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 void UEnemyFSM::ModifyWeightArray()
 {
+	// TargetDistance > MeleeDistance -> Attack: 2.f
+	// TargetDistance < MeleeDistance -> Attack: 75.f
+	if (auto* AttackState = States.FindByPredicate([](const auto& Elem)
+	{
+		return Elem.Key == EEnemyState::Attack;
+	}))
+	{
+		AttackState->Value = (TargetDistance < MeleeDistance)
+							  ? 75.f
+							  : 2.f;
+	}
+	
 	// Enemy Flying == Player Flying -> Jump: 0.f
-	// Enemy Flying != Player Flying -> Jump: 200.f
+	// Enemy Flying != Player Flying -> Jump: 150.f
 	if (auto* JumpMove = Moves.FindByPredicate([](const auto& Elem)
 	{
 		return Elem.Key == EMoveInputType::Jump;
@@ -180,9 +192,36 @@ void UEnemyFSM::ModifyWeightArray()
 	{
 		JumpMove->Value = ((Itself->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->
 			                  GetCharacterMovement()->MovementMode == MOVE_Flying))
-			                  ? 300.f
+			                  ? 150.f
 			                  : 0.f;
 	}
+
+	// Enemy CurrentHP > Player CurrentHP -> Backward: 10.f
+	// Enemy CurrentHP < Player CurrentHP -> Backward: 70.f
+	if (auto* ApproachMove = Moves.FindByPredicate([](const auto& Elem)
+	{
+		return Elem.Key == EMoveInputType::Backward;
+	}))
+	{
+		ApproachMove->Value = (Itself->StatSystem->CurHP > Target->StatSystem->CurHP)
+							  ? 10.f
+							  : 70.f;
+	}
+
+	// Enemy CurrentHP > Player CurrentHP -> Left, Right: 40.f
+	// Enemy CurrentHP < Player CurrentHP -> Left, Right: 70.f
+	for (auto& Elem : Moves)
+	{
+		if (Elem.Key == EMoveInputType::Left || Elem.Key == EMoveInputType::Right)
+		{
+			Elem.Value = (Itself->StatSystem->CurHP > Target->StatSystem->CurHP)
+						 ? 40.f
+						 : 70.f;
+		}
+	}
+
+	// Enemy CurrentHP < Player CurrentHP -> FireRate: 0.2 -> 0.4
+	Itself->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
 }
 
 EEnemyState UEnemyFSM::SelectWeightedRandomState()
@@ -246,16 +285,16 @@ void UEnemyFSM::Move()
 	switch (CurrentMove)
 	{
 	case EMoveInputType::Forward:
-		MovingTime = FMath::RandRange(0.7f, 1.7f);
+		MovingTime = FMath::RandRange(0.5f, 1.3f);
 		break;
 	case EMoveInputType::Backward:
-		MovingTime = FMath::RandRange(0.3f, 1.5f);
+		MovingTime = FMath::RandRange(0.3f, 1.1f);
 		break;
 	case EMoveInputType::Left:
-		MovingTime = FMath::RandRange(0.9f, 2.5f);
+		MovingTime = FMath::RandRange(0.7f, 1.6f);
 		break;
 	case EMoveInputType::Right:
-		MovingTime = FMath::RandRange(0.9f, 2.5f);
+		MovingTime = FMath::RandRange(0.7f, 1.6f);
 		break;
 	case EMoveInputType::Jump:
 		MovingTime = 0;
@@ -269,9 +308,11 @@ void UEnemyFSM::Move()
 void UEnemyFSM::Attack()
 {
 	bActing = true;
-
-
-	PRINTINFO();
+	Itself->RushAttackSystem->OnAttack();
+	
+	// Follow Player flying state
+	if ((Itself->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->GetCharacterMovement()->MovementMode == MOVE_Flying)) Itself->GetCharacterMovement()->SetMovementMode((Target->GetCharacterMovement()->MovementMode == MOVE_Flying) ? MOVE_Flying : MOVE_Walking);
+	
 	bActing = false;
 }
 
