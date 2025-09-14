@@ -64,6 +64,13 @@ public:
 	{
 		return bIsWinner;
 	};
+
+	UFUNCTION(BlueprintPure, Category="GameState")
+	FORCEINLINE bool IsHold() const
+	{
+		return bIsHold;
+	};
+	
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -157,6 +164,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
+	bool bIsHold = false;
 
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
