@@ -79,7 +79,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		ElapsedMoving += DeltaTime;
 		if (TargetDistance > LongDistance)
 		{
-			//Itself->RushAttackSystem->bIsDashing = true;
+			// ToDo: LookAt 비활성화
 			// 현재 상태 출력
 			FString distStr = FString::Printf(TEXT("%hhd"), Itself->RushAttackSystem->bIsDashing);
 			PRINTLOG(TEXT("%s"), *distStr);
