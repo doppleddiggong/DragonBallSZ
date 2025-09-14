@@ -17,6 +17,7 @@
 // Shared
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
+#include "EnergyBlastActor.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -74,6 +75,18 @@ void APlayerActor::Tick(float DeltaTime)
 
 	if ( RushAttackSystem->ShouldLookAtTarget())
 		this->OnLookTarget();
+
+	// 에너지탄 재장전 로직
+	if (RemainBlastShot < MaxRepeatBlastShot)
+	{
+		BlastShotRechargeTime += DeltaTime;
+		if (BlastShotRechargeTime >= BlastShotRechargeDuration)
+		{
+			RemainBlastShot = MaxRepeatBlastShot;
+			BlastShotRechargeTime = 0.0f;
+			PRINT_STRING(TEXT("Energy Blast Recharged"));
+		}
+	}
 }
 
 void APlayerActor::Landed(const FHitResult& Hit)
@@ -147,10 +160,6 @@ void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
 	PRINTLOG(TEXT("%s"), PrintMsg);
 }
-
-
-
-
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
@@ -249,7 +258,34 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 	if ( !IsControlEnable() )
 		return;
 
-	PRINTINFO();
+	// 발사 딜레이 체크
+	if (GetWorld()->GetTimeSeconds() < LastBlastShotTime + BlastShotDelay)
+		return;
+
+	// 잔탄 체크
+	if (RemainBlastShot > 0)
+	{
+		FActorSpawnParameters Params;
+		Params.Owner = this;
+		Params.Instigator = this;
+
+		GetWorld()->SpawnActor<AEnergyBlastActor>(
+			EnergyBlastFactory,
+			this->GetActorTransform(),
+			Params
+		);
+
+		// 발사 처리
+		RemainBlastShot--;
+		LastBlastShotTime = GetWorld()->GetTimeSeconds();
+		BlastShotRechargeTime = 0.0f;
+
+		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
+	}
+	else
+	{
+		PRINT_STRING(TEXT("Out of Energy Blast"));
+	}
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
