@@ -19,9 +19,6 @@ enum class EEnemyState : uint8
 	Attack UMETA(DisplayName = "MeleeAttackState"),
 	Charge UMETA(DisplayName = "ChargeKiState"),
 	Special UMETA(DisplayName = "SpecialAttackState"),
-	Damaged UMETA(DisplayName = "DamagedState"),
-	EnemyWin UMETA(DisplayName = "EnemyWinState"),
-	EnemyLose UMETA(DisplayName = "EnemyLoseState"),
 };
 
 UENUM(BlueprintType)
@@ -41,7 +38,7 @@ UENUM(BlueprintType)
 enum class ESpecialType : uint8
 {
 	Kamehameha UMETA(DisplayName = "Kamehameha"),
-	ReleaseKi UMETA(DisplayName = "ReleaseKnockbackKi"),
+	KnockbackKi UMETA(DisplayName = "KnockbackKi"),
 };
 
 
@@ -70,9 +67,9 @@ public:
 	void ModifyWeightArray();
 	EEnemyState SelectWeightedRandomState(); // EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
-		{EEnemyState::Idle, 10.f},
-		{EEnemyState::Move, 80.f},
-		{EEnemyState::Attack, 10.f},
+		{EEnemyState::Idle, 1.f},
+		{EEnemyState::Move, 10.f},
+		{EEnemyState::Attack, 0.f},
 		{EEnemyState::Charge, 0.f},
 		{EEnemyState::Special, 0.f},
 	};
@@ -86,7 +83,7 @@ public:
 	float DecisionTime = 0.8f;
 	float MovingTime;
 	float TargetDistance;
-	UPROPERTY(EditAnywhere)
+	float MeleeDistance = 1000;
 	float LongDistance = 4500;
 
 	void Idle();
@@ -94,10 +91,10 @@ public:
 	void Move();
 	EMoveInputType SelectWeightedRandomMove(); // EEnemyState Weights
 	TArray<TPair<EMoveInputType, float>> Moves = {
-		{EMoveInputType::Forward, 90.f},
+		{EMoveInputType::Forward, 80.f},
 		{EMoveInputType::Backward, 10.f},
-		{EMoveInputType::Left, 50.f},
-		{EMoveInputType::Right, 50.f},
+		{EMoveInputType::Left, 40.f},
+		{EMoveInputType::Right, 40.f},
 		{EMoveInputType::Jump, 0.f},
 	};
 	EMoveInputType CurrentMove;
