@@ -35,17 +35,8 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				GetActorLocation(),
-				GetActorRotation(),
-				FVector(0.4f, 0.4f, 0.4f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
+			
+			SpawnExplosionVFX();
 			this->Destroy();
 		}
 	}
@@ -53,17 +44,8 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				GetActorLocation(),
-				GetActorRotation(),
-				FVector(0.4f, 0.4f, 0.4f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
+			
+			SpawnExplosionVFX();
 			this->Destroy();
 		}
 	}
@@ -103,4 +85,19 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 	Direction.Normalize();
 
 	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed);
+}
+
+void AEnergyBlastActor::SpawnExplosionVFX()
+{
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				Explosion,
+				GetActorLocation(),
+				GetActorRotation(),
+				FVector(0.4f, 0.4f, 0.4f),
+				true,
+				true,
+				ENCPoolMethod::None,
+				true
+			);
 }

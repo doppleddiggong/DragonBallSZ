@@ -70,11 +70,11 @@ void AEnemyActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if ( !IsHit )
+	if ( !IsHit || !RushAttackSystem->bIsDashing )
 	{
 		this->OnLookTarget();
 	}
-	else if ( RushAttackSystem->ShouldLookAtTarget())
+	else if ( RushAttackSystem->ShouldLookAtTarget() )
 		this->OnLookTarget();
 }
 

@@ -9,8 +9,13 @@
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
 #include "EnergyBlastActor.h"
+#include "NiagaraFunctionLibrary.h"
+#include "UDashSystem.h"
+#include "UFlySystem.h"
+#include "URushAttackSystem.h"
 #include "VectorTypes.h"
 #include "Features/UEaseFunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Runtime/MovieSceneTracks/Private/MovieSceneTracksCustomAccessors.h"
 #include "Shared/FEaseHelper.h"
@@ -37,13 +42,13 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (bDefeated) return; // Return if the Game is Over
 
 	if (Itself->IsCombatStart() == false ||
-		Itself->IsCombatResult() )
+		Itself->IsCombatResult())
 	{
 		// 전투 시작전
 		// 전투 결과후
 		return;
 	}
-	
+
 	if (CurrentState == EEnemyState::Damaged)
 	{
 		void Damaged();
@@ -68,11 +73,16 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (bMoving)
 	{
 		ElapsedMoving += DeltaTime;
-		// if (TargetDistance > LongDistance)
-		// {
-		// 	MoveBeizer();
-		// 	return;
-		// }
+		if (TargetDistance > LongDistance)
+		{
+			//Itself->RushAttackSystem->bIsDashing = true;
+			// 현재 상태 출력
+			FString distStr = FString::Printf(TEXT("%hhd"), Itself->RushAttackSystem->bIsDashing);
+			PRINTLOG(TEXT("%s"), *distStr);
+			GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
+			BeizerMove();
+			return;
+		}
 
 		if (ElapsedMoving > MovingTime)
 		{
@@ -94,6 +104,26 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		case EMoveInputType::Right:
 			Itself->AddMovementInput(Itself->GetActorRightVector(), 1);
 			break;
+		case EMoveInputType::Jump:
+			if (Itself->GetCharacterMovement()->MovementMode != MOVE_Flying) // Not flying: Jump & Fly
+			{
+				Itself->FlySystem->OnJump();
+				FTimerHandle JumpTimer;
+				GetWorld()->GetTimerManager().SetTimer(
+					JumpTimer,
+					[this]()
+					{
+						Itself->FlySystem->OnJump();
+					},
+					0.5f,
+					false
+				);
+			}
+			else // Land on ground
+			{
+				Itself->FlySystem->OnJump();
+			};
+			break;
 		}
 		return;
 	}
@@ -101,13 +131,18 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// Distance between Target
 	TargetDistance = FVector::Dist(Itself->GetActorLocation(), Target->GetActorLocation());
 
+	// 현재 상태 출력
+	FString distStr = FString::Printf(TEXT("%f"), TargetDistance);
+	PRINTLOG(TEXT("%s"), *distStr);
+	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
+
 	CurrentTime += DeltaTime;
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
 	CurrentTime = 0;
 
+	ModifyWeightArray(); // Add & Remove Weight
 
-	// States.Add({EEnemyState::Act, 100.f});	// 가중치 추가
-	ChangeState(SelectWeightedRandomState());
+	ChangeState(SelectWeightedRandomState()); // Change state randomly
 
 	// 현재 상태 출력
 	FString stateStr = UEnum::GetValueAsString(CurrentState);
@@ -120,7 +155,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		Idle();
 		break;
 	case EEnemyState::Move:
-		//TargetingDestination();	// Beizer 이동
 		Move();
 		break;
 	case EEnemyState::Attack:
@@ -132,6 +166,22 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	case EEnemyState::Special:
 		Special();
 		break;
+	}
+}
+
+void UEnemyFSM::ModifyWeightArray()
+{
+	// Enemy Flying == Player Flying -> Jump: 0.f
+	// Enemy Flying != Player Flying -> Jump: 200.f
+	if (auto* JumpMove = Moves.FindByPredicate([](const auto& Elem)
+	{
+		return Elem.Key == EMoveInputType::Jump;
+	}))
+	{
+		JumpMove->Value = ((Itself->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->
+			                  GetCharacterMovement()->MovementMode == MOVE_Flying))
+			                  ? 300.f
+			                  : 0.f;
 	}
 }
 
@@ -178,29 +228,37 @@ void UEnemyFSM::Idle()
 
 void UEnemyFSM::Move()
 {
-	// if (TargetDistance > LongDistance) TargetingDestination();
-
-	CurrentMove = SelectWeightedRandomMove();
+	if (TargetDistance > LongDistance)
+	{
+		TargetingDestination();
+		ActivateDashVFX(true);
+		return;
+	}
 
 	if (FMath::FRand() <= FireRate)
 	{
 		SpawnEnergyBlastLoop(FMath::RandRange(1, 6));
 	}
-	
+
+	// EMovementMode::MOVE_Flying
+	CurrentMove = SelectWeightedRandomMove();
 
 	switch (CurrentMove)
 	{
 	case EMoveInputType::Forward:
-		MovingTime = FMath::RandRange(0.7f, 2.3f);
+		MovingTime = FMath::RandRange(0.7f, 1.7f);
 		break;
 	case EMoveInputType::Backward:
-		MovingTime = FMath::RandRange(1.1f, 4.3f);
+		MovingTime = FMath::RandRange(0.3f, 1.5f);
 		break;
 	case EMoveInputType::Left:
-		MovingTime = FMath::RandRange(1.1f, 4.3f);
+		MovingTime = FMath::RandRange(0.9f, 2.5f);
 		break;
 	case EMoveInputType::Right:
-		MovingTime = FMath::RandRange(0.5f, 1.9f);
+		MovingTime = FMath::RandRange(0.9f, 2.5f);
+		break;
+	case EMoveInputType::Jump:
+		MovingTime = 0;
 		break;
 	}
 
@@ -267,7 +325,7 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 	if (Remaining <= 0) return;
 
 	SpawnEnergyBlast();
-	
+
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()
 	{
@@ -278,37 +336,31 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 		EnergyBlastTimer,
 		TimerDelegate,
 		0.17f,
-		false
+		false,
+		FMath::RandRange(0.f, 0.5f)
 	);
 }
 
-void UEnemyFSM::MoveBeizer()
+void UEnemyFSM::ActivateDashVFX(bool Active)
 {
-	// Flying
-	MoveSpeed = 10000.f;
-	if (IsValid(Itself) == false)
+	if (Active)
 	{
+		Itself->DashSystem->NiagaraComp->Activate(Active);
 		return;
 	}
+	Itself->DashSystem->NiagaraComp->Deactivate();
+}
 
-	CumulativeDistance += MoveSpeed * GetWorld()->GetDeltaSeconds();
-	float t = FindT(CumulativeDistance);
-	FVector Pos = Bezier(Origin, CenterControlPoint, Destination, t);
-
-	// 현재 상태 출력
-	FString DistStr = FString::Printf(TEXT("%.2f"), CumulativeDistance);
-	PRINTLOG(TEXT("%s"), *DistStr);
-	GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, DistStr);
-
-	// Approach distance tolerance
-	if (ArcLength[Samples] < 10)
-	{
-		CumulativeDistance = 0;
-		bMoving = false;
-		bActing = true;
-		return;
-	}
-	Itself->SetActorLocation(Pos, true);
+void UEnemyFSM::CheckToLand()
+{
+	FHitResult Hit;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Itself->GetActorLocation(),
+		Itself->GetActorLocation() - FVector(0, 0, 35.f),
+		ECC_WorldDynamic
+	);
+	if (Hit.GetActor()->ActorHasTag("Ground")) Itself->FlySystem->OnLand(Hit);
 }
 
 FVector UEnemyFSM::Bezier(const FVector Pa, const FVector ControlPoint, const FVector Pb, const float t)
@@ -317,6 +369,30 @@ FVector UEnemyFSM::Bezier(const FVector Pa, const FVector ControlPoint, const FV
 	FVector Lerp2 = FMath::Lerp(ControlPoint, Pb, t);
 	return FMath::Lerp(Lerp1, Lerp2, t);
 }
+
+void UEnemyFSM::BeizerMove()
+{
+	// Fly
+	if (Itself->GetCharacterMovement()->MovementMode != MOVE_Flying) Itself->GetCharacterMovement()->
+	                                                                         SetMovementMode(MOVE_Flying);
+
+	CumulativeDistance += MoveSpeed * GetWorld()->GetDeltaSeconds();
+	float t = FindT(CumulativeDistance);
+	FVector Pos = Bezier(OriginLocation, CenterControlPoint, Destination, t);
+
+	// Approach distance tolerance
+	if (ArcLength[Samples] < CumulativeDistance)
+	{
+		bMoving = false;
+		CumulativeDistance = 0;
+		ActivateDashVFX(false);
+		CheckToLand();
+		return;
+	}
+	Itself->SetActorLocation(Pos, true);
+	Itself->DashSystem->NiagaraComp->SetWorldRotation(Itself->GetActorForwardVector().Rotation());
+}
+
 
 void UEnemyFSM::BuildTable(FVector A, FVector P, FVector B)
 {
@@ -348,22 +424,22 @@ float UEnemyFSM::FindT(float s)
 
 void UEnemyFSM::TargetingDestination()
 {
-	Origin = Itself->GetActorLocation();
-	Destination = Target->GetActorLocation() + (Origin - Target->GetActorLocation()).GetSafeNormal() * 2000;
+	OriginLocation = Itself->GetActorLocation();
+	Destination = Target->GetActorLocation() + Target->GetActorForwardVector() * 1200;
 
 	// Center Control Point Direction
-	FVector SideVectorFromResult = FVector::CrossProduct(FVector::UpVector, Destination - Origin);
-	FVector UpVectorFromResult = FVector::CrossProduct(Destination - Origin, SideVectorFromResult);
+	FVector SideVectorFromResult = FVector::CrossProduct(FVector::UpVector, Destination - OriginLocation);
+	FVector UpVectorFromResult = FVector::CrossProduct(Destination - OriginLocation, SideVectorFromResult);
 	UpVectorFromResult.Normalize();
 
 	// CenterControlPoint = CenterPoint + Up or Down Vector
-	float Height = Destination.Z - Origin.Z;
+	float Height = Destination.Z - OriginLocation.Z;
 	float CurveHeight = FMath::RandRange(0.f, Height / 2);
-	CenterControlPoint = (Destination + Origin) * 0.5f + UpVectorFromResult * CurveHeight;
+	CenterControlPoint = (Destination + OriginLocation) * 0.5f + UpVectorFromResult * CurveHeight;
 
 	// Sample Curve Length
-	DestinationDistance = FVector::Dist(Destination, Origin);
-	BuildTable(Origin, CenterControlPoint, Destination);
+	DestinationDistance = FVector::Dist(Destination, OriginLocation);
+	BuildTable(OriginLocation, CenterControlPoint, Destination);
 
 	bMoving = true;
 }
