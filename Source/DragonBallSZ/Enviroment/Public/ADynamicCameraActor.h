@@ -57,13 +57,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraLocation(float DeltaTime);
 
-	UFUNCTION()
-	void ResetCameraForwardLocation(float DeltaTime);
-
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraRotation(float DeltaTime);
-
-	bool TargetDeadZoneCheck(const AActor &Target);
 
 
 public:// Event-Delegate
