@@ -4,4 +4,5 @@
 	branch = main
 [submodule "Plugins/CoffeeToolbar"]
 	path = Plugins/CoffeeToolbar
-	url = https://github.com/doppleddiggong/CoffeeToolbar
+	url = https://github.com/doppleddiggong/CoffeeToolbar.git
+	branch = main
