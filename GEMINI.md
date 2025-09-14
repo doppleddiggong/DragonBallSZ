@@ -41,7 +41,7 @@
 - 커밋 메세지 자동 생성 요청을 받으면 에이전트 스펙은 AgentRule/commit-agent.md 참조
 
 ## 코딩 컨벤션 (Coding Conventions)
-- 코드 자동 생성 요청을 받으면 에이전트 스펙은 AgeuntRule/conventions-agent.md 참조
+- 코드 자동 생성 요청을 받으면 에이전트 스펙은 AgentRule/conventions-agent.md 참조
 
 ## 디버그 에이전트 워크플로우 (Debug Agent Workflow)
 - **목적**: 코딩 버그 발생 시 체계적인 디버깅 및 수정 프로세스 제공.
@@ -54,6 +54,15 @@
   - 수정 적용 후, 불필요한 디버그 코드를 자동으로 제거한다.
 - **참고**: 디버그 에이전트의 상세 동작 지침은 `AgentRule/debug_guide.md`를 참조한다.
 ---
+
+## DevLog 에이전트 워크플로우 (DevLog Agent Workflow)
+- **목적**: 일일 업무 일지 및 30일 요약 보고서 자동 생성.
+- **활성화**: 에이전트 구동 시 또는 수동 요청 시 활성화.
+- **동작**:
+  - `AgentRule/DevLog-Agent.md`에 정의된 지침에 따라 Git 커밋을 분석하여 DevLog를 생성한다.
+  - `Documents/DevLog/YYYY-MM-DD.md` 및 `Documents/DevLog/_Last30Summary.md` 파일을 업데이트한다.
+- **참고**: DevLog 에이전트의 상세 동작 지침은 `AgentRule/DevLog-Agent.md`를 참조한다.
+
 
 
 
@@ -282,13 +291,3 @@ REM (옵션) 프로젝트 파일 생성
 
 ---
 
-## 9. DevLog 자동 생성 규칙 (업데이트)
-
-- 목적: KST 09:00 경계 기준으로 DevLog 생성/백필/30일 요약.
-- 출력 경로: Documents/DevLog/YYYY-MM-DD.md, Documents/DevLog/_Last30Summary.md.
-- 실행:
-  - PreBuildSteps: Tools/run_generate_daily_devlog_once.ps1 -BackfillDays 30 -BuildSummary
-  - 수동: Tools/RunDevLog.cmd
-- 출력 언어: 영어+한글 병기(가독성 향상).
-- 참고: Q&A 요약 저장 전 Documents/DevLog/_Last30Summary.md와 최근 일자 파일을 참고하세요.
-- 비고: 기존 DailyPlan 경로 표기는 DevLog로 대체합니다.

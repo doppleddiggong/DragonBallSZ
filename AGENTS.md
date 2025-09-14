@@ -1,4 +1,4 @@
-﻿# 코덱스 에이전트 시스템 프롬프트 (Project DBSZ)
+# 코덱스 에이전트 시스템 프롬프트 (Project DBSZ)
 
 ---
 
@@ -41,8 +41,27 @@
 - 커밋 메세지 자동 생성 요청을 받으면 에이전트 스펙은 AgentRule/commit-agent.md 참조
 
 ## 코딩 컨벤션 (Coding Conventions)
-- 코드 자동 생성 요청을 받으면 에이전트 스펙은 AgeuntRule/conventions-agent.md 참조
+- 코드 자동 생성 요청을 받으면 에이전트 스펙은 AgentRule/conventions-agent.md 참조
 
+## 디버그 에이전트 워크플로우 (Debug Agent Workflow)
+- **목적**: 코딩 버그 발생 시 체계적인 디버깅 및 수정 프로세스 제공.
+- **활성화**: 문제가 발생하여 디버깅이 필요할 때 에이전트에게 "디버그 에이전트 활성화"를 요청한다.
+- **동작**:
+  - 에이전트는 문제 재현 조건 및 예상 동작을 확인한다.
+  - `AgentRule/debug_guide.md`에 정의된 지침에 따라 디버그 포인트를 식별하고 `PRINTLOG` (또는 유사한 디버그 출력) 코드를 삽입한다.
+  - 사용자에게 컴파일 및 테스트를 요청하고, 출력된 로그를 분석한다.
+  - 분석 결과를 바탕으로 문제의 원인을 파악하고 수정 방안을 제안한다.
+  - 수정 적용 후, 불필요한 디버그 코드를 자동으로 제거한다.
+- **참고**: 디버그 에이전트의 상세 동작 지침은 `AgentRule/debug_guide.md`를 참조한다.
+---
+
+## DevLog 에이전트 워크플로우 (DevLog Agent Workflow)
+- **목적**: 일일 업무 일지 및 30일 요약 보고서 자동 생성.
+- **활성화**: 에이전트 구동 시 또는 수동 요청 시 활성화.
+- **동작**:
+  - `AgentRule/DevLog-Agent.md`에 정의된 지침에 따라 Git 커밋을 분석하여 DevLog를 생성한다.
+  - `Documents/DevLog/YYYY-MM-DD.md` 및 `Documents/DevLog/_Last30Summary.md` 파일을 업데이트한다.
+- **참고**: DevLog 에이전트의 상세 동작 지침은 `AgentRule/DevLog-Agent.md`를 참조한다.
 ---
 
 
@@ -57,6 +76,7 @@
 - **주요 기능**: 캐릭터 전투(대시/부스트/넉백/히트스탑/러시어택), AI, 카메라 매니저, 데이터·이벤트 관리, 전투 UI, 나이아가라 VFX, Enhanced Input
 
 ---
+
 
 ### 2) 엔진 / 툴체인
 - **UE 버전**: 5.6  
@@ -73,6 +93,7 @@
 
 ---
 
+
 ### 3) 언어 / 런타임
 - **C++**: 엔진 모듈 / 게임 로직
 - **블루프린트**: 일부 사용 (기본 게임모드 `GM_DBSZ` 블루프린트)
@@ -80,6 +101,7 @@
 - **VFX**: Niagara
 
 ---
+
 
 ### 4) 모듈 구성
 
@@ -104,6 +126,7 @@
 
 ---
 
+
 ### 5) 주요 서브시스템 (게임 모듈)
 #### Character
 - 캐릭터/AI: `APlayerActor`, `AEnemyActor`, `AEnemyAIController`, `UEnemyFSM`, `UEnemyAnimInstance`
@@ -123,12 +146,14 @@
 
 ---
 
+
 ### 6) 플랫폼 / 타깃
 - **타깃**: `DragonBallSZTarget`(Game), `DragonBallSZEditorTarget`(Editor) — Win64
 - **플러그인 화이트리스트**: `CoffeeToolbar` Editor 모듈 Win64 허용
 - **AndroidFileServer 설정 존재**(`DefaultEngine.ini`) — 개발 편의 플러그인 활성화(실제 Android 타깃 여부와 무관)
 
 ---
+
 
 ### 7) 입력 / 맵 / 게임모드
 - **Enhanced Input 사용**  
@@ -141,6 +166,7 @@
 
 ---
 
+
 ### 8) 애셋 / 콘텐츠
 - `Content/CustomContents/Assets`  
   - 캐릭터(Goku 등) 스켈레탈 메시, 애니메이션, 몽타주 다수
@@ -148,6 +174,7 @@
 - **대규모 바이너리 애셋** → Git 관리 시 **LFS 권장**
 
 ---
+
 
 ### 9) 빌드 / 실행
 
@@ -161,6 +188,7 @@
 
 REM (옵션) 프로젝트 파일 생성
 "<UE>\Engine\Build\BatchFiles\GenerateProjectFiles.bat" -project="<PATH>\DragonBallSZ.uproject"
+
 
 
 
@@ -249,6 +277,7 @@ REM (옵션) 프로젝트 파일 생성
 3) 액션 — 근거
 ---
 
+
 ## 8. Agent 대화 요약 자동 저장 규칙
 
 - 목적: DBSZ 관련 작업 중 에이전트와의 의미 있는 질의응답을 팀이 공유·검색할 수 있도록 자동으로 기록한다.
@@ -272,14 +301,4 @@ REM (옵션) 프로젝트 파일 생성
 
 ---
 
-## 9. DevLog 자동 생성 규칙 (업데이트)
-
-- 목적: KST 09:00 경계 기준으로 DevLog 생성/백필/30일 요약.
-- 출력 경로: Documents/DevLog/YYYY-MM-DD.md, Documents/DevLog/_Last30Summary.md.
-- 실행:
-  - PreBuildSteps: Tools/run_generate_daily_devlog_once.ps1 -BackfillDays 30 -BuildSummary
-  - 수동: Tools/RunDevLog.cmd
-- 출력 언어: 영어+한글 병기(가독성 향상).
-- 참고: Q&A 요약 저장 전 Documents/DevLog/_Last30Summary.md와 최근 일자 파일을 참고하세요.
-- 비고: 기존 DailyPlan 경로 표기는 DevLog로 대체합니다.
 
