@@ -36,7 +36,7 @@ public:
 	class ACombatCharacter* TargetRef;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CameraDistance = 300;
+	float CameraDistance = 200;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TargetDistance = 500;
@@ -94,11 +94,11 @@ private:
 public:
 	// ✅ 옆으로 피할 거리를 설정하는 변수를 추가합니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Obstruction")
-	float ObstructionAvoidanceOffset = 150.f;
+	float ObstructionAvoidanceOffset = 200.f;
 
 	// ✅ 일직선으로 판단할 민감도를 설정하는 변수를 추가합니다. (1.0에 가까울수록 민감)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Obstruction")
-	float ObstructionDotThreshold = 0.98f;
+	float ObstructionDotThreshold = 0.9f;
 
 	// ✅ 타겟 가림을 회피하는 위치를 계산할 새로운 함수를 선언합니다.
 	FVector GetAvoidanceAdjustedCameraLocation();

@@ -74,40 +74,37 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 	// 원거리 상태일 때의 로직
 	else
 	{
-		// ✅ 이 프레임에서 카메라를 리셋해야 하는지 결정할 변수
-		bool bShouldResetCameraNow = false;
+		// --- 카메라를 움직여야 하는 모든 조건을 각각 독립적으로 확인합니다 ---
 
 		// 조건 1: 플레이어가 카메라-타겟 직선에서 너무 멀리 벗어났는가?
-		if (ShouldResetByAlignment())
-		{
-			bShouldResetCameraNow = true;
-		}
+		const bool bShouldResetByAlignment = ShouldResetByAlignment();
 
-		// 조건 2: (위 조건에 해당하지 않을 때) 플레이어가 앞 또는 뒤로 움직이는가?
-		if (!bShouldResetCameraNow)
+		// 조건 2: 플레이어가 앞 또는 뒤로 움직이는가?
+		bool bIsMovingFwdBack = false;
+		const FVector PlayerVelocity = PlayerRef->GetVelocity();
+		if (!PlayerVelocity.IsNearlyZero())
 		{
-			const FVector PlayerVelocity = PlayerRef->GetVelocity();
-			if (!PlayerVelocity.IsNearlyZero())
+			const FVector DirectionToTarget = (TargetRef->GetActorLocation() - PlayerRef->GetActorLocation()).GetSafeNormal();
+			const float ForwardDot = FVector::DotProduct(PlayerVelocity.GetSafeNormal(), DirectionToTarget);
+			if (FMath::Abs(ForwardDot) > 0.5f)
 			{
-				const FVector DirectionToTarget = (TargetRef->GetActorLocation() - PlayerRef->GetActorLocation()).GetSafeNormal();
-				const float ForwardDot = FVector::DotProduct(PlayerVelocity.GetSafeNormal(), DirectionToTarget);
-				
-				// 전후방 움직임 감지
-				if (FMath::Abs(ForwardDot) > 0.5f)
-				{
-					bShouldResetCameraNow = true;
-				}
+				bIsMovingFwdBack = true;
 			}
 		}
-		
-		// ✅ 위 조건 중 하나라도 만족하면 카메라를 움직입니다.
-		if (bShouldResetCameraNow)
+
+		// 조건 3: 현재 카메라 위치에서 플레이어가 타겟을 가리는가?
+		const FVector DirToPlayer = (PlayerRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+		const FVector DirToTarget = (TargetRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+		const bool bIsObstructing = FVector::DotProduct(DirToPlayer, DirToTarget) > ObstructionDotThreshold;
+
+		// --- 위 조건 중 하나라도 true이면 카메라를 움직입니다 ---
+		if (bShouldResetByAlignment || bIsMovingFwdBack || bIsObstructing)
 		{
-			// 카메라를 플레이어 등 뒤로 부드럽게 이동시킵니다.
+			// ResetCameraLocation 함수에 타겟 가림 회피 기능이 이미 포함되어 있습니다.
 			ResetCameraLocation(DeltaTime);
 			CloseCameraRotation(DeltaTime);
 		}
-		// 모든 조건에 해당하지 않으면(예: 얼라인먼트 안에서 옆으로 움직일 때)
+		// 모든 조건에 해당하지 않으면(예: 얼라인먼트 안에서 타겟을 가리지 않고 옆으로 움직일 때)
 		// 카메라는 완벽하게 고정됩니다.
 	}
 }
@@ -132,14 +129,6 @@ void ADynamicCameraActor::ResetCameraLocation(float DeltaTime)
 	
 	// 목표 위치로 부드럽게 이동합니다.
 	FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), TargetCameraLocation, DeltaTime, 5.f);
-	SetActorLocation(NewLocation);
-}
-
-void ADynamicCameraActor::ResetCameraForwardLocation(float DeltaTime)
-{
-	FVector PlayerLocation = PlayerRef->GetActorLocation();
-	FVector TargetLocation = TargetRef->GetActorLocation();
-	FVector NewLocation = UKismetMathLibrary::VInterpTo(GetActorLocation(), ((PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * 300).Length() * GetActorForwardVector()* -1) + FVector(0, 0, 100), DeltaTime, 1);
 	SetActorLocation(NewLocation);
 }
 
@@ -175,28 +164,37 @@ FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
 {
 	FVector PlayerLocation = PlayerRef->GetActorLocation();
 	FVector TargetLocation = TargetRef->GetActorLocation();
+	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * CameraDistance) + FVector(0, 0, 100);
 
-	// 1. 기본 목표 위치를 계산합니다 (플레이어의 등 뒤).
-	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * 300) + FVector(0, 0, 100);
-
-	// 2. 이 '기본 위치'에서 플레이어와 타겟이 일직선인지 확인합니다.
 	FVector DirToPlayer = (PlayerLocation - BaseCameraLocation).GetSafeNormal();
 	FVector DirToTarget = (TargetLocation - BaseCameraLocation).GetSafeNormal();
 	float AlignmentDot = FVector::DotProduct(DirToPlayer, DirToTarget);
 
-	// 3. 만약 일직선에 가깝다면 (Dot Product 결과가 임계값보다 크다면)
 	if (AlignmentDot > ObstructionDotThreshold)
 	{
-		// 4. 카메라의 '오른쪽' 방향 벡터를 계산합니다.
-		FVector RightVector = FVector::CrossProduct(DirToPlayer, FVector::UpVector).GetSafeNormal();
+		// 1. 카메라의 기본 '오른쪽' 방향을 계산합니다.
+		FVector SidewaysVector = FVector::CrossProduct(DirToPlayer, FVector::UpVector).GetSafeNormal();
+		
+		// ✅ 2. 플레이어의 현재 속도를 가져옵니다.
+		const FVector PlayerVelocity = PlayerRef->GetVelocity();
+		
+		// ✅ 3. 플레이어의 이동 방향과 플레이어의 오른쪽 방향을 내적하여 좌/우 움직임을 판단합니다.
+		const float SidewaysDot = FVector::DotProduct(PlayerVelocity.GetSafeNormal(), PlayerRef->GetActorRightVector());
 
-		// 5. 기본 위치에 '오른쪽' 벡터와 오프셋 거리를 곱한 값을 더해 목표 위치를 보정합니다.
-		BaseCameraLocation += RightVector * ObstructionAvoidanceOffset;
+		// ✅ 4. 만약 왼쪽으로 움직이고 있다면 (내적 결과가 음수), 옆 방향 벡터를 뒤집어줍니다.
+		if (SidewaysDot < -0.1f) // -0.1f 같은 작은 임계값을 주어 애매한 움직임은 무시합니다.
+		{
+			SidewaysVector *= -1.0f; // 오른쪽 -> 왼쪽
+		}
+		
+		// 5. 최종적으로 결정된 방향으로 카메라 위치를 보정합니다.
+		// (오른쪽으로 움직이거나, 정지/전후방 이동 시에는 기본값인 오른쪽으로 비켜납니다)
+		BaseCameraLocation += SidewaysVector * ObstructionAvoidanceOffset;
 	}
 
-	// 6. 최종적으로 계산된 목표 위치를 반환합니다.
 	return BaseCameraLocation;
 }
+
 
 void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
