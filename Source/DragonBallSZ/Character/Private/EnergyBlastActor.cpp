@@ -39,6 +39,7 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
+			this->HitProcess(TargetActor, EVFXType::Explosion_Yellow);
 			// SpawnExplosionVFX();
 			this->Destroy();
 		}
@@ -47,6 +48,7 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
+			this->HitProcess(TargetActor, EVFXType::Explosion_Blue);
 			// SpawnExplosionVFX();
 			this->Destroy();
 		}
