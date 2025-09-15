@@ -105,7 +105,7 @@ void APlayerActor::Tick(float DeltaTime)
 		{
 			RemainBlastShot = MaxRepeatBlastShot;
 			BlastShotRechargeTime = 0.0f;
-			PRINT_STRING(TEXT("Energy Blast Recharged"));
+			// PRINT_STRING(TEXT("Energy Blast Recharged"));
 		}
 	}
 }
@@ -332,11 +332,11 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 
 		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 		
-		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
+		// PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
 	}
 	else
 	{
-		PRINT_STRING(TEXT("Out of Energy Blast"));
+		// PRINT_STRING(TEXT("Out of Energy Blast"));
 	}
 }
 

@@ -165,20 +165,29 @@ UAnimMontage* ACombatCharacter::GetRandomHitAnim()
 void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
+	{
+		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+		{
+			if ( IsPlayer() )
+				EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+			else if ( IsEnemy())
+				EventManager->SendUpdateHealth(false, StatSystem->CurHP, StatSystem->MaxHP);
+		}
 		bIsCombatStart = true;
+	}
 	else if ( InMsg == GameEvent::PlayerWin )
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsPlayer();
 
-		PRINT_STRING(TEXT("WINNER IS PLAYER"));
+		PRINTLOG(TEXT("WINNER IS PLAYER"));
 	}
 	else if ( InMsg == GameEvent::EnemyWin )
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsEnemy();
 
-		PRINT_STRING(TEXT("ENEMY IS PLAYER"));
+		PRINTLOG(TEXT("ENEMY IS PLAYER"));
 	}
 }
 
