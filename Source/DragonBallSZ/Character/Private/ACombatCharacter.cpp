@@ -180,14 +180,14 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 		bIsCombatResult = true;
 		bIsWinner = this->IsPlayer();
 
-		PRINTLOG(TEXT("WINNER IS PLAYER"));
+		// PRINTLOG(TEXT("WINNER IS PLAYER"));
 	}
 	else if ( InMsg == GameEvent::EnemyWin )
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsEnemy();
 
-		PRINTLOG(TEXT("ENEMY IS PLAYER"));
+		// PRINTLOG(TEXT("ENEMY IS PLAYER"));
 	}
 }
 

@@ -117,8 +117,8 @@ void AEnemyActor::OnDash(AActor* Target, bool IsDashing, FVector Direction )
 {
 	if ( this != Target )
 		return;
-	const TCHAR* PrintMsg = IsDashing ? TEXT("Enemy Dashing Start") : TEXT("Enemy Dashing Complete");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = IsDashing ? TEXT("Enemy Dashing Start") : TEXT("Enemy Dashing Complete");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void AEnemyActor::OnTeleport(AActor* Target)
@@ -126,7 +126,7 @@ void AEnemyActor::OnTeleport(AActor* Target)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("Enemy OnTeleport"));
+	// PRINTLOG(TEXT("Enemy OnTeleport"));
 }
 
 void AEnemyActor::OnAttack(AActor* Target, int ComboCount)
@@ -134,7 +134,7 @@ void AEnemyActor::OnAttack(AActor* Target, int ComboCount)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("Enemy ComboCount : %d"), ComboCount);
+	// PRINTLOG(TEXT("Enemy ComboCount : %d"), ComboCount);
 }
 
 void AEnemyActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
@@ -142,7 +142,7 @@ void AEnemyActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("Enemy OnSpecialAttack : %d"), SpecialIndex);
+	// PRINTLOG(TEXT("Enemy OnSpecialAttack : %d"), SpecialIndex);
 }
 
 void AEnemyActor::OnGuard(AActor* Target, bool bState)
@@ -150,8 +150,8 @@ void AEnemyActor::OnGuard(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Enemy Guard Start") : TEXT("Enemy Guard End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Enemy Guard Start") : TEXT("Enemy Guard End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void AEnemyActor::OnAvoid(AActor* Target, bool bState)
@@ -159,8 +159,8 @@ void AEnemyActor::OnAvoid(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Enemy Avoid Start") : TEXT("Enemy Avoid End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Enemy Avoid Start") : TEXT("Enemy Avoid End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void AEnemyActor::OnPowerCharge(AActor* Target, bool bState)
@@ -168,6 +168,6 @@ void AEnemyActor::OnPowerCharge(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Enemy PowerCharge Start") : TEXT("Enemy PowerCharge End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Enemy PowerCharge Start") : TEXT("Enemy PowerCharge End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
