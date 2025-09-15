@@ -66,6 +66,6 @@ void ACombatLevelScript::OnTimerTick()
 {
 	CombatTime += 1;
 
-	if ( IsValid(CombatUI))
-		CombatUI->UpdateTimer(CombatTime);
+	// if ( IsValid(CombatUI))
+	// 	CombatUI->UpdateTimer(CombatTime);
 }
