@@ -49,8 +49,11 @@ public:
 
 	// void SpawnExplosionVFX();
 	
-	UPROPERTY(EditAnywhere)
-	float Speed = 4000;
+	float ElapsedTime;
+	float SpeedUpTime = 0.6f;
+	float Speed;
+	float MinSpeed = 3700;
+	float MaxSpeed = 5400;
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 10;

@@ -66,7 +66,12 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (AutoTrackMoveSpeed > 0.f)
 		{
 			const FVector NewLoc = OwnerLoc + Owner->GetActorForwardVector() * (AutoTrackMoveSpeed * DeltaTime);
-			Owner->SetActorLocation(NewLoc, true);
+
+			FVector OwnerProjectionLoc = FVector(Owner->GetActorLocation().X, Owner->GetActorLocation().Y, 0.f);
+			FVector TargetProjectionLoc = FVector(Target->GetActorLocation().X, Target->GetActorLocation().Y, 0.f);
+			float ProjectionDist = FVector::Dist(OwnerProjectionLoc, TargetProjectionLoc);
+
+			if (ProjectionDist > 90) Owner->SetActorLocation(NewLoc, true);
 		}
 	}
 }

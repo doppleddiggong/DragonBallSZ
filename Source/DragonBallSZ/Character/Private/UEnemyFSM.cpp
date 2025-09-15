@@ -102,7 +102,8 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 				FVector TargetLocation = FVector(Target->GetActorLocation().X, Target->GetActorLocation().Y, 0.f);
 				FVector ItselfLocation = FVector(Itself->GetActorLocation().X, Itself->GetActorLocation().Y, 0.f);
 				float ProjectionDistance = FVector::Dist(TargetLocation, ItselfLocation);
-				if (ProjectionDistance > 10) Itself->AddMovementInput(Itself->GetActorForwardVector(), 1);
+
+				if (ProjectionDistance > 90) Itself->AddMovementInput(Itself->GetActorForwardVector(), 1);
 				break;
 			}
 		case EMoveInputType::Backward:

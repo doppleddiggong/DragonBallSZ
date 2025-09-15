@@ -15,6 +15,8 @@
 #include "EAttackPowerType.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZVFXManager.h"
+#include "Features/UEaseFunctionLibrary.h"
+#include "Shared/FEaseHelper.h"
 
 
 // Sets default values
@@ -88,7 +90,16 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 	FVector Direction = Target->GetActorLocation() - this->GetActorLocation();
 	Direction.Normalize();
 
-	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed);
+	ElapsedTime += DeltaTime;
+	Speed = UEaseFunctionLibrary::LerpFloatEase(MinSpeed, MaxSpeed,
+		ElapsedTime / SpeedUpTime,
+		EEaseType::EaseInCirc);
+
+	FString distStr = FString::Printf(TEXT("%f"), ElapsedTime / SpeedUpTime);
+	PRINTLOG(TEXT("%s"), *distStr);
+	GEngine->AddOnScreenDebugMessage(4, 1, FColor::Cyan, distStr);
+	
+	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed, true);
 }
 //
 // void AEnergyBlastActor::SpawnExplosionVFX()
