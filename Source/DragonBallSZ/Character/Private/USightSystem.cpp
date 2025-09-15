@@ -72,7 +72,7 @@ void USightSystem::InitSightSystem(AActor* InTargetActor, const float InSightLen
 
 void USightSystem::SightLineTrace(float InLength, float InAngle) const
 {
-	if ( bDrawDebugLine )
+	if ( !bDrawDebugLine )
 		return;
 	
 	UWorld* OwnerWorld = OwnerActor->GetWorld();
