@@ -143,7 +143,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// 현재 상태 출력
 	FString distStr = FString::Printf(TEXT("%f"), TargetDistance);
-	PRINTLOG(TEXT("Distance: %s"), *distStr);
+	// PRINTLOG(TEXT("Distance: %s"), *distStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
 
 	CurrentTime += DeltaTime;
@@ -156,7 +156,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	// 현재 상태 출력
 	FString stateStr = UEnum::GetValueAsString(CurrentState);
-	PRINTLOG(TEXT("EnemyState %s"), *stateStr);
+	// PRINTLOG(TEXT("EnemyState %s"), *stateStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, stateStr);
 
 	switch (CurrentState)

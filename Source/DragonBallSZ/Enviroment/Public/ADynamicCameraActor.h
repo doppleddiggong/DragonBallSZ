@@ -36,30 +36,12 @@ public:
 	class ACombatCharacter* TargetRef;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float CameraDistance = 300;
+	float CameraDistance = 200;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float TargetDistance = 500;
 	float CurrentDistance;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_X_Min = 0.2f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_X_Max = 0.8f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_Y_Min = 0.1f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZonePlayer_Y_Max = 0.9f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_X_Min = 0.3f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_X_Max = 0.7f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_Y_Min = 0.2f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DeadZoneTarget_Y_Max = 0.8f;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraResetTime = 5;
 
@@ -75,13 +57,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraLocation(float DeltaTime);
 
-	UFUNCTION()
-	void ResetCameraForwardLocation(float DeltaTime);
-
 	UFUNCTION(BlueprintCallable)
 	void ResetCameraRotation(float DeltaTime);
-
-	bool TargetDeadZoneCheck(const AActor &Target);
 
 
 public:// Event-Delegate
@@ -112,11 +89,11 @@ private:
 public:
 	// ✅ 옆으로 피할 거리를 설정하는 변수를 추가합니다.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Obstruction")
-	float ObstructionAvoidanceOffset = 150.f;
+	float ObstructionAvoidanceOffset = 200.f;
 
 	// ✅ 일직선으로 판단할 민감도를 설정하는 변수를 추가합니다. (1.0에 가까울수록 민감)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Obstruction")
-	float ObstructionDotThreshold = 0.98f;
+	float ObstructionDotThreshold = 0.9f;
 
 	// ✅ 타겟 가림을 회피하는 위치를 계산할 새로운 함수를 선언합니다.
 	FVector GetAvoidanceAdjustedCameraLocation();

@@ -5,7 +5,7 @@
 
 void UDBSZEventManager::SendMessage(const FString& InMsg)
 {
-	PRINTLOG(TEXT("SendMessage(%s)"), *InMsg );
+	// PRINTLOG(TEXT("SendMessage(%s)"), *InMsg );
 	
 	OnMessage.Broadcast(InMsg);
 }

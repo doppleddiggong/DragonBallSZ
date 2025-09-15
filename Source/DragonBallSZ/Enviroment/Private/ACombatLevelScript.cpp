@@ -40,7 +40,7 @@ void ACombatLevelScript::OnRecvMessage(FString InMsg)
 void ACombatLevelScript::GameStart()
 {
 	CombatTime = 0.0f;
-	CombatUI->AddToViewport();
+	//CombatUI->AddToViewport();
 	
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(
@@ -66,6 +66,6 @@ void ACombatLevelScript::OnTimerTick()
 {
 	CombatTime += 1;
 
-	if ( IsValid(CombatUI))
-		CombatUI->UpdateTimer(CombatTime);
+	// if ( IsValid(CombatUI))
+	// 	CombatUI->UpdateTimer(CombatTime);
 }
