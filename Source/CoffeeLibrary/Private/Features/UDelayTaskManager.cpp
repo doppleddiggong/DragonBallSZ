@@ -10,7 +10,7 @@
 void UDelayTaskManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	PRINTLOG( TEXT("DelayTaskManager Initialized."));
+	// PRINTLOG( TEXT("DelayTaskManager Initialized."));
 }
 
 void UDelayTaskManager::Deinitialize()

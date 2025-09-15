@@ -105,7 +105,7 @@ void APlayerActor::Tick(float DeltaTime)
 		{
 			RemainBlastShot = MaxRepeatBlastShot;
 			BlastShotRechargeTime = 0.0f;
-			PRINT_STRING(TEXT("Energy Blast Recharged"));
+			// PRINT_STRING(TEXT("Energy Blast Recharged"));
 		}
 	}
 }
@@ -127,8 +127,8 @@ void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( this != Target )
 		return;
-	const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnTeleport(AActor* Target)
@@ -136,7 +136,7 @@ void APlayerActor::OnTeleport(AActor* Target)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("OnTeleport"));
+	// PRINTLOG(TEXT("OnTeleport"));
 }
 
 void APlayerActor::OnAttack(AActor* Target, int ComboCount)
@@ -144,7 +144,7 @@ void APlayerActor::OnAttack(AActor* Target, int ComboCount)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
+	// PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
 }
 
 void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
@@ -152,7 +152,7 @@ void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
 	if ( this != Target )
 		return;
 
-	PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
+	// PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
 }
 
 void APlayerActor::OnGuard(AActor* Target, bool bState)
@@ -160,8 +160,8 @@ void APlayerActor::OnGuard(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnAvoid(AActor* Target, bool bState)
@@ -169,17 +169,17 @@ void APlayerActor::OnAvoid(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	
-	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	//
+	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
@@ -332,11 +332,11 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 
 		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 		
-		PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
+		// PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
 	}
 	else
 	{
-		PRINT_STRING(TEXT("Out of Energy Blast"));
+		// PRINT_STRING(TEXT("Out of Energy Blast"));
 	}
 }
 

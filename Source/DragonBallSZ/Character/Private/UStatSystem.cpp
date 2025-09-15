@@ -23,12 +23,6 @@ void UStatSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 void UStatSystem::InitStat_Implementation(bool IsPlayer)
 {
 	this->bIsPlayer = IsPlayer;
-
-	// TODO, 데이터 테이블로 빼자
-	this->MaxHP = 1000;
-	this->CurHP = MaxHP;
-	this->Damage = 30;
-
 	this->IsDead = false;
 }
 

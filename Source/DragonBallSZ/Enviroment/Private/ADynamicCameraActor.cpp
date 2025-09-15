@@ -201,8 +201,8 @@ void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Directi
 	if ( PlayerRef != Target )
 		return;
 
-	const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void ADynamicCameraActor::OnTeleport(AActor* Target)
@@ -210,7 +210,7 @@ void ADynamicCameraActor::OnTeleport(AActor* Target)
 	if ( PlayerRef != Target )
 		return;
 
-	PRINTLOG(TEXT("OnTeleport"));
+	// PRINTLOG(TEXT("OnTeleport"));
 }
 
 void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
@@ -223,7 +223,7 @@ void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
 	ResetCameraLocation(DeltaTime);
 	CloseCameraRotation(DeltaTime);
 
-	PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
+	// PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
 }
 
 void ADynamicCameraActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
@@ -231,7 +231,7 @@ void ADynamicCameraActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
 	if ( PlayerRef != Target )
 		return;
 
-	PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
+	// PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
 }
 
 void ADynamicCameraActor::OnGuard(AActor* Target, bool bState)
@@ -239,8 +239,8 @@ void ADynamicCameraActor::OnGuard(AActor* Target, bool bState)
 	if ( PlayerRef != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void ADynamicCameraActor::OnAvoid(AActor* Target, bool bState)
@@ -248,8 +248,8 @@ void ADynamicCameraActor::OnAvoid(AActor* Target, bool bState)
 	if ( PlayerRef != Target )
 		return;
 
-	const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
@@ -257,8 +257,8 @@ void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
 	if ( PlayerRef != Target )
 		return;
 	
-	const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
-	PRINTLOG(TEXT("%s"), PrintMsg);
+	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
+	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void ADynamicCameraActor::SetPlayerHold( bool bState)

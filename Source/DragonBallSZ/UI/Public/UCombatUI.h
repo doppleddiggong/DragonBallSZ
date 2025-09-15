@@ -13,14 +13,23 @@ class DRAGONBALLSZ_API UCombatUI : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 
 public:
-	void UpdateTimer(float Time);
+	void UpdateTimer();
 
+	UFUNCTION()
+	void OnReceiveMessage(FString Msg);
+
+	
 protected:
 	UFUNCTION()
 	void OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP);
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Time")
+	float CombatTime = 0.0f;
+	
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> Text_RemainTime;
@@ -30,4 +39,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Enemy;
+	
+private:
+	FTimerHandle CombatTimerHandle;
 };
