@@ -93,12 +93,18 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			bMoving = false;
 			ElapsedMoving = 0;
 		}
-
+		
 		switch (CurrentMove)
 		{
 		case EMoveInputType::Forward:
-			Itself->AddMovementInput(Itself->GetActorForwardVector(), 1);
-			break;
+			{
+				// Preventing Z-Axis Overlap
+				FVector TargetLocation = FVector(Target->GetActorLocation().X, Target->GetActorLocation().Y, 0.f);
+				FVector ItselfLocation = FVector(Itself->GetActorLocation().X, Itself->GetActorLocation().Y, 0.f);
+				float ProjectionDistance = FVector::Dist(TargetLocation, ItselfLocation);
+				if (ProjectionDistance > 10) Itself->AddMovementInput(Itself->GetActorForwardVector(), 1);
+				break;
+			}
 		case EMoveInputType::Backward:
 			Itself->AddMovementInput(Itself->GetActorForwardVector(), -1);
 			break;
