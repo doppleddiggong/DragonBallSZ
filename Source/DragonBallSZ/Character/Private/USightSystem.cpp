@@ -56,6 +56,7 @@ void USightSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 		{
 			// 현재 탐지 상태값과 동일함
 			this->AddElapsedTime();
+			
 			// NOTE. 탐지되지않은 시간에 비례해서 무엇인가 하고 싶다면..
 		}
 	}
@@ -71,11 +72,10 @@ void USightSystem::InitSightSystem(AActor* InTargetActor, const float InSightLen
 
 void USightSystem::SightLineTrace(float InLength, float InAngle) const
 {
-	// if ( !IsValid(TargetActor) || !IsValid(OwnerActor) )
-	// 	return false;
-
+	if ( bDrawDebugLine )
+		return;
+	
 	UWorld* OwnerWorld = OwnerActor->GetWorld();
-
 	auto LineColor = DetectTarget ? GameColor::Pink : GameColor::Green;
 
 	{
@@ -126,18 +126,12 @@ void USightSystem::SightLineTrace(float InLength, float InAngle) const
 
 bool USightSystem::DetectSightLength(float InLength) const
 {
-	// if ( !IsValid(TargetActor) || !IsValid(OwnerActor) )
-	// 	return false;
-
 	const float Dist = FVector::Dist( TargetActor->GetActorLocation(), OwnerActor->GetActorLocation());
-	return Dist <  InLength;
+	return Dist < InLength;
 }
 
 bool USightSystem::DetectSightAngle(float InAngle) const
 {
-	// if ( !IsValid(TargetActor) || !IsValid(OwnerActor) )
-	// 	return false;
-	
 	auto Direction = TargetActor->GetActorLocation() - OwnerActor->GetActorLocation();
 	Direction.Normalize();
 

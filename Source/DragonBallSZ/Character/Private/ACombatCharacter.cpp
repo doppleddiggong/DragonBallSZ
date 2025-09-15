@@ -207,8 +207,6 @@ void ACombatCharacter::OnDamage(
 	if ( DamagedActor != this)
 		return;
 	
-	PRINT_STRING(TEXT("OnDamage"));
-	
 	IsHit = true;
 
 	UDBSZVFXManager::Get(GetWorld())->ShowVFX(

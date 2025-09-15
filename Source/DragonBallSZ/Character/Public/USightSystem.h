@@ -36,6 +36,9 @@ private:
 public:
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnSightDetect OnSightDetect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool bDrawDebugLine = false;
 	
 private:
 	UPROPERTY()
