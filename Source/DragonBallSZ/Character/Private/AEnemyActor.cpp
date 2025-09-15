@@ -79,7 +79,8 @@ void AEnemyActor::BeginPlay()
 	EventManager->OnGuard.AddDynamic(this, &AEnemyActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &AEnemyActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &AEnemyActor::OnPowerCharge);
-	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+
+	EventManager->SendUpdateHealth(false, StatSystem->CurHP, StatSystem->MaxHP);
 }
 
 void AEnemyActor::Tick(float DeltaTime)
