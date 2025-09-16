@@ -53,7 +53,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<APlayerActor> Target;
 	UPROPERTY()
-	TObjectPtr<AEnemyActor> Itself;
+	TObjectPtr<AEnemyActor> Owner;
 
 protected:
 	virtual void BeginPlay() override;

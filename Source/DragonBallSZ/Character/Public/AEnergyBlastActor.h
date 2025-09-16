@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "EVFXType.h"
 #include "GameFramework/Actor.h"
-#include "EnergyBlastActor.generated.h"
+#include "AEnergyBlastActor.generated.h"
 
+class UProjectileMovementComponent;
 class USphereComponent;
 class UNiagaraSystem;
 class UBoxComponent;
-class UProjectileMovementComponent;
 class APlayerActor;
 
 UCLASS()

@@ -2,7 +2,7 @@
 
 #include "UCharacterData.h"
 #include "DragonBallSZ.h"
-#include "EnergyBlastActor.h"
+#include "AEnergyBlastActor.h"
 
 #include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"

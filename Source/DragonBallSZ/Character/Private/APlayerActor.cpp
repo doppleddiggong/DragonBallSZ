@@ -19,7 +19,7 @@
 // Shared
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
-#include "EnergyBlastActor.h"
+#include "AEnergyBlastActor.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"

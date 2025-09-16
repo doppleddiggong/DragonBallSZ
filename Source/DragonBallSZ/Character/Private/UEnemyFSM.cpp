@@ -2,23 +2,17 @@
 
 
 #include "UEnemyFSM.h"
-
-#include <ThirdParty/ShaderConductor/ShaderConductor/External/DirectXShaderCompiler/include/dxc/DXIL/DxilConstants.h>
-
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
-#include "EnergyBlastActor.h"
-#include "NiagaraFunctionLibrary.h"
+#include "AEnergyBlastActor.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "URushAttackSystem.h"
 #include "VectorTypes.h"
-#include "Features/UEaseFunctionLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Runtime/MovieSceneTracks/Private/MovieSceneTracksCustomAccessors.h"
-#include "Shared/FEaseHelper.h"
+
 
 UEnemyFSM::UEnemyFSM()
 {
@@ -29,7 +23,7 @@ void UEnemyFSM::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Itself = Cast<AEnemyActor>(GetOwner());
+	Owner = Cast<AEnemyActor>(GetOwner());
 
 	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
@@ -39,21 +33,21 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Itself->IsHold() )
+	if (Owner->IsHold() )
 		return;
 	
 	if (bDefeated)
 		return; // Return if the Game is Over
 
-	if (Itself->IsCombatStart() == false ||
-		Itself->IsCombatResult())
+	if (Owner->IsCombatStart() == false ||
+		Owner->IsCombatResult())
 	{
 		// 전투 시작전
 		// 전투 결과후
 		return;
 	}
 
-	if (Itself->IsHit)
+	if (Owner->IsHit)
 	{
 		void Damaged();
 		return;
@@ -65,7 +59,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		bDefeated = true;
 		return;
 	}
-	else if (Itself->StatSystem->IsDead)
+	else if (Owner->StatSystem->IsDead)
 	{
 		void EnemyLose();
 		bDefeated = true;
@@ -81,7 +75,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		{
 			// ToDo: LookAt 비활성화
 			// 현재 상태 출력
-			FString distStr = FString::Printf(TEXT("%hhd"), Itself->RushAttackSystem->bIsDashing);
+			FString distStr = FString::Printf(TEXT("%hhd"), Owner->RushAttackSystem->bIsDashing);
 			PRINTLOG(TEXT("%s"), *distStr);
 			GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
 			BeizerMove();
@@ -100,31 +94,31 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			{
 				// Preventing Z-Axis Overlap
 				FVector TargetLocation = FVector(Target->GetActorLocation().X, Target->GetActorLocation().Y, 0.f);
-				FVector ItselfLocation = FVector(Itself->GetActorLocation().X, Itself->GetActorLocation().Y, 0.f);
+				FVector ItselfLocation = FVector(Owner->GetActorLocation().X, Owner->GetActorLocation().Y, 0.f);
 				float ProjectionDistance = FVector::Dist(TargetLocation, ItselfLocation);
 
-				if (ProjectionDistance > 90) Itself->AddMovementInput(Itself->GetActorForwardVector(), 1);
+				if (ProjectionDistance > 90) Owner->AddMovementInput(Owner->GetActorForwardVector(), 1);
 				break;
 			}
 		case EMoveInputType::Backward:
-			Itself->AddMovementInput(Itself->GetActorForwardVector(), -1);
+			Owner->AddMovementInput(Owner->GetActorForwardVector(), -1);
 			break;
 		case EMoveInputType::Left:
-			Itself->AddMovementInput(Itself->GetActorRightVector(), -1);
+			Owner->AddMovementInput(Owner->GetActorRightVector(), -1);
 			break;
 		case EMoveInputType::Right:
-			Itself->AddMovementInput(Itself->GetActorRightVector(), 1);
+			Owner->AddMovementInput(Owner->GetActorRightVector(), 1);
 			break;
 		case EMoveInputType::Jump:
-			if (Itself->GetCharacterMovement()->MovementMode != MOVE_Flying) // Not flying: Jump & Fly
+			if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying) // Not flying: Jump & Fly
 			{
-				Itself->FlySystem->OnJump();
+				Owner->FlySystem->OnJump();
 				FTimerHandle JumpTimer;
 				GetWorld()->GetTimerManager().SetTimer(
 					JumpTimer,
 					[this]()
 					{
-						Itself->FlySystem->OnJump();
+						Owner->FlySystem->OnJump();
 					},
 					0.5f,
 					false
@@ -132,7 +126,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			}
 			else // Land on ground
 			{
-				Itself->FlySystem->OnJump();
+				Owner->FlySystem->OnJump();
 			};
 			break;
 		}
@@ -140,7 +134,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	}
 
 	// Distance between Target
-	TargetDistance = FVector::Dist(Itself->GetActorLocation(), Target->GetActorLocation());
+	TargetDistance = FVector::Dist(Owner->GetActorLocation(), Target->GetActorLocation());
 
 	// 현재 상태 출력
 	FString distStr = FString::Printf(TEXT("%f"), TargetDistance);
@@ -201,7 +195,7 @@ void UEnemyFSM::ModifyWeightArray()
 		return Elem.Key == EMoveInputType::Jump;
 	}))
 	{
-		JumpMove->Value = ((Itself->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->
+		JumpMove->Value = ((Owner->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->
 			                  GetCharacterMovement()->MovementMode == MOVE_Flying))
 			                  ? 150.f
 			                  : 0.f;
@@ -214,7 +208,7 @@ void UEnemyFSM::ModifyWeightArray()
 		return Elem.Key == EMoveInputType::Backward;
 	}))
 	{
-		ApproachMove->Value = (Itself->StatSystem->CurHP > Target->StatSystem->CurHP)
+		ApproachMove->Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
 							  ? 10.f
 							  : 70.f;
 	}
@@ -225,14 +219,14 @@ void UEnemyFSM::ModifyWeightArray()
 	{
 		if (Elem.Key == EMoveInputType::Left || Elem.Key == EMoveInputType::Right)
 		{
-			Elem.Value = (Itself->StatSystem->CurHP > Target->StatSystem->CurHP)
+			Elem.Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
 						 ? 40.f
 						 : 70.f;
 		}
 	}
 
 	// Enemy CurrentHP < Player CurrentHP -> FireRate: 0.2 -> 0.4
-	Itself->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
+	Owner->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
 }
 
 EEnemyState UEnemyFSM::SelectWeightedRandomState()
@@ -319,10 +313,10 @@ void UEnemyFSM::Move()
 void UEnemyFSM::Attack()
 {
 	bActing = true;
-	Itself->RushAttackSystem->OnAttack();
+	Owner->RushAttackSystem->OnAttack();
 	
 	// Follow Player flying state
-	if ((Itself->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->GetCharacterMovement()->MovementMode == MOVE_Flying)) Itself->GetCharacterMovement()->SetMovementMode((Target->GetCharacterMovement()->MovementMode == MOVE_Flying) ? MOVE_Flying : MOVE_Walking);
+	if ((Owner->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->GetCharacterMovement()->MovementMode == MOVE_Flying)) Owner->GetCharacterMovement()->SetMovementMode((Target->GetCharacterMovement()->MovementMode == MOVE_Flying) ? MOVE_Flying : MOVE_Walking);
 	
 	bActing = false;
 }
@@ -362,12 +356,12 @@ void UEnemyFSM::EnemyLose()
 void UEnemyFSM::SpawnEnergyBlast()
 {
 	FActorSpawnParameters Params;
-	Params.Owner = Itself;
-	Params.Instigator = Itself;
+	Params.Owner = Owner;
+	Params.Instigator = Owner;
 
 	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		Itself->EnergyBlastFactory,
-		Itself->GetActorTransform(),
+		Owner->EnergyBlastFactory,
+		Owner->GetActorTransform(),
 		Params
 	);
 }
@@ -397,10 +391,10 @@ void UEnemyFSM::ActivateDashVFX(bool Active)
 {
 	if (Active)
 	{
-		Itself->DashSystem->NiagaraComp->Activate(Active);
+		Owner->DashSystem->NiagaraComp->Activate(Active);
 		return;
 	}
-	Itself->DashSystem->NiagaraComp->Deactivate();
+	Owner->DashSystem->NiagaraComp->Deactivate();
 }
 
 void UEnemyFSM::CheckToLand()
@@ -408,11 +402,11 @@ void UEnemyFSM::CheckToLand()
 	FHitResult Hit;
 	bool bHit = GetWorld()->LineTraceSingleByChannel(
 		Hit,
-		Itself->GetActorLocation(),
-		Itself->GetActorLocation() - FVector(0, 0, 35.f),
+		Owner->GetActorLocation(),
+		Owner->GetActorLocation() - FVector(0, 0, 35.f),
 		ECC_WorldDynamic
 	);
-	if (Hit.GetActor()->ActorHasTag("Ground")) Itself->FlySystem->OnLand(Hit);
+	if (Hit.GetActor()->ActorHasTag("Ground")) Owner->FlySystem->OnLand(Hit);
 }
 
 FVector UEnemyFSM::Bezier(const FVector Pa, const FVector ControlPoint, const FVector Pb, const float t)
@@ -425,7 +419,7 @@ FVector UEnemyFSM::Bezier(const FVector Pa, const FVector ControlPoint, const FV
 void UEnemyFSM::BeizerMove()
 {
 	// Fly
-	if (Itself->GetCharacterMovement()->MovementMode != MOVE_Flying) Itself->GetCharacterMovement()->
+	if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying) Owner->GetCharacterMovement()->
 	                                                                         SetMovementMode(MOVE_Flying);
 
 	CumulativeDistance += MoveSpeed * GetWorld()->GetDeltaSeconds();
@@ -441,8 +435,8 @@ void UEnemyFSM::BeizerMove()
 		CheckToLand();
 		return;
 	}
-	Itself->SetActorLocation(Pos, true);
-	Itself->DashSystem->NiagaraComp->SetWorldRotation(Itself->GetActorForwardVector().Rotation());
+	Owner->SetActorLocation(Pos, true);
+	Owner->DashSystem->NiagaraComp->SetWorldRotation(Owner->GetActorForwardVector().Rotation());
 }
 
 
@@ -476,7 +470,7 @@ float UEnemyFSM::FindT(float s)
 
 void UEnemyFSM::TargetingDestination()
 {
-	OriginLocation = Itself->GetActorLocation();
+	OriginLocation = Owner->GetActorLocation();
 	Destination = Target->GetActorLocation() + Target->GetActorForwardVector() * 1200;
 
 	// Center Control Point Direction
