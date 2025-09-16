@@ -275,6 +275,13 @@ void URushAttackSystem::AttackTrace()
 
 void URushAttackSystem::PlayMontage(int32 MontageIndex)
 {
+	// 시스템이 준비되지 않았거나 월드가 유효하지 않으면 즉시 중단
+    if (!Owner || !GetWorld() || !EventManager || !AnimInstance)
+    {
+        PRINTLOG(TEXT("PlayMontage가 시스템 준비 전에 호출되어 중단됩니다."));
+        return;
+    }
+
 	if (!AttackMontages.IsValidIndex(MontageIndex))
 		return;
 

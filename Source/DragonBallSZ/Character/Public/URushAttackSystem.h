@@ -148,8 +148,10 @@ private:
     UPROPERTY()
     class UDBSZEventManager* EventManager;
 
+	UPROPERTY()
 	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
 	TArray<EAttackPowerType> AttackPowerType;
 	
+	UPROPERTY()
 	TObjectPtr<UAnimMontage> DashMontage;
 };
