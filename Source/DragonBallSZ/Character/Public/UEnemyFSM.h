@@ -67,7 +67,7 @@ public:
 	void ModifyWeightArray();
 	EEnemyState SelectWeightedRandomState(); // EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
-		{EEnemyState::Idle, 1.f},
+		{EEnemyState::Idle, 0.f},
 		{EEnemyState::Move, 10.f},
 		{EEnemyState::Attack, 0.f},
 		{EEnemyState::Charge, 0.f},
@@ -91,11 +91,11 @@ public:
 	void Move();
 	EMoveInputType SelectWeightedRandomMove(); // EEnemyState Weights
 	TArray<TPair<EMoveInputType, float>> Moves = {
-		{EMoveInputType::Forward, 80.f},
-		{EMoveInputType::Backward, 10.f},
-		{EMoveInputType::Left, 40.f},
-		{EMoveInputType::Right, 40.f},
-		{EMoveInputType::Jump, 0.f},
+		{EMoveInputType::Forward, 0.f},
+		{EMoveInputType::Backward, 0.f},
+		{EMoveInputType::Left, 0.f},
+		{EMoveInputType::Right, 0.f},
+		{EMoveInputType::Jump, 100.f},
 	};
 	EMoveInputType CurrentMove;
 

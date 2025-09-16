@@ -47,6 +47,13 @@ void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
 
+    if (!IsValid(CharacterData))
+    {
+        PRINTLOG(TEXT("AEnemyActor::BeginPlay: CharacterData is invalid. Cannot load character assets."));
+        // Handle gracefully, e.g., return or use default values
+        return;
+    }
+
 	// EnemyActor Only
 	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
 		TargetActor = Cast<APlayerActor>(Player);

@@ -145,7 +145,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
 	CurrentTime = 0;
 
-	ModifyWeightArray(); // Add & Remove Weight
+	// ModifyWeightArray(); // Add & Remove Weight
 
 	ChangeState(SelectWeightedRandomState()); // Change state randomly
 
@@ -154,6 +154,8 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// PRINTLOG(TEXT("EnemyState %s"), *stateStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, stateStr);
 
+	CurrentState = EEnemyState::Move;
+	
 	switch (CurrentState)
 	{
 	case EEnemyState::Idle:
@@ -286,7 +288,7 @@ void UEnemyFSM::Move()
 
 	// EMovementMode::MOVE_Flying
 	CurrentMove = SelectWeightedRandomMove();
-
+	CurrentMove = EMoveInputType::Jump;
 	switch (CurrentMove)
 	{
 	case EMoveInputType::Forward:
@@ -312,13 +314,25 @@ void UEnemyFSM::Move()
 
 void UEnemyFSM::Attack()
 {
-	bActing = true;
-	Owner->RushAttackSystem->OnAttack();
-	
-	// Follow Player flying state
-	if ((Owner->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->GetCharacterMovement()->MovementMode == MOVE_Flying)) Owner->GetCharacterMovement()->SetMovementMode((Target->GetCharacterMovement()->MovementMode == MOVE_Flying) ? MOVE_Flying : MOVE_Walking);
-	
-	bActing = false;
+    bActing = true;
+
+    Owner->RushAttackSystem->OnAttack();
+
+    // 대상의 비행 상태에 따라 소유자의 이동 모드를 동기화합니다.
+    const EMovementMode OwnerMoveMode = Owner->GetCharacterMovement()->MovementMode;
+    const EMovementMode TargetMoveMode = Target->GetCharacterMovement()->MovementMode;
+
+    const bool bOwnerIsFlying = (OwnerMoveMode == EMovementMode::MOVE_Flying);
+    const bool bTargetIsFlying = (TargetMoveMode == EMovementMode::MOVE_Flying);
+
+    // 소유자와 대상의 비행 상태가 다를 경우
+    if (bOwnerIsFlying != bTargetIsFlying)
+    {
+        const EMovementMode ResultMode = bTargetIsFlying ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking;
+        Owner->GetCharacterMovement()->SetMovementMode(ResultMode);
+    }
+
+    bActing = false;
 }
 
 void UEnemyFSM::Charge()

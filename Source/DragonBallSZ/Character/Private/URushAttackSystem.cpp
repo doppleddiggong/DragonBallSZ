@@ -41,6 +41,12 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	if (bIsDashing)
 	{
+        if (!IsValid(Owner)) // Add this check
+        {
+            PRINTLOG(TEXT("TickComponent: Owner is invalid while dashing. Stopping dash."));
+            OnDashCompleted(); // Stop dashing if owner is invalid
+            return;
+        }
 		ElapsedTime += DeltaTime;
         
 		const float Alpha = FMath::Clamp(ElapsedTime / DashDuration, 0.0f, 1.0f);
@@ -135,7 +141,14 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 	MoveComp = Owner->GetCharacterMovement();
 
 	this->Target = Owner->TargetActor;
-	TargetMoveComp = Target->GetCharacterMovement();
+	if (IsValid(Target))
+	{
+		TargetMoveComp = Target->GetCharacterMovement();
+	}
+	else
+	{
+		PRINTLOG(TEXT("InitSystem: Target is not valid. Owner: %s"), *Owner->GetName());
+	}
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 
@@ -143,6 +156,10 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 	{
 		InData->LoadRushAttackMontage(AttackMontages, AttackPowerType);
 		InData->LoadDashMontage(DashMontage);
+		if (!IsValid(DashMontage))
+		{
+			PRINTLOG(TEXT("InitSystem: DashMontage failed to load from InData."));
+		}
 	}
 	else
 	{
@@ -155,7 +172,10 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 void URushAttackSystem::OnDashCompleted()
 {
 	bIsDashing = false;
-	AnimInstance->Montage_Stop(0.1f, DashMontage);
+    if (IsValid(AnimInstance) && IsValid(DashMontage)) // Add check for DashMontage
+    {
+	    AnimInstance->Montage_Stop(0.1f, DashMontage);
+    }
 
 	if (!Owner->IsHit)
 		PlayMontage(PendingMontageIndex);
@@ -166,6 +186,12 @@ void URushAttackSystem::OnDashCompleted()
 
 void URushAttackSystem::OnAttack()
 {
+    if (!IsValid(Target))
+    {
+        PRINTLOG(TEXT("OnAttack: Target is invalid. Skipping attack."));
+        return;
+    }
+
 	if (0.f < LastAttackTime &&
 		GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
 	{
@@ -217,6 +243,13 @@ void URushAttackSystem::AttackTrace()
 	if ( !Owner->IsInSight( Target ))
 		return;
 
+    // Add check for AttackPowerType
+    if (!AttackPowerType.IsValidIndex(ComboCount))
+    {
+        PRINTLOG(TEXT("AttackTrace: ComboCount (%d) is out of bounds for AttackPowerType. Skipping attack trace."), ComboCount);
+        return;
+    }
+
 	const EAttackPowerType Type = AttackPowerType[ComboCount];
 	float DelayKnockback = 0.f;
 	if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
@@ -250,12 +283,15 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 	LastAttackTime = GetWorld()->GetTimeSeconds();
 	EventManager->SendAttack(Owner, MontageIndex);
 	
-	AnimInstance->Montage_Play(
-		AttackMontages[MontageIndex],
-		1.0f,
-		EMontagePlayReturnType::MontageLength,
-		0.f,
-		true);
+	if (IsValid(AnimInstance)) // Add check
+    {
+	    AnimInstance->Montage_Play(
+		    AttackMontages[MontageIndex],
+		    1.0f,
+		    EMontagePlayReturnType::MontageLength,
+		    0.f,
+		    true);
+    }
 	
 	GetWorld()->GetTimerManager().ClearTimer(ComboTimeHandler);
 	GetWorld()->GetTimerManager().SetTimer(
@@ -269,12 +305,28 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 
 void URushAttackSystem::DashToTarget(int32 MontageIndex)
 {
+    if (!IsValid(Target))
+    {
+        PRINTLOG(TEXT("DashToTarget: Target is invalid. Skipping dash."));
+        PlayMontage(MontageIndex); // Still play the montage if target is invalid, but don't dash
+        return;
+    }
     const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Target->GetActorLocation();
 
 	// XY 평면에서의 벡터와 거리를 계산
 	FVector ToTargetXY = TargetLoc - OwnerLoc;
 	const float DistanceXY = ToTargetXY.Size();
+
+	// Prevent division by zero if owner and target are at the same XY location
+	if (DistanceXY < KINDA_SMALL_NUMBER) // KINDA_SMALL_NUMBER is a small float constant in Unreal Engine
+	{
+		// If already at target, perhaps just play the attack montage or return.
+		// For now, returning to prevent crash.
+		PRINTLOG(TEXT("DashToTarget: DistanceXY is too small, skipping dash. Owner: %s, Target: %s"), *Owner->GetName(), *Target->GetName());
+		PlayMontage(MontageIndex); // Directly play the attack montage if already close
+		return;
+	}
 
 	// 대시 방향은 XY 평면으로, Z축은 그대로 유지
 	const FVector DirXY = ToTargetXY / DistanceXY;
@@ -303,7 +355,13 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 		EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
 	}
 	
-    AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+    if (IsValid(AnimInstance)) // Add check
+    {
+		if( IsValid(DashMontage)) 
+		{
+			AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+		}
+    }
 }
 
 void URushAttackSystem::TeleportToTarget(int32 MontageIndex)

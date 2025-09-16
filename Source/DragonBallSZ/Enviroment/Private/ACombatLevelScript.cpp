@@ -2,70 +2,163 @@
 
 #include "ACombatLevelScript.h"
 
-#include "GameEvent.h"
+#include "ADynamicCameraActor.h"
+#include "AEnemyActor.h"
+#include "APlayerActor.h"
 #include "UCombatUI.h"
+
+#include "GameEvent.h"
 #include "UDBSZEventManager.h"
+#include "DragonBallSZ.h"
+#include "EngineUtils.h"
+
+#include "LevelSequencePlayer.h"
+#include "MovieSceneSequencePlaybackSettings.h"
+
 #include "Blueprint/UserWidget.h"
 #include "Features/UDelayTaskManager.h"
 #include "Shared/FComponentHelper.h"
+#include "Kismet/GameplayStatics.h"
 
 #define COMBAT_WIDGET_PATH TEXT("/Game/CustomContents/UI/WB_Combat.WB_Combat_C")
+
+#define MAIN_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleIntro/MainSequence.MainSequence")
+#define GOKU_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleOutro/GokuWin.GokuWin")
+
+class ULevelSequencePlayer;
 
 ACombatLevelScript::ACombatLevelScript()
 {
 	CombatUIFactory = FComponentHelper::LoadClass<UUserWidget>(COMBAT_WIDGET_PATH);
+
+	static ConstructorHelpers::FObjectFinder<ULevelSequence> TempMainSeq(MAIN_SEQ_PATH);
+	if (TempMainSeq.Succeeded())
+		MainSeq = TempMainSeq.Object;
+
+	static ConstructorHelpers::FObjectFinder<ULevelSequence> TempGokuSeq(GOKU_SEQ_PATH);
+	if (TempMainSeq.Succeeded())
+		GokuWinSeq = TempMainSeq.Object;
 }
 
 void ACombatLevelScript::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	CombatUI = CreateWidget<UCombatUI>(GetWorld(), CombatUIFactory);
 
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
+	if ( AActor* Camera = UGameplayStatics::GetActorOfClass(GetWorld(), ADynamicCameraActor::StaticClass()) )
+		DynamicCameraActor = Cast<ADynamicCameraActor>(Camera);
+	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
+		PlayerActor = Cast<APlayerActor>(Player);
+	if ( AActor* Enemy = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
+		EnemyActor = Cast<AEnemyActor>(Enemy);
+
+	for( TActorIterator<AActor> it(GetWorld()); it; ++it )
 	{
-		EventManager->OnMessage.AddDynamic(this, &ACombatLevelScript::OnRecvMessage);
-		EventManager->SendMessage( GameEvent::GameStart.ToString() );
+		auto Spawn = *it;
+		if ( Spawn->GetActorNameOrLabel().Contains((TEXT("BP_GokuWin"))))
+			GokuWinActor = Spawn;
 	}
+	
+	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnMessage.AddDynamic(this, &ACombatLevelScript::OnRecvMessage);
 }
 
 void ACombatLevelScript::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg.Equals(GameEvent::GameStart.ToString(), ESearchCase::IgnoreCase ))
 	{
-		this->GameStart();
 	}
-}
-
-void ACombatLevelScript::GameStart()
-{
-	CombatTime = 0.0f;
-	//CombatUI->AddToViewport();
-	
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(
-		TimerHandle, 
-		this, 
-		&ACombatLevelScript::OnTimerTick, 
-		1.0f,
-		true,
-		0.0f 
-	);
-
-	if ( auto DelayTaskManager = UDelayTaskManager::Get(GetWorld()) )
+	else if ( InMsg.Equals(GameEvent::CombatStart.ToString(), ESearchCase::IgnoreCase ))
 	{
-		DelayTaskManager->Delay(this, CombatStartDelay, [this]()
-		{
-			if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-				EventManager->SendMessage( GameEvent::CombatStart.ToString() );
-		});
+		bCombatStart = true;
+		bCombatResult = false;
+	}
+	else if ( InMsg.Equals(GameEvent::PlayerWin.ToString(), ESearchCase::IgnoreCase ))
+	{
+		GokuWinActor->SetActorTransform( PlayerActor->GetActorTransform());
+		CombatResultProcess(true);
+	}
+	else if ( InMsg.Equals(GameEvent::EnemyWin.ToString(), ESearchCase::IgnoreCase ))
+	{
+		CombatResultProcess(false);
 	}
 }
 
-void ACombatLevelScript::OnTimerTick()
-{
-	CombatTime += 1;
 
-	// if ( IsValid(CombatUI))
-	// 	CombatUI->UpdateTimer(CombatTime);
+void ACombatLevelScript::CombatResultProcess(bool IsPlayerWin)
+{
+	if ( bCombatResult )
+		return;
+
+	bCombatResult = true;
+}
+
+void ACombatLevelScript::ShowCombatUI(const ESlateVisibility InSetVisiblity)
+{
+	if ( CombatUI == nullptr )
+	{
+		CombatUI = CreateWidget<UCombatUI>(GetWorld(), CombatUIFactory);
+		CombatUI->AddToViewport();
+	}
+
+	if ( !IsValid( CombatUI ) )
+	{
+		PRINTLOG(TEXT("CombatUI is nullptr, Please Check This State"));
+		return;
+	}
+
+	CombatUI->SetVisibility(InSetVisiblity);
+}
+
+
+void ACombatLevelScript::PlaySequence(class ULevelSequence* InSequence)
+{
+	// 이미 플레이어가 존재하면 먼저 정리
+	if (SequencePlayer)
+	{
+		SequencePlayer->Stop();
+		SequencePlayer = nullptr; // 가비지 컬렉터 대상이 되도록 nullptr로 설정
+	}
+	
+	if (InSequence)
+	{
+		PlayingSequence = InSequence;
+		SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
+			GetWorld(),
+			InSequence,
+			FMovieSceneSequencePlaybackSettings(),
+			SequenceActor );
+        
+		if (SequencePlayer)
+		{
+			// **OnFinished 델리게이트에 함수 바인딩**
+			SequencePlayer->OnFinished.AddDynamic(this, &ACombatLevelScript::OnSequenceFinished);
+			
+			SequencePlayer->Play();
+		}
+	}
+}
+
+void ACombatLevelScript::OnSequenceFinished()
+{
+	// 어떤 시퀀스가 완료되었는지 확인
+	if (PlayingSequence == MainSeq)
+	{
+		PRINTLOG(TEXT("MainSeq finished!"));
+
+		if( auto TaskManager = UDelayTaskManager::Get(GetWorld()) )
+		{
+			UDelayTaskManager::Get(this)->Delay(this, CombatStartDelay, [this](){
+				EventManager->SendMessage(GameEvent::CombatStart.ToString());
+			});
+		}
+	}
+	else if (PlayingSequence == GokuWinSeq)
+	{
+		PRINTLOG(TEXT("GokuWinSeq finished!"));
+	}
+
+	PlayingSequence = nullptr;
+
+	if (SequencePlayer)
+		SequencePlayer = nullptr;
 }

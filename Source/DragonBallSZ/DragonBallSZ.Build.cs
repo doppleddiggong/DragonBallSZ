@@ -23,6 +23,9 @@ public class DragonBallSZ : ModuleRules
 			"GameplayTasks",		
 			"NavigationSystem",		
 			
+			"LevelSequence", 
+			"MovieScene",
+			
 			"CoffeeLibrary"
 		});
 

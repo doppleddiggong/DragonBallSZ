@@ -13,25 +13,85 @@ class DRAGONBALLSZ_API ACombatLevelScript : public ALevelScriptActor
 
 public:
 	ACombatLevelScript();
-	
+
+public:
 	virtual void BeginPlay() override;
+
+public:
+	UFUNCTION( BlueprintCallable, BlueprintPure, Category="NEW_STATE")
+	FORCEINLINE class ADynamicCameraActor* GetDynamicCameraActor() const
+	{
+		return DynamicCameraActor;
+	};
+
+	UFUNCTION( BlueprintCallable, BlueprintPure, Category="NEW_STATE")
+	FORCEINLINE class APlayerActor* GetPlayerActor() const
+	{
+		return PlayerActor;
+	};
+
+	UFUNCTION( BlueprintCallable, BlueprintPure, Category="NEW_STATE")
+	FORCEINLINE class AEnemyActor* GetEnemyActor() const
+	{
+		return EnemyActor;
+	};
 
 	UFUNCTION()
 	void OnRecvMessage(FString InMsg);
-
-private:
-	void GameStart();
-	void OnTimerTick();
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="GameState")
-	float CombatStartDelay = 0.5f;
-
+	UFUNCTION(BlueprintCallable, Category="NEW_STATE")
+	void CombatResultProcess(bool IsPlayerWin);
 	
+public:
+	UFUNCTION( BlueprintCallable, Category="UI")
+	void ShowCombatUI(const ESlateVisibility InSetVisiblity );
+
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UUserWidget> CombatUIFactory;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI" )
 	class UCombatUI* CombatUI;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="UI")
-	float CombatTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera" )
+	class ADynamicCameraActor* DynamicCameraActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character" )
+	class APlayerActor* PlayerActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character" )
+	class AEnemyActor* EnemyActor;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="State")
+	bool bCombatStart = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="State")
+	bool bCombatResult = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event" )
+	class UDBSZEventManager* EventManager;
+
+	
+public:
+	UFUNCTION( BlueprintCallable, Category="Sequence")
+	void PlaySequence(class ULevelSequence* InSequence);
+
+	UFUNCTION()
+	void OnSequenceFinished();
+
+	UPROPERTY()
+	class ULevelSequence* PlayingSequence;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	float CombatStartDelay = 2.0f;
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	class ULevelSequencePlayer* SequencePlayer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	class ALevelSequenceActor* SequenceActor;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	class ULevelSequence* MainSeq;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	class ULevelSequence* GokuWinSeq;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	AActor* GokuWinActor;
 };

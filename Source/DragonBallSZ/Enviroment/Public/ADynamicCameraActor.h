@@ -45,6 +45,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraResetTime = 5;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="NEW_STATE")
+	bool bIsIntroPlay = false;
 
 	
 public:
