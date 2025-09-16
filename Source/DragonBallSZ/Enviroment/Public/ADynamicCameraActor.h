@@ -31,9 +31,9 @@ public:
 	class UCameraComponent* CameraComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class ACombatCharacter* PlayerRef;
+	class APlayerActor* PlayerRef;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class ACombatCharacter* TargetRef;
+	class AEnemyActor* TargetRef;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraDistance = 200;
@@ -44,10 +44,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CameraResetTime = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="NEW_STATE")
-	bool bIsIntroPlay = false;
-
 	
 public:
 	UFUNCTION(BlueprintCallable)
@@ -79,11 +75,6 @@ public:// Event-Delegate
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnPowerCharge(AActor* Target, bool bState);
 
-	UFUNCTION(BlueprintCallable, Category="Command")
-	void SetPlayerHold( bool bState);
-	UFUNCTION(BlueprintCallable, Category="Command")
-	void SetTargetHold( bool bState );
-	
 private:
 	class UDBSZEventManager* EventManager;
 	bool bIsCameraResetting = false;

@@ -62,17 +62,26 @@ void UCombatUI::OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP)
 	}
 }
 
+void UCombatUI::StartCombatTime()
+{
+	CombatTime = 0.0f;
+
+	UpdateTimer();
+	GetWorld()->GetTimerManager().SetTimer(CombatTimerHandle, this, &UCombatUI::UpdateTimer, 1.0f, true);
+}
+
+void UCombatUI::ClearCombatTime()
+{
+	CombatTime = 0.0f;
+	
+	GetWorld()->GetTimerManager().ClearTimer(CombatTimerHandle);
+}
+
+
 void UCombatUI::OnReceiveMessage(FString Msg)
 {
-	if (Msg == GameEvent::GameStart)
+	if ( Msg == GameEvent::PlayerWin || Msg == GameEvent::EnemyWin )
 	{
-		CombatTime = 0.0f;
-
-		UpdateTimer();
-		GetWorld()->GetTimerManager().SetTimer(CombatTimerHandle, this, &UCombatUI::UpdateTimer, 1.0f, true);
-	}
-	else if ( Msg == GameEvent::PlayerWin || Msg == GameEvent::EnemyWin )
-	{
-		GetWorld()->GetTimerManager().ClearTimer(CombatTimerHandle);
+		this->ClearCombatTime();
 	}
 }

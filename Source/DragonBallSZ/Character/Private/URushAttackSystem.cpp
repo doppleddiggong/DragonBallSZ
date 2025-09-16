@@ -177,7 +177,7 @@ void URushAttackSystem::OnDashCompleted()
 	    AnimInstance->Montage_Stop(0.1f, DashMontage);
     }
 
-	if (!Owner->IsHit)
+	if (!Owner->IsHitting())
 		PlayMontage(PendingMontageIndex);
 
 	Owner->RecoveryMovementMode(PrevMovementMode);
@@ -283,7 +283,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 	LastAttackTime = GetWorld()->GetTimeSeconds();
 	EventManager->SendAttack(Owner, MontageIndex);
 	
-	if (IsValid(AnimInstance)) // Add check
+	if (IsValid(AnimInstance) && IsValid(AttackMontages[MontageIndex]) )
     {
 	    AnimInstance->Montage_Play(
 		    AttackMontages[MontageIndex],
@@ -318,13 +318,10 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	FVector ToTargetXY = TargetLoc - OwnerLoc;
 	const float DistanceXY = ToTargetXY.Size();
 
-	// Prevent division by zero if owner and target are at the same XY location
-	if (DistanceXY < KINDA_SMALL_NUMBER) // KINDA_SMALL_NUMBER is a small float constant in Unreal Engine
+	if ( DistanceXY < KINDA_SMALL_NUMBER )
 	{
-		// If already at target, perhaps just play the attack montage or return.
-		// For now, returning to prevent crash.
 		PRINTLOG(TEXT("DashToTarget: DistanceXY is too small, skipping dash. Owner: %s, Target: %s"), *Owner->GetName(), *Target->GetName());
-		PlayMontage(MontageIndex); // Directly play the attack montage if already close
+		PlayMontage(MontageIndex);
 		return;
 	}
 
@@ -350,17 +347,14 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	MoveComp->DisableMovement();
 
 
-	if ( TravelXY > 450.0f )
+	if ( TravelXY > DashEventRange )
 	{
 		EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
 	}
 	
-    if (IsValid(AnimInstance)) // Add check
+    if (IsValid(AnimInstance)  && IsValid(DashMontage) )
     {
-		if( IsValid(DashMontage)) 
-		{
-			AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
-		}
+		AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
     }
 }
 

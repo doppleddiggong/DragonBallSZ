@@ -84,9 +84,10 @@ void UListActorComponent::AssignItemAppend()
 #endif
 }
 
-#if WITH_EDITOR
+
 void UListActorComponent::SortByNameAsc()
 {
+#if WITH_EDITOR
 	const FScopedTransaction Tx(
 		NSLOCTEXT("ListActorManager", "SortByNameAsc", "Sort ArrayActors by Name Asc")
 	);
@@ -100,10 +101,12 @@ void UListActorComponent::SortByNameAsc()
 	{
 		Pkg->SetDirtyFlag(true);
 	}
+#endif
 }
 
 void UListActorComponent::SortByNameDesc()
 {
+#if WITH_EDITOR
 	const FScopedTransaction Tx(
 		NSLOCTEXT("ListActorManager", "SortByNameDesc", "Sort ArrayActors by Name Desc")
 	);
@@ -117,5 +120,5 @@ void UListActorComponent::SortByNameDesc()
 	{
 		Pkg->SetDirtyFlag(true);
 	}
+#endif	
 }
-#endif

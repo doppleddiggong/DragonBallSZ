@@ -33,7 +33,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Owner->IsHold() )
+	if (Owner->IsHolding() )
 		return;
 	
 	if (bDefeated)
@@ -47,7 +47,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		return;
 	}
 
-	if (Owner->IsHit)
+	if (Owner->IsHitting())
 	{
 		void Damaged();
 		return;
@@ -145,7 +145,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
 	CurrentTime = 0;
 
-	// ModifyWeightArray(); // Add & Remove Weight
+	ModifyWeightArray(); // Add & Remove Weight
 
 	ChangeState(SelectWeightedRandomState()); // Change state randomly
 
@@ -154,8 +154,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// PRINTLOG(TEXT("EnemyState %s"), *stateStr);
 	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, stateStr);
 
-	CurrentState = EEnemyState::Move;
-	
 	switch (CurrentState)
 	{
 	case EEnemyState::Idle:
@@ -288,7 +286,7 @@ void UEnemyFSM::Move()
 
 	// EMovementMode::MOVE_Flying
 	CurrentMove = SelectWeightedRandomMove();
-	CurrentMove = EMoveInputType::Jump;
+
 	switch (CurrentMove)
 	{
 	case EMoveInputType::Forward:

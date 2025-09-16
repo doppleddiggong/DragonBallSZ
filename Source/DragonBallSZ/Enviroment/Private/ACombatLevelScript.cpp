@@ -22,28 +22,23 @@
 
 #define COMBAT_WIDGET_PATH TEXT("/Game/CustomContents/UI/WB_Combat.WB_Combat_C")
 
-#define MAIN_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleIntro/MainSequence.MainSequence")
-#define GOKU_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleOutro/GokuWin.GokuWin")
+// #define MAIN_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleIntro/MainSequence.MainSequence")
+// #define GOKU_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleOutro/GokuWin.GokuWin")
 
 class ULevelSequencePlayer;
 
 ACombatLevelScript::ACombatLevelScript()
 {
 	CombatUIFactory = FComponentHelper::LoadClass<UUserWidget>(COMBAT_WIDGET_PATH);
-
-	static ConstructorHelpers::FObjectFinder<ULevelSequence> TempMainSeq(MAIN_SEQ_PATH);
-	if (TempMainSeq.Succeeded())
-		MainSeq = TempMainSeq.Object;
-
-	static ConstructorHelpers::FObjectFinder<ULevelSequence> TempGokuSeq(GOKU_SEQ_PATH);
-	if (TempMainSeq.Succeeded())
-		GokuWinSeq = TempMainSeq.Object;
 }
 
 void ACombatLevelScript::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// MainSeq = LoadObject<ULevelSequence>(nullptr, MAIN_SEQ_PATH);
+	// GokuWinSeq = LoadObject<ULevelSequence>(nullptr, GOKU_SEQ_PATH);
+	
 	if ( AActor* Camera = UGameplayStatics::GetActorOfClass(GetWorld(), ADynamicCameraActor::StaticClass()) )
 		DynamicCameraActor = Cast<ADynamicCameraActor>(Camera);
 	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
@@ -66,11 +61,20 @@ void ACombatLevelScript::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg.Equals(GameEvent::GameStart.ToString(), ESearchCase::IgnoreCase ))
 	{
+		PlayerActor->SetHold(true);
+		EnemyActor->SetHold(true);
+
+		ShowCombatUI(ESlateVisibility::Hidden);
 	}
 	else if ( InMsg.Equals(GameEvent::CombatStart.ToString(), ESearchCase::IgnoreCase ))
 	{
 		bCombatStart = true;
 		bCombatResult = false;
+
+		PlayerActor->SetHold(false);
+		EnemyActor->SetHold(false);
+
+		ShowCombatUI(ESlateVisibility::Visible);
 	}
 	else if ( InMsg.Equals(GameEvent::PlayerWin.ToString(), ESearchCase::IgnoreCase ))
 	{
@@ -107,6 +111,13 @@ void ACombatLevelScript::ShowCombatUI(const ESlateVisibility InSetVisiblity)
 	}
 
 	CombatUI->SetVisibility(InSetVisiblity);
+
+	if( InSetVisiblity == ESlateVisibility::Visible )
+		CombatUI->StartCombatTime();
+	else if( InSetVisiblity == ESlateVisibility::Hidden )
+	{
+		CombatUI->ClearCombatTime();
+	}
 }
 
 
@@ -151,10 +162,17 @@ void ACombatLevelScript::OnSequenceFinished()
 				EventManager->SendMessage(GameEvent::CombatStart.ToString());
 			});
 		}
+
+        if( auto PlayerController = UGameplayStatics::GetPlayerController(this, 0) )
+            PlayerController->SetViewTargetWithBlend(DynamicCameraActor, 0.0f);
 	}
 	else if (PlayingSequence == GokuWinSeq)
 	{
 		PRINTLOG(TEXT("GokuWinSeq finished!"));
+	}
+	else
+	{
+		PRINTLOG(TEXT("Unknown Seq finished!"));
 	}
 
 	PlayingSequence = nullptr;

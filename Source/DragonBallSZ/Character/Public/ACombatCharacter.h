@@ -66,9 +66,15 @@ public:
 	};
 
 	UFUNCTION(BlueprintPure, Category="GameState")
-	FORCEINLINE bool IsHold() const
+	FORCEINLINE bool IsHolding() const
 	{
 		return bIsHold;
+	};
+
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE void SetHold(const bool bState)
+	{
+		this->bIsHold = bState;
 	};
 	
 public:
@@ -125,12 +131,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	class ACombatCharacter* TargetActor;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
-	bool IsHit = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	bool bIsHold = false;
-	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
@@ -171,6 +171,12 @@ protected:
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
+	bool IsHit = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsHold = false;
+		
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
 	class UCharacterData* CharacterData;

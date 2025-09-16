@@ -7,10 +7,8 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 
-#include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -46,9 +44,7 @@ void ADynamicCameraActor::BeginPlay()
 	EventManager->OnSpecialAttack.AddDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
 	EventManager->OnGuard.AddDynamic(this, &ADynamicCameraActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &ADynamicCameraActor::OnAvoid);
-	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);
-
-	
+	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);	
 }
 
 // Called every frame
@@ -259,16 +255,4 @@ void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
 	
 	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
 	// PRINTLOG(TEXT("%s"), PrintMsg);
-}
-
-void ADynamicCameraActor::SetPlayerHold( bool bState)
-{
-	if ( IsValid(PlayerRef))
-		PlayerRef->bIsHold = bState;
-}
-
-void ADynamicCameraActor::SetTargetHold( bool bState )
-{
-	if ( IsValid(TargetRef))
-		TargetRef->bIsHold = bState;
 }

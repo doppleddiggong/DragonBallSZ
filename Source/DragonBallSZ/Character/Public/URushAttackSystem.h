@@ -108,7 +108,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
     float AttackRange = 150.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
+	float DashEventRange = 450.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
     float TeleportRange = 900.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")

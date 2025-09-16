@@ -16,15 +16,20 @@ protected:
 	virtual void NativeDestruct() override;
 
 public:
-	void UpdateTimer();
+	UFUNCTION(BlueprintCallable, Category="Time")
+	void StartCombatTime();
 
+	UFUNCTION(BlueprintCallable, Category="Time")
+	void ClearCombatTime();
+	
 	UFUNCTION()
 	void OnReceiveMessage(FString Msg);
-
-	
 protected:
 	UFUNCTION()
 	void OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP);
+
+private:
+	void UpdateTimer();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Time")
