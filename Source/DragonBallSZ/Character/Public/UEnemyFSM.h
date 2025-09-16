@@ -80,7 +80,7 @@ public:
 	bool bActing = false;
 	float CurrentTime = 0;
 	float ElapsedMoving = 0;
-	float DecisionTime = 0.8f;
+	float DecisionTime = 0.8f;    
 	float MovingTime;
 	float TargetDistance;
 	float MeleeDistance = 1000;
