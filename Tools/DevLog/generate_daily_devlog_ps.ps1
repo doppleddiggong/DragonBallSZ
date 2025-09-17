@@ -7,61 +7,35 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-function Get-KstNow {
-  $utc = [DateTime]::UtcNow
-  return $utc.AddHours(9)
-}
+function Get-KstNow { return [DateTime]::UtcNow.AddHours(9) }
 
 function Get-KstBoundsForToday09 {
   $nowKst = Get-KstNow
   $date = $nowKst.Date
-  $today9 = [DateTime]::SpecifyKind([datetime]::new($date.Year,$date.Month,$date.Day,9,0,0), 'Unspecified')
-  $today9 = [DateTimeOffset]::new($today9, [TimeSpan]::FromHours(9))
+  $today9 = [DateTimeOffset]::new([datetime]::new($date.Year,$date.Month,$date.Day,9,0,0), [TimeSpan]::FromHours(9))
   if ($nowKst -lt $today9.DateTime) {
     $date = $date.AddDays(-1)
     $today9 = [DateTimeOffset]::new([datetime]::new($date.Year,$date.Month,$date.Day,9,0,0), [TimeSpan]::FromHours(9))
   }
   $yest9 = $today9.AddDays(-1)
-  return [PSCustomObject]@{
-    DateStr = $today9.Date.ToString('yyyy-MM-dd')
-    StartISO = $yest9.ToString('yyyy-MM-ddTHH:mm:sszzz')
-    EndISO   = $today9.ToString('yyyy-MM-ddTHH:mm:sszzz')
-  }
+  return [PSCustomObject]@{ DateStr=$today9.Date.ToString('yyyy-MM-dd'); StartISO=$yest9.ToString('yyyy-MM-ddTHH:mm:sszzz'); EndISO=$today9.ToString('yyyy-MM-ddTHH:mm:sszzz') }
 }
 
 function Get-KstBoundsForDate09([datetime]$date) {
   $end = [DateTimeOffset]::new([datetime]::new($date.Year,$date.Month,$date.Day,9,0,0), [TimeSpan]::FromHours(9))
   $start = $end.AddDays(-1)
-  return [PSCustomObject]@{
-    DateStr = $date.ToString('yyyy-MM-dd')
-    StartISO = $start.ToString('yyyy-MM-ddTHH:mm:sszzz')
-    EndISO   = $end.ToString('yyyy-MM-ddTHH:mm:sszzz')
-  }
+  return [PSCustomObject]@{ DateStr=$date.ToString('yyyy-MM-dd'); StartISO=$start.ToString('yyyy-MM-ddTHH:mm:sszzz'); EndISO=$end.ToString('yyyy-MM-ddTHH:mm:sszzz') }
 }
 
 function Invoke-GitLogRange([string]$SinceISO, [string]$UntilISO, [switch]$NoMerges) {
-  $args = @('log')
-  if ($NoMerges) { $args += '--no-merges' }
+  $args = @('log'); if ($NoMerges) { $args += '--no-merges' }
   $args += @("--since=$SinceISO", "--until=$UntilISO", '--date=iso-strict', '--pretty=format:%H|%ad|%an|%s%n%b', '--numstat')
-  $psi = New-Object System.Diagnostics.ProcessStartInfo -Property @{
-    FileName = 'git'
-    Arguments = ($args -join ' ')
-    RedirectStandardOutput = $true
-    RedirectStandardError = $true
-    UseShellExecute = $false
-    WorkingDirectory = (Get-Location).Path
-  }
-  $p = [System.Diagnostics.Process]::Start($psi)
-  $out = $p.StandardOutput.ReadToEnd()
-  $err = $p.StandardError.ReadToEnd()
-  $p.WaitForExit()
-  if ($p.ExitCode -ne 0) { return '' }
-  return $out
+  $psi = New-Object System.Diagnostics.ProcessStartInfo -Property @{ FileName='git'; Arguments=($args -join ' '); RedirectStandardOutput=$true; RedirectStandardError=$true; UseShellExecute=$false; WorkingDirectory=(Get-Location).Path }
+  $p = [System.Diagnostics.Process]::Start($psi); $out = $p.StandardOutput.ReadToEnd(); $p.WaitForExit(); if ($p.ExitCode -ne 0) { return '' }; return $out
 }
 
 function Parse-GitNumstat([string]$Text) {
-  $commits = @()
-  $cur = $null
+  $commits = @(); $cur = $null
   foreach ($line in ($Text -split "`r?`n")) {
     if ($line -match '^(?<sha>[0-9a-f]{7,40})\|(?<date>[^|]+)\|(?<author>[^|]+)\|(?<sub>.*)$') {
       if ($cur) { $commits += $cur }
@@ -70,18 +44,15 @@ function Parse-GitNumstat([string]$Text) {
     }
     if ($line -match '^(?<adds>\d+|-)\t(?<dels>\d+|-)\t(?<path>.+)$') {
       if ($null -ne $cur) {
-        $adds = ($Matches.adds -eq '-') ? 0 : [int]$Matches.adds
-        $dels = ($Matches.dels -eq '-') ? 0 : [int]$Matches.dels
-        $cur.adds += $adds
-        $cur.dels += $dels
-        $cur.files += 1
+        $adds = 0; if ($Matches.adds -ne '-') { $adds = [int]$Matches.adds }
+        $dels = 0; if ($Matches.dels -ne '-') { $dels = [int]$Matches.dels }
+        $cur.adds += $adds; $cur.dels += $dels; $cur.files += 1
       }
       continue
     }
     if ($null -ne $cur) { $cur.body += $line }
   }
   if ($cur) { $commits += $cur }
-
   foreach ($c in $commits) {
     $bodyText = ($c.body -join "`n")
     $todos = [System.Text.RegularExpressions.Regex]::Matches($bodyText, '(?im)^\s*(?:todo:|@todo)\s*(.+)$') | ForEach-Object { $_.Groups[1].Value.Trim() }
@@ -93,7 +64,8 @@ function Parse-GitNumstat([string]$Text) {
 
 function Classify-Commit([string]$Subject) {
   $type=''; $scope=$null; $sub=$Subject
-  $m = [System.Text.RegularExpressions.Regex]::Match(($Subject ?? ''), '^(?<type>[a-zA-Z]+)(\((?<scope>[^)]+)\))?:\s*(?<sub>.+)$')
+  $safeSubject = if ($null -ne $Subject -and $Subject -ne '') { $Subject } else { '' }
+  $m = [System.Text.RegularExpressions.Regex]::Match($safeSubject, '^(?<type>[a-zA-Z]+)(\((?<scope>[^)]+)\))?:\s*(?<sub>.+)$')
   if ($m.Success) { $type=$m.Groups['type'].Value.ToLower(); $scope=$m.Groups['scope'].Value; $sub=$m.Groups['sub'].Value }
   $cl='Progress'
   if ($type) {
@@ -107,89 +79,69 @@ function Classify-Commit([string]$Subject) {
 }
 
 function Render-DayMD([string]$DateStr, $Commits, [string]$OutPath) {
-  $addsT = ($Commits | Measure-Object -Property adds -Sum).Sum
-  $delsT = ($Commits | Measure-Object -Property dels -Sum).Sum
-  $filesT = ($Commits | Measure-Object -Property files -Sum).Sum
-  if (-not $addsT) { $addsT = 0 }
-  if (-not $delsT) { $delsT = 0 }
-  if (-not $filesT) { $filesT = 0 }
-
+  $addsT = (($Commits | ForEach-Object { $_.adds }) | Measure-Object -Sum).Sum; if (-not $addsT) { $addsT = 0 }
+  $delsT = (($Commits | ForEach-Object { $_.dels }) | Measure-Object -Sum).Sum; if (-not $delsT) { $delsT = 0 }
+  $filesT = (($Commits | ForEach-Object { $_.files }) | Measure-Object -Sum).Sum; if (-not $filesT) { $filesT = 0 }
   $done=@(); $prog=@(); $need=@(); $todos=@(); $details=@()
   foreach ($c in $Commits) {
-    $cls, $scope, $clean = Classify-Commit $c.subject
-    $sha7 = $c.sha.Substring(0,7)
-    $scopeTag = if ($scope) { "[$scope] " } else { '' }
+    $res = Classify-Commit $c.subject; $cls=$res[0]; $scope=$res[1]; $clean=$res[2]
+    $sha7 = $c.sha.Substring(0,7); $scopeTag = if ($scope) { "[$scope] " } else { '' }
     $line = "$scopeTag$clean ($sha7) (+$($c.adds)/-$($c.dels), $($c.files) files)"
     if ($cls -eq 'Done') { $done += $line } else { $prog += $line }
-    if ($c.breaking) { $need += "주의: 마이그레이션 필요 ($sha7)" }
-    foreach ($t in $c.todos) { $todos += "- [ ] $t (출처: $sha7)" }
+    if ($c.breaking) { $need += "NOTE: migration needed ($sha7)" }
+    foreach ($t in $c.todos) { $todos += "- [ ] $t (from: $sha7)" }
     $bodyText = ($c.body -join "`n").Trim()
     if ($bodyText) {
-      $details += "- $scopeTag$clean ($sha7) — $($c.author) @ $($c.date)"
+      $details += "- $scopeTag$clean ($sha7) @$($c.author) @ $($c.date)"
       foreach ($bl in ($bodyText -split "`r?`n")) { $details += "  > $bl" }
       $details += ''
     }
   }
 
+  $doneOut = if ($done.Count -gt 0) { $done } else { @('(none)') }
+  $progOut = if ($prog.Count -gt 0) { $prog } else { @('(none)') }
+  $needOut = if ($need.Count -gt 0) { $need } else { @('(none)') }
+  $todosOut = if ($todos.Count -gt 0) { $todos } else { @('(none)') }
+  $detailsOut = if ($details.Count -gt 0) { $details } else { @('(none)') }
+
   $lines = @(
     "# Daily DevLog $DateStr (KST 09:00 boundary)",
-    "# 일일 개발 로그 $DateStr (KST 09:00 경계)",
     "",
-    "---",
-    "",
-    "## Summary / 요약",
+    "## Summary",
     "Commits: $($Commits.Count) | Changes: +$addsT / -$delsT | Files: $filesT",
-    "커밋: $($Commits.Count)개 | 변경 합계: +$addsT / -$delsT | 파일: $filesT",
     "",
-    "## Highlights / 하이라이트",
-    "2-5 high-impact changes, short bullets",
-    "영향 큰 변경 2~5개를 간단히 요약",
+    "## Highlights",
+    "(summarize 2-5 high-impact changes)",
     "",
     "## Commit-based Work Log",
-    "## 커밋 기반 작업 로그",
-    "",
     "### Done",
-    "### 완료",
-    (if ($done.Count) { $done } else { '(none) / (없음)' }),
+    $doneOut,
     "",
     "### In Progress",
-    "### 진행",
-    (if ($prog.Count) { $prog } else { '(none) / (없음)' }),
+    $progOut,
     "",
     "### Needs Attention",
-    "### 주의 필요",
-    (if ($need.Count) { $need } else { '(none) / (없음)' }),
+    $needOut,
     "",
     "### TODO (from commits)",
-    "### 커밋 기반 TODO",
-    (if ($todos.Count) { $todos } else { '(none) / (없음)' }),
+    $todosOut,
     "",
     "## Details",
-    "## 상세",
-    (if ($details.Count) { $details } else { '(none) / (없음)' }),
+    $detailsOut,
     "",
     "## Metrics (approx)",
-    "## 메트릭(추정)",
     "Commits: $($Commits.Count)",
     "Adds: +$addsT / Dels: -$delsT",
     "Files: $filesT",
     "Done: $($done.Count) | Progress: $($prog.Count) | Needs: $($need.Count)",
-    "Todos: $($todos.Count)",
-    "커밋: $($Commits.Count)개",
-    "추가: +$addsT / 삭제: -$delsT",
-    "파일: $filesT",
-    "완료: $($done.Count) | 진행: $($prog.Count) | 주의: $($need.Count)",
-    "TODO: $($todos.Count)"
+    "Todos: $($todos.Count)"
   )
 
   $outDir = Split-Path -Parent $OutPath
   New-Item -ItemType Directory -Force -Path $outDir | Out-Null
   $lines | Out-File -FilePath $OutPath -Encoding UTF8
 
-  $metrics = [ordered]@{
-    date=$DateStr; commits=$Commits.Count; adds=$addsT; dels=$delsT; files=$filesT;
-    done=$done.Count; progress=$prog.Count; needsAttention=$need.Count; todos=$todos.Count
-  }
+  $metrics = [ordered]@{ date=$DateStr; commits=$Commits.Count; adds=$addsT; dels=$delsT; files=$filesT; done=$done.Count; progress=$prog.Count; needsAttention=$need.Count; todos=$todos.Count }
   ($metrics | ConvertTo-Json -Depth 3 -Compress) | Out-File -FilePath (Join-Path $outDir ("{0}.metrics.json" -f $DateStr)) -Encoding UTF8
 }
 
@@ -197,23 +149,22 @@ function Build-Last30Summary([string]$OutDir) {
   $now = (Get-KstNow).Date
   $texts = @()
   for ($i=0; $i -lt 30; $i++) {
-    $d = $now.AddDays(-$i)
-    $p = Join-Path $OutDir ("{0}.md" -f ($d.ToString('yyyy-MM-dd')))
+    $d = $now.AddDays(-$i); $p = Join-Path $OutDir ("{0}.md" -f ($d.ToString('yyyy-MM-dd')))
     if (Test-Path $p) { $texts += (Get-Content -Raw -Path $p -ErrorAction SilentlyContinue) }
   }
   if (-not $texts.Count) { return }
-  $todoCount = ($texts -join "`n" | Select-String -Pattern '^- \[ \]' -AllMatches -MultiLine).Matches.Count
+  $todoCount = @(($texts -join "`n") | Select-String -Pattern '^- \[ \]').Count
   $lines = @(
-    "## 30-Day Briefing {0}" -f ($now.ToString('yyyy-MM-dd')),
+    "## 30-Day Briefing $($now.ToString('yyyy-MM-dd'))",
     "",
-    "### Overview / 개요",
-    "- Daily files: {0} (last 30 days)" -f $texts.Count,
-    "- 미완료 TODO(추정): {0}" -f $todoCount,
+    "### Overview",
+    "- Daily files: $($texts.Count) (last 30 days)",
+    "- TODO outstanding (est.): $todoCount",
     "",
-    "### Suggested Focus / 권장 가이드(요약)",
-    "1) 미해결 TODO 우선 처리 및 일정 확인",
-    "2) 진행 커밋 많은 일자 점검 및 분할·종결 전략",
-    "3) 완료/진행 비율 개선(소단위 커밋 권장)"
+    "### Suggested Focus",
+    "1) Prioritize open TODOs",
+    "2) Review in-progress heavy days",
+    "3) Improve Done/Progress ratio"
   )
   $out = Join-Path $OutDir '_Last30Summary.md'
   $lines | Out-File -FilePath $out -Encoding UTF8
@@ -223,7 +174,6 @@ function Build-Last30Summary([string]$OutDir) {
 $root = (Get-Location).Path
 $outDir = Join-Path $root 'Documents/DevLog'
 
-# Today
 $b = Get-KstBoundsForToday09
 $todayPath = Join-Path $outDir ("{0}.md" -f $b.DateStr)
 if (-not (Test-Path $todayPath)) {
@@ -232,7 +182,6 @@ if (-not (Test-Path $todayPath)) {
   Render-DayMD -DateStr $b.DateStr -Commits $commits -OutPath $todayPath
 }
 
-# Backfill
 if ($BackfillDays -gt 0) {
   $now = (Get-KstNow).Date
   for ($i=1; $i -le $BackfillDays; $i++) {
@@ -249,4 +198,3 @@ if ($BackfillDays -gt 0) {
 if ($BuildSummary) { Build-Last30Summary -OutDir $outDir }
 
 Write-Output "[DevLog-PS] Generation complete."
-
