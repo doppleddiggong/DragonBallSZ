@@ -114,6 +114,9 @@ void UCombatUI::OnReceiveMessage(FString Msg)
 
 void UCombatUI::OnDamage(bool bIsPlayer, float Damage)
 {
+	if( Damage <= 0 )
+		return;
+	
 	if ( bIsPlayer )
 	{
 		// 플레이어가 맞았으니, 적에게 점수
