@@ -15,8 +15,22 @@ public:
 	// Sets default values for this actor's properties
 	AKamehamehaActor();
 
+	UPROPERTY()
+	TObjectPtr<class USceneComponent> RootComp;
+	
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class UNiagaraComponent> ChargeComp;
+	TObjectPtr<class UNiagaraComponent> ChargeSphere;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UNiagaraComponent> Kamehameha;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UNiagaraComponent> FinishDust;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UNiagaraComponent> Explosion;
+
+	UPROPERTY()
+	TObjectPtr<ACharacter> Target;
+	UPROPERTY()
+	TObjectPtr<ACharacter> Shooter;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -26,7 +40,13 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	float LoopDuration = 0.37;
-	UPROPERTY(EditAnywhere)
+	float LoopDuration = 0.37f;
+	FVector BeamVector = FVector(1,1,1);
+	
+	//ToDo: DataTable로 뽑기
 	float LoopSpeed = 0.001;
+	float BeamSpeed = 1.5f;
+
+	UFUNCTION(BlueprintCallable)
+	void FireKamehameha();
 };
