@@ -8,4 +8,6 @@ enum class EAnimMontageType : uint8
 	Kamehame,
 	Intro,
 	Win,
+
+	ChargeKi,
 };

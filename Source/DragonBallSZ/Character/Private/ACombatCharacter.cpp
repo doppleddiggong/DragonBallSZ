@@ -8,6 +8,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
+#include "UChargeKiSystem.h"
 
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
@@ -36,6 +37,7 @@ ACombatCharacter::ACombatCharacter()
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
+	ChargeKiSystem		= CreateDefaultSubobject<UChargeKiSystem>(TEXT("ChargeKiSystem"));
 	
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
 	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -337,6 +339,9 @@ void ACombatCharacter::PlayTypeMontage(EAnimMontageType Type)
 	case EAnimMontageType::Win:
 		AnimMontage = WinMontage;
 		break;
+	case EAnimMontageType::ChargeKi:
+		AnimMontage = ChargeKiMontage;
+		break;
 	}
 
 	this->PlayTargetMontage(AnimMontage);
@@ -358,6 +363,36 @@ void ACombatCharacter::PlayTargetMontage(UAnimMontage* AnimMontage)
 		PRINTLOG(TEXT("Failed to PlayMontage"));
 	}
 }
+
+void ACombatCharacter::StopTargetMontage(EAnimMontageType Type, float BlendInOutTime)
+{
+	UAnimMontage* AnimMontage = nullptr;
+
+	switch (Type)
+	{
+	case EAnimMontageType::Death:
+		AnimMontage = DeathMontage;
+		break;
+	case EAnimMontageType::Blast:
+		AnimMontage = GetRandomBlastAnim();
+		break;
+	case EAnimMontageType::Kamehame:
+		AnimMontage = KamehameMontage;
+		break;
+	case EAnimMontageType::Intro:
+		AnimMontage = IntroMontage;
+		break;
+	case EAnimMontageType::Win:
+		AnimMontage = WinMontage;
+		break;
+	case EAnimMontageType::ChargeKi:
+		AnimMontage = ChargeKiMontage;
+		break;
+	}
+	
+	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
+}
+
 
 void ACombatCharacter::PlaySoundAttack()
 {

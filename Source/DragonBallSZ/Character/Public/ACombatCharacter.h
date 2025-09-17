@@ -76,6 +76,12 @@ public:
 		this->bIsHold = bState;
 	};
 	
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE void IsChargeKi(const bool bState)
+	{
+		this->bIsChargeKi = bState;
+	};
+	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
@@ -155,6 +161,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void PlayTargetMontage(UAnimMontage* AnimMontage);
 
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void StopTargetMontage(EAnimMontageType Type, float BlendInOutTime);
+	
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlaySoundAttack();
@@ -180,7 +189,9 @@ public: // Combat Character ShaderComp
 	class UDashSystem* DashSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
 	class UFlySystem* FlySystem;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
+	class UChargeKiSystem* ChargeKiSystem;
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	class ACombatCharacter* TargetActor;
@@ -220,10 +231,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
-
-
-	FTimerHandle AvoidTimer;
-	float AvoidTime = 1.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	bool IsHit = false;
@@ -231,7 +238,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	bool bIsHold = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsChargeKi = false;
 
+
+	FTimerHandle AvoidTimer;
+	float AvoidTime = 1.0f;
+	
 protected:
 	// 블라스트 마지막 발사 시간
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
@@ -241,18 +254,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
 	class UCharacterData* CharacterData;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
-	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
-	TObjectPtr<class UNiagaraSystem> DashVFX;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TArray<TObjectPtr<UAnimMontage>> HitMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<UAnimMontage> DeathMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TArray<TObjectPtr<UAnimMontage>> BlastMontages;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> ChargeKiMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<UAnimMontage> KamehameMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
@@ -261,9 +270,15 @@ public:
 	TObjectPtr<UAnimMontage> WinMontage;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<class UNiagaraSystem> DashVFX;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<class UNiagaraSystem> ChargeKiVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
+	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
+	
 	
 private:
 	class UDBSZEventManager* EventManager;
-
-	int BlastCount = 0;
 };

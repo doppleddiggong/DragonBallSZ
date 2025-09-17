@@ -96,6 +96,17 @@ bool UCharacterData::LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMonta
 	return true;
 }
 
+bool UCharacterData::LoadChargeKiMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = ChargeKiAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadChargeKiMontage"));
+		return false;
+	}
+	return true;
+}
+
 bool UCharacterData::LoadKamehameMontage(TObjectPtr<UAnimMontage>& OutMontage) const
 {
 	OutMontage = KamehameAsset.LoadSynchronous();
@@ -129,13 +140,24 @@ bool UCharacterData::LoadWinMontage(TObjectPtr<UAnimMontage>& OutMontage) const
 	return true;
 }
 
-
-bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutDashVFX) const
+bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
 {
-	OutDashVFX = DashVFX.LoadSynchronous();
-	if (!OutDashVFX)
+	OutVFX = DashVFX.LoadSynchronous();
+	if (!OutVFX)
 	{
 		PRINTLOG(TEXT("Failed to LoadDashVFX"));
+		return false;
+	}
+	return true;
+}
+
+
+bool UCharacterData::LoadChargeKiVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
+{
+	OutVFX = ChargeKiVFX.LoadSynchronous();
+	if (!OutVFX)
+	{
+		PRINTLOG(TEXT("Failed to LoadChargeKiVFX"));
 		return false;
 	}
 	return true;

@@ -21,8 +21,8 @@ void UCombatUI::NativeConstruct()
 		EventManager->OnMessage.AddDynamic(this, &UCombatUI::OnReceiveMessage);
 	}
 
-	void HideEnemyDamageUI();
-
+	this->HidePlayerDamageUI();
+	this->HideEnemyDamageUI();
 }
 
 void UCombatUI::NativeDestruct()

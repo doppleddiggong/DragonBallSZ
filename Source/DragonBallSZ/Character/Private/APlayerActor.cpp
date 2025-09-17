@@ -11,6 +11,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UCharacterData.h"
+#include "UChargeKiSystem.h"
 
 // PlayerActor Only
 #include "AEnemyActor.h"
@@ -22,10 +23,8 @@
 #include "AEnergyBlastActor.h"
 #include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
-#include "UDBSZSoundManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 
 #define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
 
@@ -66,12 +65,16 @@ void APlayerActor::BeginPlay()
 	// AsyncLoad
 	CharacterData->LoadHitMontage(HitMontages);
 	CharacterData->LoadDeathMontage(DeathMontage);
-	CharacterData->LoadDashVFX(DashVFX);
-	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
 	CharacterData->LoadBlastMontage(BlastMontages);
+	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
 	CharacterData->LoadKamehameMontage(KamehameMontage);
 	CharacterData->LoadIntroMontage(IntroMontage);
 	CharacterData->LoadWinMontage(WinMontage);
+
+	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
+
+	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
 	
 	CameraShakeSystem->InitSystem(this);	
 
@@ -82,6 +85,7 @@ void APlayerActor::BeginPlay()
 	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
+	ChargeKiSystem ->InitSystem(this, ChargeKiVFX);
 
 	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
@@ -245,7 +249,7 @@ void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	EventManager->SendPowerCharge(this, bPressed);
+	ChargeKiSystem->ActivateEffect(bPressed);
 }
 
 void APlayerActor::Cmd_Guard_Implementation(bool bPressed)

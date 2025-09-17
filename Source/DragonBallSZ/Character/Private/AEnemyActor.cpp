@@ -10,6 +10,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UCharacterData.h"
+#include "UChargeKiSystem.h"
 
 // EnemyActor Only
 #include "AEnemyAIController.h"
@@ -65,7 +66,15 @@ void AEnemyActor::BeginPlay()
 	// AsyncLoad
 	CharacterData->LoadHitMontage(HitMontages);
 	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadBlastMontage(BlastMontages);
+	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
+	CharacterData->LoadKamehameMontage(KamehameMontage);
+	CharacterData->LoadIntroMontage(IntroMontage);
+	CharacterData->LoadWinMontage(WinMontage);
+
 	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
+
 	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
 
 	// ActorComponent 초기화
@@ -75,18 +84,10 @@ void AEnemyActor::BeginPlay()
 	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, AEnemyActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
+	ChargeKiSystem ->InitSystem(this, ChargeKiVFX);
 
 	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
-	// EventManager->OnDash.AddDynamic(this, &AEnemyActor::OnDash);
-	// EventManager->OnTeleport.AddDynamic(this, &AEnemyActor::OnTeleport);
-	// EventManager->OnAttack.AddDynamic(this, &AEnemyActor::OnAttack);
-	// EventManager->OnSpecialAttack.AddDynamic(this, &AEnemyActor::OnSpecialAttack);
-	// EventManager->OnGuard.AddDynamic(this, &AEnemyActor::OnGuard);
-	// EventManager->OnAvoid.AddDynamic(this, &AEnemyActor::OnAvoid);
-	// EventManager->OnPowerCharge.AddDynamic(this, &AEnemyActor::OnPowerCharge);
-
-
 }
 
 void AEnemyActor::Tick(float DeltaTime)
@@ -118,62 +119,3 @@ void AEnemyActor::OnRestoreAvoid()
 {
 	EventManager->SendAvoid(this, false);
 }
-//
-// void AEnemyActor::OnDash(AActor* Target, bool IsDashing, FVector Direction )
-// {
-// 	if ( this != Target )
-// 		return;
-// 	// const TCHAR* PrintMsg = IsDashing ? TEXT("Enemy Dashing Start") : TEXT("Enemy Dashing Complete");
-// 	// PRINTLOG(TEXT("%s"), PrintMsg);
-// }
-//
-// void AEnemyActor::OnTeleport(AActor* Target)
-// {
-// 	if ( this != Target )
-// 		return;
-//
-// 	// PRINTLOG(TEXT("Enemy OnTeleport"));
-// }
-//
-// void AEnemyActor::OnAttack(AActor* Target, int ComboCount)
-// {
-// 	if ( this != Target )
-// 		return;
-//
-// 	// PRINTLOG(TEXT("Enemy ComboCount : %d"), ComboCount);
-// }
-//
-// void AEnemyActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
-// {
-// 	if ( this != Target )
-// 		return;
-//
-// 	// PRINTLOG(TEXT("Enemy OnSpecialAttack : %d"), SpecialIndex);
-// }
-//
-// void AEnemyActor::OnGuard(AActor* Target, bool bState)
-// {
-// 	if ( this != Target )
-// 		return;
-// 	
-// 	// const TCHAR* PrintMsg = bState ? TEXT("Enemy Guard Start") : TEXT("Enemy Guard End");
-// 	// PRINTLOG(TEXT("%s"), PrintMsg);
-// }
-//
-// void AEnemyActor::OnAvoid(AActor* Target, bool bState)
-// {
-// 	if ( this != Target )
-// 		return;
-// 	
-// 	// const TCHAR* PrintMsg = bState ? TEXT("Enemy Avoid Start") : TEXT("Enemy Avoid End");
-// 	// PRINTLOG(TEXT("%s"), PrintMsg);
-// }
-//
-// void AEnemyActor::OnPowerCharge(AActor* Target, bool bState)
-// {
-// 	if ( this != Target )
-// 		return;
-// 	
-// 	// const TCHAR* PrintMsg = bState ? TEXT("Enemy PowerCharge Start") : TEXT("Enemy PowerCharge End");
-// 	// PRINTLOG(TEXT("%s"), PrintMsg);
-// }
