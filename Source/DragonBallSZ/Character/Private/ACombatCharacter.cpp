@@ -65,12 +65,6 @@ void ACombatCharacter::BeginPlay()
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
  }
 
-
-void ACombatCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
 	if ( this->IsHolding() )

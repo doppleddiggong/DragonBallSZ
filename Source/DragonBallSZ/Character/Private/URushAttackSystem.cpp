@@ -80,6 +80,13 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 			if (ProjectionDist > 90) Owner->SetActorLocation(NewLoc, true);
 		}
 	}
+
+	if ( ComboResetTime > 0.0f &&
+		GetWorld()->GetTimeSeconds() > ComboResetTime )
+	{
+		ComboResetTime = 0.0f;
+		ComboCount = 0;
+	}
 }
 
 void URushAttackSystem::BindMontageDelegates(UAnimInstance* Anim)
@@ -295,6 +302,9 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
     {
 		Owner->PlaySoundAttack();
 
+		float AttackEndTime = AttackMontages[MontageIndex]->GetPlayLength();
+		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime; 
+		
 	    AnimInstance->Montage_Play(
 		    AttackMontages[MontageIndex],
 		    1.0f,
@@ -302,15 +312,6 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		    0.f,
 		    true);
     }
-	
-	GetWorld()->GetTimerManager().ClearTimer(ComboTimeHandler);
-	GetWorld()->GetTimerManager().SetTimer(
-		ComboTimeHandler,
-		this,
-		&URushAttackSystem::ResetCounter,
-		ComboResetTime,
-		false
-	);
 }
 
 void URushAttackSystem::DashToTarget(int32 MontageIndex)

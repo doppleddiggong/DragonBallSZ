@@ -44,8 +44,6 @@ public:
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
 
-	FORCEINLINE void ResetCounter()	{ ComboCount = 0; bIsAttacking = false; }
-
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void OnDashCompleted();
@@ -94,8 +92,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	float ComboResetTime = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	float MinAttackDelay = 0.75f;	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
@@ -123,26 +119,10 @@ public:
 	float AutoTrackMoveSpeed = 900.0f;
 
 
-	
+
 private:
-	float ElapsedTime = 0.0f;
-	float LastAttackTime = 0.0f;
-	bool bDelegatesBound = false;
-
-	int ComboCount = 0;
-
-	int32 PendingMontageIndex = 0;
-	TEnumAsByte<EMovementMode> PrevMovementMode;
-
-	FTimerHandle KnockbackTimerHandler;
-    FTimerHandle ComboTimeHandler;
-    FTimerHandle TraceTimeHandler;
-
-	FVector DashStartLoc;
-	FVector DashTargetLoc;
-
-    UPROPERTY()
-    class UDBSZEventManager* EventManager;
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
@@ -150,4 +130,21 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<UAnimMontage> DashMontage;
+	
+private:
+	float ElapsedTime = 0.0f;
+	float LastAttackTime = 0.0f;
+	bool bDelegatesBound = false;
+
+	float ComboResetTime = 0.0f;
+	int ComboCount = 0;
+
+	int32 PendingMontageIndex = 0;
+	TEnumAsByte<EMovementMode> PrevMovementMode;
+
+	FTimerHandle KnockbackTimerHandler;
+    FTimerHandle TraceTimeHandler;
+
+	FVector DashStartLoc;
+	FVector DashTargetLoc;
 };

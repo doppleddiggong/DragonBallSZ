@@ -5,6 +5,10 @@
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 
+
+#define MIN_DMG_MUL 0.85f
+#define MAX_DMG_MUL 1.15f
+
 UStatSystem::UStatSystem()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -24,6 +28,24 @@ void UStatSystem::InitStat_Implementation(bool IsPlayer)
 {
 	this->bIsPlayer = IsPlayer;
 	this->IsDead = false;
+}
+
+float UStatSystem::GetRandDmg(float Damage)
+{
+	return FMath::RandRange( Damage * MIN_DMG_MUL, Damage * MAX_DMG_MUL);
+}
+
+float UStatSystem::GetAttackDamage(int ComboCount)
+{
+	if ( AttackDamage.IsValidIndex(ComboCount) )
+		return GetRandDmg( AttackDamage[ComboCount]);
+
+	return 0;
+}	
+
+float UStatSystem::GetBlastDamage()
+{
+	return GetRandDmg(BlastDamage);
 }
 
 void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)

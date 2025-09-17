@@ -277,13 +277,13 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 
 	this->UseBlast();
 	this->PlayTypeMontage(EAnimMontageType::Blast);
-	
+	LastBlastShotTime = GetWorld()->GetTimeSeconds();
+
 	GetWorld()->SpawnActor<AEnergyBlastActor>(
 		EnergyBlastFactory,
 		this->GetActorTransform(),
 		Params
 	);
-	LastBlastShotTime = GetWorld()->GetTimeSeconds();
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()

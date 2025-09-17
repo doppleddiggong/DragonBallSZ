@@ -10,7 +10,7 @@ UCLASS( Blueprintable, ClassGroup=(DBSZ), meta=(BlueprintSpawnableComponent) )
 class DRAGONBALLSZ_API UStatSystem : public UActorComponent
 {
 	GENERATED_BODY()
-
+	
 public:
 	UStatSystem();
 
@@ -28,22 +28,17 @@ public:
 	}
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
-	void InitStat(bool IsPlayer);	
+	void InitStat(bool IsPlayer);
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
-	FORCEINLINE float GetAttackDamage(int ComboCount)
-	{
-		if ( AttackDamage.IsValidIndex(ComboCount) )
-			return AttackDamage[ComboCount];
-		return 0;
-	}	
+	float GetRandDmg(float Damage);
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
-	FORCEINLINE float GetBlastDamage()
-	{
-		return BlastDamage;
-	}
+	float GetAttackDamage(int ComboCount);
 
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	float GetBlastDamage();
+	
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void SetAttackChargeKi(int ComboCount)
 	{
