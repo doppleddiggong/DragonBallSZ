@@ -96,6 +96,21 @@ void APlayerActor::BeginPlay()
 	EventManager->SendUpdateKi(true, StatSystem->CurKi, StatSystem->MaxKi);
 }
 
+void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (!EventManager) return;
+	
+	EventManager->OnDash.RemoveDynamic(this, &APlayerActor::OnDash);
+	EventManager->OnTeleport.RemoveDynamic(this, &APlayerActor::OnTeleport);
+	EventManager->OnAttack.RemoveDynamic(this, &APlayerActor::OnAttack);
+	EventManager->OnSpecialAttack.RemoveDynamic(this, &APlayerActor::OnSpecialAttack);
+	EventManager->OnGuard.RemoveDynamic(this, &APlayerActor::OnGuard);
+	EventManager->OnAvoid.RemoveDynamic(this, &APlayerActor::OnAvoid);
+	EventManager->OnPowerCharge.RemoveDynamic(this, &APlayerActor::OnPowerCharge);
+}
+
 void APlayerActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

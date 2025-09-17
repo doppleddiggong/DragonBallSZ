@@ -57,6 +57,16 @@ void ACombatLevelScript::BeginPlay()
 	EventManager->OnMessage.AddDynamic(this, &ACombatLevelScript::OnRecvMessage);
 }
 
+void ACombatLevelScript::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (EventManager)
+	{
+		EventManager->OnMessage.RemoveDynamic(this, &ACombatLevelScript::OnRecvMessage);
+	}
+}
+
 void ACombatLevelScript::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg.Equals(GameEvent::GameStart.ToString(), ESearchCase::IgnoreCase ))

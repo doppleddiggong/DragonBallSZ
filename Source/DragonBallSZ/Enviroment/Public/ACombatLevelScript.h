@@ -16,6 +16,7 @@ public:
 
 public:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	UFUNCTION( BlueprintCallable, BlueprintPure, Category="NEW_STATE")

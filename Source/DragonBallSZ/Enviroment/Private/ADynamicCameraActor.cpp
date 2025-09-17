@@ -47,6 +47,21 @@ void ADynamicCameraActor::BeginPlay()
 	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);	
 }
 
+void ADynamicCameraActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (!EventManager) return;
+	
+	EventManager->OnDash.RemoveDynamic(this, &ADynamicCameraActor::OnDash);
+	EventManager->OnTeleport.RemoveDynamic(this, &ADynamicCameraActor::OnTeleport);
+	EventManager->OnAttack.RemoveDynamic(this, &ADynamicCameraActor::OnAttack);
+	EventManager->OnSpecialAttack.RemoveDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
+	EventManager->OnGuard.RemoveDynamic(this, &ADynamicCameraActor::OnGuard);
+	EventManager->OnAvoid.RemoveDynamic(this, &ADynamicCameraActor::OnAvoid);
+	EventManager->OnPowerCharge.RemoveDynamic(this, &ADynamicCameraActor::OnPowerCharge);
+}
+
 // Called every frame
 void ADynamicCameraActor::Tick(float DeltaTime)
 {

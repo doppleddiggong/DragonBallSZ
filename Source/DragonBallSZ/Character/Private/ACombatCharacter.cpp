@@ -65,6 +65,16 @@ void ACombatCharacter::BeginPlay()
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
  }
 
+void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (EventManager)
+	{
+		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
+	}
+}
+
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
 	if ( this->IsHolding() )
