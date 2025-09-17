@@ -262,11 +262,12 @@ void URushAttackSystem::AttackTrace()
 		EventManager->SendKnockback(Target, this->Owner, Type, 0.3f);
 	});
 
+	Owner->SetAttackChargeKi(ComboCount);
+	
 	GetWorld()->GetTimerManager().SetTimer(KnockbackTimerHandler, TimerDelegate, DelayKnockback, false);
-
 	UGameplayStatics::ApplyDamage(
 		Target,
-		Damage,
+		Owner->GetAttackDamage(ComboCount),
 		nullptr,
 		Owner,
 		UDamageType::StaticClass()
@@ -361,7 +362,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 		EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
 	}
 	
-    if (IsValid(AnimInstance)  && IsValid(DashMontage) )
+    if (IsValid(AnimInstance) && IsValid(DashMontage) )
     {
 		AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
     }

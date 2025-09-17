@@ -52,3 +52,25 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 
 	return IsDead;
 }
+
+void UStatSystem::IncreaseKi_Implementation(float InKi)
+{
+	this->CurKi += InKi;
+
+	if( CurKi > MaxKi )
+		CurKi = MaxKi;
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateKi(bIsPlayer, CurKi, MaxKi);
+}
+
+void UStatSystem::DecreaseKi_Implementation(float InKi)
+{
+	this->CurKi -= InKi;
+
+	if( CurKi < 0 )
+		CurKi = 0;
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateKi(bIsPlayer, CurKi, MaxKi);
+}

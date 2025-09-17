@@ -37,6 +37,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnUpdateKi, bool, IsPlayer, float, CurKi, float, MaxKi );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnUpdateKi OnUpdateKi;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendUpdateKi(const bool IsPlayer, const float CurKi, const float MaxKi);
+
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, EAttackPowerType, Type);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnHitStop OnHitStop;

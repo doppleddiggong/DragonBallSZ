@@ -30,6 +30,11 @@ public:
 	bool LoadHitMontage( TArray<TObjectPtr<UAnimMontage>>& OutHitMontage) const;
 	bool LoadDeathMontage( TObjectPtr<UAnimMontage>& OutDeathMontage) const;
 
+	bool LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage ) const;
+	bool LoadKamehameMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadIntroMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadWinMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+
 	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutDashVFX) const;
 	bool LoadEnergyBlast(TSubclassOf<class AEnergyBlastActor>& OutEnergyBlast);
 
@@ -45,6 +50,19 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DeathAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TArray<TSoftObjectPtr<UAnimMontage>> BlastAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> KamehameAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> IntroAsset;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> WinAsset;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
 	TSoftObjectPtr<class UNiagaraSystem> DashVFX;

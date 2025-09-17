@@ -4,7 +4,9 @@
 #include "UEnemyFSM.h"
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
+
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "AEnergyBlastActor.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
@@ -76,7 +78,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			// ToDo: LookAt 비활성화
 			// 현재 상태 출력
 			FString distStr = FString::Printf(TEXT("%hhd"), Owner->RushAttackSystem->bIsDashing);
-			PRINTLOG(TEXT("%s"), *distStr);
+			// PRINTLOG(TEXT("%s"), *distStr);
 			GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
 			BeizerMove();
 			return;
@@ -368,6 +370,15 @@ void UEnemyFSM::EnemyLose()
 
 void UEnemyFSM::SpawnEnergyBlast()
 {
+	if (!Owner->IsBlastShootEnable() )
+	{
+		PRINT_STRING(TEXT("Enemy Is ShootBlastDisable!!!!"));
+		return;
+	}
+
+	Owner->UseBlast();
+	Owner->PlayTypeMontage(EAnimMontageType::Blast);
+	
 	FActorSpawnParameters Params;
 	Params.Owner = Owner;
 	Params.Instigator = Owner;
@@ -381,7 +392,8 @@ void UEnemyFSM::SpawnEnergyBlast()
 
 void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 {
-	if (Remaining <= 0) return;
+	if (Remaining <= 0)
+		return;
 
 	SpawnEnergyBlast();
 	Owner->PlaySoundAttack();

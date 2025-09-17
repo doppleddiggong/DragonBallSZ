@@ -12,6 +12,7 @@
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "UDBSZVFXManager.h"
 #include "UDBSZSoundManager.h"
 
@@ -54,7 +55,6 @@ ACombatCharacter::ACombatCharacter()
 void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 
 	MeshComp = this->GetMesh();
 	AnimInstance = MeshComp->GetAnimInstance();
@@ -160,11 +160,17 @@ UAnimMontage* ACombatCharacter::GetRandomHitAnim()
 	return UCommonFunctionLibrary::GetRandomMontage(HitMontages);
 }
 
+UAnimMontage* ACombatCharacter::GetRandomBlastAnim()
+{
+	return UCommonFunctionLibrary::GetRandomMontage(BlastMontages);
+}
+
 void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 	{
 		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->CurHP, StatSystem->MaxHP);
+		EventManager->SendUpdateKi(IsPlayer(), StatSystem->CurKi, StatSystem->MaxKi);
 
 		bIsCombatStart = true;
 	}
@@ -220,6 +226,8 @@ void ACombatCharacter::OnDamage(
 					FVector(0.05f) );
 	
 	bool IsDie = StatSystem->DecreaseHealth(Damage);
+
+	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 	
 	if ( IsDie )
 	{
@@ -227,27 +235,16 @@ void ACombatCharacter::OnDamage(
 		EventManager->SendMessage( SendEventType.ToString() );
 
 		this->PlaySoundWin();
-		
-		AnimInstance->Montage_Play(
-			DeathMontage,
-			1.0f,
-			EMontagePlayReturnType::MontageLength,
-			0.f,
-			true);
-	
+		this->PlayTypeMontage(EAnimMontageType::Death);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
 	}
 	else
 	{
-		auto HitAnim = GetRandomHitAnim();
-		float HitEndTime = HitAnim->GetPlayLength();
-		AnimInstance->Montage_Play(
-			HitAnim,
-			1.0f,
-			EMontagePlayReturnType::MontageLength,
-			0.f,
-			true);
-	
+		auto HitAnimMontage = GetRandomHitAnim();
+		float HitEndTime = HitAnimMontage->GetPlayLength();
+
+		this->PlayTargetMontage(HitAnimMontage);
+
 		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this](){
 			IsHit = false;
 		});
@@ -297,6 +294,62 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 		this->bUseControllerRotationYaw = false;
 		this->bUseControllerRotationPitch = false;
 		Movement->bOrientRotationToMovement = true;
+	}
+}
+
+bool ACombatCharacter::IsBlastShootEnable()
+{
+	if ( !IsControlEnable() )
+		return false;
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	const float NextAvailableTime = LastBlastShotTime + GetBlastShootDelay();
+	if (NextAvailableTime > Now )
+		return false;
+	
+	return StatSystem->CurKi > StatSystem->BlastNeedKi;
+}
+
+void ACombatCharacter::PlayTypeMontage(EAnimMontageType Type)
+{
+	UAnimMontage* AnimMontage = nullptr;
+
+	switch (Type)
+	{
+	case EAnimMontageType::Death:
+		AnimMontage = DeathMontage;
+		break;
+	case EAnimMontageType::Blast:
+		AnimMontage = GetRandomBlastAnim();
+		break;
+	case EAnimMontageType::Kamehame:
+		AnimMontage = KamehameMontage;
+		break;
+	case EAnimMontageType::Intro:
+		AnimMontage = IntroMontage;
+		break;
+	case EAnimMontageType::Win:
+		AnimMontage = WinMontage;
+		break;
+	}
+
+	this->PlayTargetMontage(AnimMontage);
+}
+
+void ACombatCharacter::PlayTargetMontage(UAnimMontage* AnimMontage)
+{
+	if ( IsValid(AnimInstance) && IsValid(AnimMontage) )
+	{
+		AnimInstance->Montage_Play(
+			AnimMontage,
+			1.0f,
+			EMontagePlayReturnType::MontageLength,
+			0.f,
+			true);
+	}
+	else
+	{
+		PRINTLOG(TEXT("Failed to PlayMontage"));
 	}
 }
 

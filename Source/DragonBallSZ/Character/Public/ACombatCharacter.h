@@ -93,6 +93,8 @@ public:
 	bool IsInSight(const AActor* Other) const;
 	UFUNCTION(BlueprintCallable, Category="Character|Montage")
 	UAnimMontage* GetRandomHitAnim();
+	UFUNCTION(BlueprintCallable, Category="Character|Montage")
+	UAnimMontage* GetRandomBlastAnim();
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void OnRecvMessage(FString InMsg);
@@ -112,6 +114,47 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void RecoveryMovementMode(const EMovementMode InMovementMode);
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	bool IsBlastShootEnable();
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void SetAttackChargeKi(int ComboCount)
+	{
+		StatSystem->SetAttackChargeKi(ComboCount);
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Command")
+	FORCEINLINE float GetBlastShootDelay()
+	{
+		return StatSystem->BlastShotDelay;
+	}
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Stat")
+	FORCEINLINE float GetAttackDamage(int ComboCount)
+	{
+		return StatSystem->GetAttackDamage(ComboCount);
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stat")
+	FORCEINLINE float GetBlastDamage()
+	{
+		return StatSystem->GetBlastDamage();
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseBlast()
+	{
+		return StatSystem->UseBlast();
+	}
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void PlayTypeMontage(EAnimMontageType Type);
+
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void PlayTargetMontage(UAnimMontage* AnimMontage);
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
@@ -188,7 +231,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	bool bIsHold = false;
-		
+
+
+protected:
+	// 블라스트 마지막 발사 시간
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float LastBlastShotTime = 0;
+	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
 	class UCharacterData* CharacterData;
@@ -203,7 +252,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<UAnimMontage> DeathMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TArray<TObjectPtr<UAnimMontage>> BlastMontages;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> KamehameMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> IntroMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> WinMontage;
 
+
+	
 private:
 	class UDBSZEventManager* EventManager;
+
+	int BlastCount = 0;
 };

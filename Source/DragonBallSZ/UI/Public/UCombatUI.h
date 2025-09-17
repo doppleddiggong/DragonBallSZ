@@ -24,10 +24,14 @@ public:
 	
 	UFUNCTION()
 	void OnReceiveMessage(FString Msg);
+	
 protected:
 	UFUNCTION()
 	void OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP);
 
+	UFUNCTION()
+	void OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi);
+	
 private:
 	void UpdateTimer();
 
@@ -44,6 +48,13 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Enemy;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> ProgressBar_Player_Ki;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> ProgressBar_Enemy_Ki;
+
 	
 private:
 	FTimerHandle CombatTimerHandle;

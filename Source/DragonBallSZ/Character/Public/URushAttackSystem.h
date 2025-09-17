@@ -36,9 +36,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void InitSystem(class ACombatCharacter* InOwner, class UCharacterData* InData);
 
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
-
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool IsAttackEnable() const { return !bIsAttacking && !bIsDashing; }
 	UFUNCTION(BlueprintPure, Category="RushAttack")
@@ -133,7 +130,6 @@ private:
 	bool bDelegatesBound = false;
 
 	int ComboCount = 0;
-	float Damage = 30.0f;
 
 	int32 PendingMontageIndex = 0;
 	TEnumAsByte<EMovementMode> PrevMovementMode;

@@ -20,6 +20,11 @@ void UDBSZEventManager::SendUpdateHealth(const bool IsPlayer, const float CurHP,
 	OnUpdateHealth.Broadcast(IsPlayer, CurHP, MaxHp);
 }
 
+void UDBSZEventManager::SendUpdateKi(const bool IsPlayer, const float CurKi, const float MaxKi)
+{
+	OnUpdateKi.Broadcast(IsPlayer, CurKi, MaxKi);
+}
+
 void UDBSZEventManager::SendHitStop(AActor* Target, const EAttackPowerType Type)
 {
 	OnHitStop.Broadcast(Target, Type);

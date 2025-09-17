@@ -20,6 +20,7 @@
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
+#include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZSoundManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -67,13 +68,16 @@ void APlayerActor::BeginPlay()
 	CharacterData->LoadDeathMontage(DeathMontage);
 	CharacterData->LoadDashVFX(DashVFX);
 	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	CharacterData->LoadBlastMontage(BlastMontages);
+	CharacterData->LoadKamehameMontage(KamehameMontage);
+	CharacterData->LoadIntroMontage(IntroMontage);
+	CharacterData->LoadWinMontage(WinMontage);
 	
 	CameraShakeSystem->InitSystem(this);	
 
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this, CharacterData);
-	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
@@ -89,6 +93,7 @@ void APlayerActor::BeginPlay()
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
 	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+	EventManager->SendUpdateKi(true, StatSystem->CurKi, StatSystem->MaxKi);
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -97,18 +102,6 @@ void APlayerActor::Tick(float DeltaTime)
 
 	if ( RushAttackSystem->ShouldLookAtTarget())
 		this->OnLookTarget();
-
-	// 에너지탄 재장전 로직
-	if (RemainBlastShot < MaxRepeatBlastShot)
-	{
-		BlastShotRechargeTime += DeltaTime;
-		if (BlastShotRechargeTime >= BlastShotRechargeDuration)
-		{
-			RemainBlastShot = MaxRepeatBlastShot;
-			BlastShotRechargeTime = 0.0f;
-			// PRINT_STRING(TEXT("Energy Blast Recharged"));
-		}
-	}
 }
 
 void APlayerActor::Landed(const FHitResult& Hit)
@@ -271,34 +264,26 @@ void APlayerActor::Cmd_RushAttack_Implementation()
 
 void APlayerActor::Cmd_EnergyBlast_Implementation()
 {
-	if ( !IsControlEnable() )
+	if (!IsBlastShootEnable() )
 		return;
+	
+	EventManager->SendCameraShake(this, EAttackPowerType::Small );
+	
+	this->PlaySoundAttack();
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
 
-	// 발사 딜레이 체크
-	if (GetWorld()->GetTimeSeconds() < LastBlastShotTime + BlastShotDelay)
-		return;
-
-	// 잔탄 체크
-	if (RemainBlastShot > 0)
-	{
-		this->PlaySoundAttack();
-		
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.Instigator = this;
-
-		GetWorld()->SpawnActor<AEnergyBlastActor>(
-			EnergyBlastFactory,
-			this->GetActorTransform(),
-			Params
-		);
-		// 발사 처리
-		RemainBlastShot--;
-		LastBlastShotTime = GetWorld()->GetTimeSeconds();
-		BlastShotRechargeTime = 0.0f;
-
-		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
-	}
+	this->UseBlast();
+	this->PlayTypeMontage(EAnimMontageType::Blast);
+	
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		EnergyBlastFactory,
+		this->GetActorTransform(),
+		Params
+	);
+	LastBlastShotTime = GetWorld()->GetTimeSeconds();
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()

@@ -75,6 +75,61 @@ bool UCharacterData::LoadDeathMontage(TObjectPtr<UAnimMontage>& OutDeathMontage)
 	return true;
 }
 
+bool UCharacterData::LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage) const
+{
+	OutMontage.Empty();
+
+	for (const FRushData& Data : RushData)
+	{
+		UAnimMontage* LoadedMontage = Data.AttackAsset.LoadSynchronous();
+		if (LoadedMontage)
+		{
+			OutMontage.Add(LoadedMontage);
+		}
+		else
+		{
+			PRINTLOG( TEXT("Failed to LoadBlastMontage"));
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UCharacterData::LoadKamehameMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = KamehameAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadKamehameMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadIntroMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = IntroAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadIntroMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadWinMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = WinAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+
 bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutDashVFX) const
 {
 	OutDashVFX = DashVFX.LoadSynchronous();

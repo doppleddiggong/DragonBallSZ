@@ -21,7 +21,6 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
-
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
 	FORCEINLINE bool IsPlayer()
 	{
@@ -30,6 +29,34 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void InitStat(bool IsPlayer);	
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float GetAttackDamage(int ComboCount)
+	{
+		if ( AttackDamage.IsValidIndex(ComboCount) )
+			return AttackDamage[ComboCount];
+		return 0;
+	}	
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float GetBlastDamage()
+	{
+		return BlastDamage;
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void SetAttackChargeKi(int ComboCount)
+	{
+		if ( ChargeKi.IsValidIndex(ComboCount) )
+			IncreaseKi(ChargeKi[ComboCount]);
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseBlast()
+	{
+		DecreaseKi(BlastNeedKi);
+	}
+	
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void IncreaseHealth(float InHealPoint);	
@@ -37,20 +64,44 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	bool DecreaseHealth(float InDamagePoint);	
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
+	void IncreaseKi(float InKi);	
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
+	void DecreaseKi(float InKi);	
+
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|State")
 	bool bIsPlayer = false;
 	
 	// Health
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|HP")
 	float CurHP = 1000;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|HP")
 	float MaxHP = 1000;
 
+	// Attack
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float Damage = 30;
-
+	TArray<float> AttackDamage { 30, 45, 50, 70, 100 };
+	
+	// Ki
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	float CurKi = 300;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	float MaxKi = 500;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	float BlastNeedKi = 20;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	float BlastDamage = 30;
+	// 에너지탄 발사 딜레이
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float BlastShotDelay = 0.5;
+	
+	// 공격시 회복기
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	TArray<float> ChargeKi  { 3, 4, 5, 7, 10 };
+	
 	// STATE
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	bool IsDead = false;

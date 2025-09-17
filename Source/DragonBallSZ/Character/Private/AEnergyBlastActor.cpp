@@ -3,18 +3,18 @@
 
 #include "AEnergyBlastActor.h"
 
+#include "EAttackPowerType.h"
+
+#include "ACombatCharacter.h"
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
-#include "Components/BoxComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
-#include "NiagaraFunctionLibrary.h"
-#include "Components/SphereComponent.h"
-
-#include "EAttackPowerType.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZVFXManager.h"
+
+
+#include "Kismet/GameplayStatics.h"
+#include "Components/SphereComponent.h"
 #include "Features/UEaseFunctionLibrary.h"
 #include "Shared/FEaseHelper.h"
 
@@ -62,19 +62,19 @@ void AEnergyBlastActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Shooter = Cast<ACharacter>(GetOwner());
+	Shooter = Cast<ACombatCharacter>(GetOwner());
 	if (Shooter)
 	{
 		if (Shooter->IsA(APlayerActor::StaticClass()))	// Shooter: Player
 		{
 			// Target: Enemy
-			Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
+			Target = Cast<ACombatCharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 			ensureMsgf(Target, TEXT("AEnergyBlastActor: Target 캐스팅 실패! AEnemyActor 필요합니다!"));
 		}
 		else if (Shooter->IsA(AEnemyActor::StaticClass()))	// Shooter: Enemy
 		{
 			// Target: Player
-			Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+			Target = Cast<ACombatCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 			ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
 		}
 	}
@@ -101,21 +101,6 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 	
 	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed, true);
 }
-//
-// void AEnergyBlastActor::SpawnExplosionVFX()
-// {
-// 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-// 				GetWorld(),
-// 				Explosion,
-// 				GetActorLocation(),
-// 				GetActorRotation(),
-// 				FVector(0.4f, 0.4f, 0.4f),
-// 				true,
-// 				true,
-// 				ENCPoolMethod::None,
-// 				true
-// 			);
-// }
 
 void AEnergyBlastActor::HitProcess(AActor* DamagedActor, EVFXType VFXType)
 {
@@ -132,7 +117,7 @@ void AEnergyBlastActor::HitProcess(AActor* DamagedActor, EVFXType VFXType)
 	
 	UGameplayStatics::ApplyDamage(
 		DamagedActor,
-		Damage,
+		Shooter->GetBlastDamage(),
 		nullptr,
 		Owner,
 		UDamageType::StaticClass()

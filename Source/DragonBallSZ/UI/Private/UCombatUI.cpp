@@ -16,6 +16,7 @@ void UCombatUI::NativeConstruct()
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 	{
 		EventManager->OnUpdateHealth.AddDynamic(this, &UCombatUI::OnRecvUpdateHealth);
+		EventManager->OnUpdateKi.AddDynamic(this, &UCombatUI::OnRecvUpdateKi);
 		EventManager->OnMessage.AddDynamic(this, &UCombatUI::OnReceiveMessage);
 	}
 }
@@ -27,6 +28,7 @@ void UCombatUI::NativeDestruct()
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 	{
 		EventManager->OnUpdateHealth.RemoveDynamic(this, &UCombatUI::OnRecvUpdateHealth);
+		EventManager->OnUpdateKi.RemoveDynamic(this, &UCombatUI::OnRecvUpdateKi);
 		EventManager->OnMessage.RemoveDynamic(this, &UCombatUI::OnReceiveMessage);
 	}
 
@@ -59,6 +61,25 @@ void UCombatUI::OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP)
 	{
 		if (ProgressBar_Enemy)
 			ProgressBar_Enemy->SetPercent(Percent);
+	}
+}
+
+void UCombatUI::OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi)
+{
+	if (MaxKi <= 0.0f)
+		return;
+
+	const float Percent = FMath::Clamp(CurKi / MaxKi, 0.0f, 1.0f);
+
+	if (bIsPlayer)
+	{
+		if (ProgressBar_Player_Ki)
+			ProgressBar_Player_Ki->SetPercent(Percent);
+	}
+	else
+	{
+		if (ProgressBar_Enemy_Ki)
+			ProgressBar_Enemy_Ki->SetPercent(Percent);
 	}
 }
 
