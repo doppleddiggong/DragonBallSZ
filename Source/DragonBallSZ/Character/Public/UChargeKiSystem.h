@@ -25,6 +25,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="ChargeKi")
 	void ActivateEffect(const bool bState);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="ChargeKi")
+	FORCEINLINE bool IsActivateState()
+	{
+		return ActivateState;
+	}
 private:
 	UFUNCTION()
 	void ChargeKiTick() const;
@@ -36,9 +41,6 @@ public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category="ChargeKi")
 	class UNiagaraComponent* NiagaraComp = nullptr;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
-	bool ActivateState = false;
-
 	UPROPERTY()
 	class UDBSZEventManager* EventManager;
 
@@ -49,4 +51,6 @@ public:
 
 private:
 	FTimerHandle KiChargeTimerHandle;
+
+	bool ActivateState = false;
 };

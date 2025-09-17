@@ -235,6 +235,12 @@ void ACombatCharacter::OnDamage(
 
 	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 	EventManager->SendDamage(IsPlayer(), Damage);
+
+	if ( ChargeKiSystem->IsActivateState() )
+	{
+		// 기 차지 캔슬!
+		ChargeKiSystem->ActivateEffect(false);
+	}
 	
 	
 	if ( IsDie )
@@ -258,9 +264,6 @@ void ACombatCharacter::OnDamage(
 		});
 	}
 }
-
-
-
 
 void ACombatCharacter::SetFlying()
 {
