@@ -23,6 +23,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendMessage(const FString& InMsg);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamage, bool, IsPlayer, float, Damage);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnDamage OnDamage;
+	
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendDamage(const bool IsPlayer, const float Damage);
+
+	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCamera, int32, Group, int32, Index);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCamera OnCamera;

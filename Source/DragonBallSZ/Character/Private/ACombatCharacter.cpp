@@ -232,6 +232,8 @@ void ACombatCharacter::OnDamage(
 	bool IsDie = StatSystem->DecreaseHealth(Damage);
 
 	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+	EventManager->SendDamage(IsPlayer(), Damage);
+	
 	
 	if ( IsDie )
 	{

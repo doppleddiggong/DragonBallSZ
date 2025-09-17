@@ -10,6 +10,11 @@ void UDBSZEventManager::SendMessage(const FString& InMsg)
 	OnMessage.Broadcast(InMsg);
 }
 
+void UDBSZEventManager::SendDamage(const bool IsPlayer, const float Damage)
+{
+	OnDamage.Broadcast(IsPlayer, Damage);
+}
+
 void UDBSZEventManager::SendCamera(const int& Group, const int& Index)
 {
 	OnCamera.Broadcast(Group, Index);
