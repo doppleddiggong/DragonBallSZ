@@ -45,12 +45,6 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 	{
 		CurHP = 0;
 		this->IsDead = true;
-
-		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		{
-			FName SendEventType = bIsPlayer ? GameEvent::EnemyWin : GameEvent::PlayerWin;
-			EventManager->SendMessage( SendEventType.ToString() );
-		}
 	}
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )

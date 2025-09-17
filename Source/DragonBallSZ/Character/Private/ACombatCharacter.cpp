@@ -13,6 +13,7 @@
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 #include "UDBSZVFXManager.h"
+#include "UDBSZSoundManager.h"
 
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -54,23 +55,20 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
 
 	MeshComp = this->GetMesh();
 	AnimInstance = MeshComp->GetAnimInstance();
 	
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
-}
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+ }
 
 
 void ACombatCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// ACombatCharacter 상속 객체에서 각자 합시다.
-	// if ( RushAttackSystem->ShouldLookAtTarget())
-	// 	this->OnLookTarget();
 }
 
 bool ACombatCharacter::IsControlEnable_Implementation()
@@ -166,20 +164,15 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 	{
-		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		{
-			if ( IsPlayer() )
-				EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
-			else if ( IsEnemy())
-				EventManager->SendUpdateHealth(false, StatSystem->CurHP, StatSystem->MaxHP);
-		}
+		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->CurHP, StatSystem->MaxHP);
+
 		bIsCombatStart = true;
 	}
 	else if ( InMsg == GameEvent::PlayerWin )
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsPlayer();
-
+	
 		// PRINTLOG(TEXT("WINNER IS PLAYER"));
 	}
 	else if ( InMsg == GameEvent::EnemyWin )
@@ -218,6 +211,8 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
+	this->PlaySoundHit();
+	
 	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
 					EVFXType::Hit_Small,
 					GetActorLocation(),
@@ -228,6 +223,11 @@ void ACombatCharacter::OnDamage(
 	
 	if ( IsDie )
 	{
+		FName SendEventType = IsPlayer() ? GameEvent::EnemyWin : GameEvent::PlayerWin;
+		EventManager->SendMessage( SendEventType.ToString() );
+
+		this->PlaySoundWin();
+		
 		AnimInstance->Montage_Play(
 			DeathMontage,
 			1.0f,
@@ -298,4 +298,34 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 		this->bUseControllerRotationPitch = false;
 		Movement->bOrientRotationToMovement = true;
 	}
+}
+
+void ACombatCharacter::PlaySoundAttack()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Attack : ESoundType::Vege_Attack;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundHit()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Hit : ESoundType::Vege_Hit;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundJump()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Jump : ESoundType::Vege_Jump;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundTeleport()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Teleport : ESoundType::Vege_Teleport;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundWin()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Win : ESoundType::Vege_Win;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
 }

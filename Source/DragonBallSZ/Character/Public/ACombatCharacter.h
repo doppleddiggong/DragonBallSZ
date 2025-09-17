@@ -112,7 +112,19 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void RecoveryMovementMode(const EMovementMode InMovementMode);
-	
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundAttack();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundHit();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundJump();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundTeleport();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundWin();
+
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
 	class UStatSystem* StatSystem;
@@ -190,4 +202,8 @@ public:
 	TArray<TObjectPtr<UAnimMontage>> HitMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<UAnimMontage> DeathMontage;
+
+
+private:
+	class UDBSZEventManager* EventManager;
 };

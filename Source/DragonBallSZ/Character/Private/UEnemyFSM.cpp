@@ -113,6 +113,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying) // Not flying: Jump & Fly
 			{
 				Owner->FlySystem->OnJump();
+
 				FTimerHandle JumpTimer;
 				GetWorld()->GetTimerManager().SetTimer(
 					JumpTimer,
@@ -383,7 +384,8 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 	if (Remaining <= 0) return;
 
 	SpawnEnergyBlast();
-
+	Owner->PlaySoundAttack();
+	
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()
 	{

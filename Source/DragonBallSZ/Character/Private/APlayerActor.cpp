@@ -21,6 +21,7 @@
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
 #include "UDBSZEventManager.h"
+#include "UDBSZSoundManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -127,59 +128,42 @@ void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( this != Target )
 		return;
-	// const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnTeleport(AActor* Target)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("OnTeleport"));
 }
 
 void APlayerActor::OnAttack(AActor* Target, int ComboCount)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
 }
 
 void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
 }
 
 void APlayerActor::OnGuard(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnAvoid(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	//
-	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
@@ -187,18 +171,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
-	// {
-	// 	// Move By Actor
-	// 	const FVector Forward = GetActorForwardVector();
-	// 	const FVector Right   = GetActorRightVector();
-	//
-	// 	AddMovementInput(Forward, Axis.Y);
-	// 	AddMovementInput(Right,   Axis.X);
-	// }
-
-	// MOVE_Walking, MOVE_Falling	Yaw만 사용	Yaw + Roll 사용 (시각 효과용 가능)	수평 (XZ) 이동
-	// MOVE_Flying	Pitch + Yaw	Pitch + Yaw	3D 이동 (YZ 포함)
-
 	const FRotator ActorRot = GetActorRotation();
 	
 	auto MoveComp = GetCharacterMovement();
@@ -212,9 +184,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		const FVector RightDir   = FRotationMatrix(YawWithRollRot).GetUnitAxis(EAxis::Y);
 		const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
 
-		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
-		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
-
 		AddMovementInput(RightDir, Axis.X);
 		AddMovementInput(ForwardDir, Axis.Y);
 	}
@@ -227,9 +196,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		const FVector RightDir   = FRotationMatrix(FullRot).GetUnitAxis(EAxis::Y);
 		const FVector ForwardDir = FRotationMatrix(FullRot).GetUnitAxis(EAxis::X);
 
-		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
-		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
-		
 		AddMovementInput(RightDir, Axis.X);
 		AddMovementInput(ForwardDir, Axis.Y);
 	}
@@ -315,6 +281,8 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 	// 잔탄 체크
 	if (RemainBlastShot > 0)
 	{
+		this->PlaySoundAttack();
+		
 		FActorSpawnParameters Params;
 		Params.Owner = this;
 		Params.Instigator = this;
@@ -324,19 +292,12 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 			this->GetActorTransform(),
 			Params
 		);
-
 		// 발사 처리
 		RemainBlastShot--;
 		LastBlastShotTime = GetWorld()->GetTimeSeconds();
 		BlastShotRechargeTime = 0.0f;
 
 		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
-		
-		// PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
-	}
-	else
-	{
-		// PRINT_STRING(TEXT("Out of Energy Blast"));
 	}
 }
 

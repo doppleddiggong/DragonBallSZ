@@ -292,6 +292,8 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 	
 	if (IsValid(AnimInstance) && IsValid(AttackMontages[MontageIndex]) )
     {
+		Owner->PlaySoundAttack();
+
 	    AnimInstance->Montage_Play(
 		    AttackMontages[MontageIndex],
 		    1.0f,
@@ -436,6 +438,8 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
     }
 
     // 5) 텔레포트 및 회전: 타겟을 바라보게 정렬
+	Owner->PlaySoundTeleport();
+	
     Owner->SetActorLocation(Chosen, false, nullptr, ETeleportType::TeleportPhysics);
     const FRotator Face = (TargetLoc - Chosen).Rotation();
     Owner->SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));

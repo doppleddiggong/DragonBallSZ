@@ -39,7 +39,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DashAsset;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<TSoftObjectPtr<UAnimMontage>> HitAsset;
 	
