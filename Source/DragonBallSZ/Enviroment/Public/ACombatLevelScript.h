@@ -75,6 +75,7 @@ public:
 
 	UFUNCTION()
 	void OnSequenceFinished();
+	void PlaySoundWin();
 
 	UPROPERTY()
 	class ULevelSequence* PlayingSequence;
@@ -92,6 +93,8 @@ public:
 	class ULevelSequence* MainSeq;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	class ULevelSequence* GokuWinSeq;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	class ULevelSequence* VegeWinSeq;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	AActor* GokuWinActor;

@@ -251,7 +251,7 @@ void ACombatCharacter::OnDamage(
 		FName SendEventType = IsPlayer() ? GameEvent::EnemyWin : GameEvent::PlayerWin;
 		EventManager->SendMessage( SendEventType.ToString() );
 
-		this->PlaySoundWin();
+		// this->PlaySoundWin();
 		this->PlayTypeMontage(EAnimMontageType::Death);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
 	}
@@ -435,7 +435,7 @@ void ACombatCharacter::PlaySoundTeleport()
 }
 
 void ACombatCharacter::PlaySoundWin()
-{
-	auto SoundType = IsPlayer() ? ESoundType::Goku_Win : ESoundType::Vege_Win;
+{	
+	auto SoundType = IsPlayer() ? ESoundType::Vege_Win : ESoundType::Goku_Win;
 	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
 }

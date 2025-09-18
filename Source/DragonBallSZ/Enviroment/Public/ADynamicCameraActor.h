@@ -102,5 +102,16 @@ protected:
 	// ✅ 새로 추가: 얼라인먼트를 체크할 새로운 함수를 선언합니다.
 	bool ShouldResetByAlignment() const;
 
-	// 참고: 기존의 DeadZonePlayer_X_Min 등의 변수들은 이제 이 로직에서 사용되지 않습니다.
+
+	/** 플레이어 컨트롤러에 대한 참조입니다. 화면 좌표 계산에 필요합니다. */
+	UPROPERTY()
+	TObjectPtr<APlayerController> PlayerControllerRef;
+    
+	/** 화면 가장자리로부터의 안전 영역(%)입니다. 0.1은 10%를 의미합니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera | Screen Edge")
+	float ScreenSafeZonePadding = 0.1f;
+
+	/** 화면 가장자리에서 카메라를 밀어내는 속도입니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera | Screen Edge")
+	float ScreenEdgeCorrectionSpeed = 500.f;
 };
