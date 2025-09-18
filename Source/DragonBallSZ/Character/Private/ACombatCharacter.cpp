@@ -28,13 +28,13 @@ ACombatCharacter::ACombatCharacter()
 	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
 	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
 
-	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
-	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
-	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
-	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
-	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
-	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
-	
+	StatSystem = CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
+	HitStopSystem = CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
+	KnockbackSystem = CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
+	RushAttackSystem = CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
+	DashSystem = CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
+	FlySystem = CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
+
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
 	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
 
@@ -55,11 +55,11 @@ void ACombatCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage);
 
 	MeshComp = this->GetMesh();
 	AnimInstance = MeshComp->GetAnimInstance();
-	
+
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
 }
 
@@ -75,20 +75,20 @@ void ACombatCharacter::Tick(float DeltaTime)
 
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
-	if ( this->IsHold() )
+	if (this->IsHold())
 		return false;
-	
-	if ( IsCombatStart() == false || IsCombatResult())
+
+	if (IsCombatStart() == false || IsCombatResult())
 	{
 		// 전투 시작 전
 		// 전투 결과 후
 		return false;
 	}
-	
-	if ( IsHit )
+
+	if (IsHit)
 		return false;
 
-	if ( StatSystem->IsDead )
+	if (StatSystem->IsDead)
 		return false;
 
 	return true;
@@ -96,10 +96,10 @@ bool ACombatCharacter::IsControlEnable_Implementation()
 
 bool ACombatCharacter::IsMoveEnable_Implementation()
 {
-	if ( !IsControlEnable() )
+	if (!IsControlEnable())
 		return false;
 
-	if ( IsAttackIng() )
+	if (IsAttackIng())
 		return false;
 
 	return true;
@@ -107,7 +107,7 @@ bool ACombatCharacter::IsMoveEnable_Implementation()
 
 bool ACombatCharacter::IsAttackEnable_Implementation()
 {
-	if ( IsHit )
+	if (IsHit)
 		return false;
 
 	return true;
@@ -144,15 +144,15 @@ bool ACombatCharacter::IsInSight(const AActor* Other) const
 
 	const bool bBlocked = GetWorld()->LineTraceSingleByChannel(
 		Hit,
-		SelfLoc + FVector(0,0,50),
-		OtherLoc + FVector(0,0,50),
+		SelfLoc + FVector(0, 0, 50),
+		OtherLoc + FVector(0, 0, 50),
 		ECC_Visibility,
 		Params
 	);
-    
+
 	if (bBlocked && Hit.GetActor() != Other)
 		return false;
-	
+
 	return true;
 }
 
@@ -164,25 +164,25 @@ UAnimMontage* ACombatCharacter::GetRandomHitAnim()
 
 void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
-	if ( InMsg == GameEvent::CombatStart )
+	if (InMsg == GameEvent::CombatStart)
 	{
 		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
 		{
-			if ( IsPlayer() )
+			if (IsPlayer())
 				EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
-			else if ( IsEnemy())
+			else if (IsEnemy())
 				EventManager->SendUpdateHealth(false, StatSystem->CurHP, StatSystem->MaxHP);
 		}
 		bIsCombatStart = true;
 	}
-	else if ( InMsg == GameEvent::PlayerWin )
+	else if (InMsg == GameEvent::PlayerWin)
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsPlayer();
 
 		// PRINTLOG(TEXT("WINNER IS PLAYER"));
 	}
-	else if ( InMsg == GameEvent::EnemyWin )
+	else if (InMsg == GameEvent::EnemyWin)
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsEnemy();
@@ -211,22 +211,22 @@ void ACombatCharacter::OnFlyEnd_Implementation()
 
 void ACombatCharacter::OnDamage(
 	AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatedBy, AActor* DamageCauser )
+	AController* InstigatedBy, AActor* DamageCauser)
 {
-	if ( DamagedActor != this)
+	if (DamagedActor != this)
 		return;
-	
+
 	IsHit = true;
 
 	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
-					EVFXType::Hit_Small,
-					GetActorLocation(),
-					GetActorRotation(),
-					FVector(0.05f) );
-	
+		EVFXType::Hit_Small,
+		GetActorLocation() + FVector(200, 0, -100),
+		GetActorRotation() + FRotator(0, -90, 0),
+		FVector(1.f));
+
 	bool IsDie = StatSystem->DecreaseHealth(Damage);
-	
-	if ( IsDie )
+
+	if (IsDie)
 	{
 		AnimInstance->Montage_Play(
 			DeathMontage,
@@ -234,8 +234,8 @@ void ACombatCharacter::OnDamage(
 			EMontagePlayReturnType::MontageLength,
 			0.f,
 			true);
-	
-		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+
+		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 	else
 	{
@@ -247,14 +247,13 @@ void ACombatCharacter::OnDamage(
 			EMontagePlayReturnType::MontageLength,
 			0.f,
 			true);
-	
-		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this](){
+
+		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this]()
+		{
 			IsHit = false;
 		});
 	}
 }
-
-
 
 
 void ACombatCharacter::SetFlying()
@@ -270,7 +269,7 @@ void ACombatCharacter::SetFlying()
 void ACombatCharacter::SetFallingToWalk()
 {
 	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
-	MoveComp->SetMovementMode( EMovementMode::MOVE_Falling );
+	MoveComp->SetMovementMode(EMovementMode::MOVE_Falling);
 
 	this->bUseControllerRotationYaw = false;
 	this->bUseControllerRotationPitch = false;
@@ -279,21 +278,21 @@ void ACombatCharacter::SetFallingToWalk()
 
 void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 {
-	if ( InMovementMode == MOVE_None)
+	if (InMovementMode == MOVE_None)
 		return;
-	
+
 	auto Movement = this->GetCharacterMovement();
 
-	if ( InMovementMode == MOVE_Flying )
+	if (InMovementMode == MOVE_Flying)
 	{
-		Movement->SetMovementMode( EMovementMode::MOVE_Flying );
+		Movement->SetMovementMode(EMovementMode::MOVE_Flying);
 		this->bUseControllerRotationYaw = true;
 		this->bUseControllerRotationPitch = true;
 		Movement->bOrientRotationToMovement = false;
 	}
 	else
 	{
-		Movement->SetMovementMode( InMovementMode );
+		Movement->SetMovementMode(InMovementMode);
 		this->bUseControllerRotationYaw = false;
 		this->bUseControllerRotationPitch = false;
 		Movement->bOrientRotationToMovement = true;
