@@ -102,7 +102,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendAttack(AActor* Target, int ComboCount);
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSpecialAttack, AActor*, Target, int32, SpecialIndex);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSpecialAttack, AActor*, Target, int32, SpecialStateIndex);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnSpecialAttack OnSpecialAttack;
 

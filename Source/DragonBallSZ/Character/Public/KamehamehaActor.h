@@ -49,4 +49,32 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
+
+
+
+
+
+
+
+
+
+public:
+	bool StartKamehameAnim = false;
+
+	UPROPERTY()
+	ACombatCharacter* InOwner;
+	UPROPERTY()
+	ACombatCharacter* InTarget;
+	
+	UFUNCTION(BlueprintCallable, Category="Player")
+	void StartKamehame(class ACombatCharacter* InKamehameOwner, class ACombatCharacter* InKamehameTarget);
+
+	UFUNCTION(BlueprintCallable, Category="Player")
+	void DelayKamehameFire();
+	
+	UFUNCTION(BlueprintCallable, Category="Player")
+	void EndKamehame();
+
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
 };

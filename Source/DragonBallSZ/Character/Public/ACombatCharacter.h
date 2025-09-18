@@ -90,6 +90,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsAttackEnable();
 
+
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsHitting();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -123,6 +125,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Command")
 	bool IsBlastShootEnable();
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsKamehameEnable();
+	
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void SetAttackChargeKi(int ComboCount)
 	{
@@ -278,6 +283,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
 	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
+	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
 private:
 	class UDBSZEventManager* EventManager;

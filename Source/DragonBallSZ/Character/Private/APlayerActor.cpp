@@ -21,6 +21,8 @@
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
+#include "KamehamehaActor.h"
+
 #include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -75,6 +77,7 @@ void APlayerActor::BeginPlay()
 	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
 
 	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	CharacterData->LoadKamehame(KamehamehaFactory);
 	
 	CameraShakeSystem->InitSystem(this);	
 
@@ -307,8 +310,18 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
 {
-	if ( !IsControlEnable() )
+	if ( !IsKamehameEnable() )
 		return;
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+	
+	auto KamehameActor = GetWorld()->SpawnActor<AKamehamehaActor>(
+		KamehamehaFactory,
+		this->GetActorTransform(),
+		Params
+	);
 
-	EventManager->SendSpecialAttack(this, 1);
+	KamehameActor->StartKamehame(this, TargetActor);
 }

@@ -76,6 +76,7 @@ void AEnemyActor::BeginPlay()
 	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
 
 	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	CharacterData->LoadKamehame(KamehamehaFactory);
 
 	// ActorComponent 초기화
 	StatSystem->InitStat(false);

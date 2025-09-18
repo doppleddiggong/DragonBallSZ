@@ -39,6 +39,7 @@ public:
 	bool LoadChargeKiVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
 
 	bool LoadEnergyBlast(TSubclassOf<class AEnergyBlastActor>& OutEnergyBlast);
+	bool LoadKamehame(TSubclassOf<class AKamehamehaActor>& OutActor);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
@@ -67,4 +68,6 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Actor)
 	TSubclassOf<class AEnergyBlastActor> EnergyBlast;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Actor)
+	TSubclassOf<class AKamehamehaActor> Kamehame;
 };

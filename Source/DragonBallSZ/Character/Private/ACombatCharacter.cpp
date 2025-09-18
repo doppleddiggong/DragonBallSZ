@@ -118,6 +118,7 @@ bool ACombatCharacter::IsAttackEnable_Implementation()
 	return true;
 }
 
+
 bool ACombatCharacter::IsHitting_Implementation()
 {
 	return IsHit;
@@ -321,6 +322,16 @@ bool ACombatCharacter::IsBlastShootEnable()
 		return false;
 	
 	return StatSystem->CurKi > StatSystem->BlastNeedKi;
+}
+
+
+bool ACombatCharacter::IsKamehameEnable_Implementation()
+{
+	if ( !IsControlEnable() )
+		return false;
+
+	int KamehameNeedKi = 100;
+	return StatSystem->CurKi > KamehameNeedKi;
 }
 
 void ACombatCharacter::PlayTypeMontage(EAnimMontageType Type)

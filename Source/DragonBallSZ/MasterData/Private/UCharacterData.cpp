@@ -4,6 +4,8 @@
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
 
+#include "KamehamehaActor.h"
+
 #include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"
 
@@ -171,5 +173,16 @@ bool UCharacterData::LoadEnergyBlast(TSubclassOf<AEnergyBlastActor>& OutEnergyBl
 	}
 
 	OutEnergyBlast = this->EnergyBlast;
+	return true;
+}
+
+bool UCharacterData::LoadKamehame(TSubclassOf<AKamehamehaActor>& OutActor)
+{
+	if ( !Kamehame)
+	{
+		PRINTLOG(TEXT("Failed to LoadKamehame"));
+	}
+
+	OutActor = this->Kamehame;
 	return true;
 }

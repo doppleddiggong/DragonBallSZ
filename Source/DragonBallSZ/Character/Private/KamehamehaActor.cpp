@@ -5,10 +5,19 @@
 
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
+
+#include "ACombatCharacter.h"
+
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+
+#include "UDBSZEventManager.h"
 #include "Kismet/GameplayStatics.h"
+
+
+
 
 // Sets default values
 AKamehamehaActor::AKamehamehaActor()
@@ -49,6 +58,8 @@ void AKamehamehaActor::BeginPlay()
 			ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
 		}
 	}
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
 }
 
 // Called every frame
@@ -84,4 +95,52 @@ void AKamehamehaActor::FireKamehameha()
 	ChargeSphere->DeactivateImmediate();
 
 	Kamehameha->Activate();
+}
+
+void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatCharacter* InKamehameTarget)
+{
+	this->InOwner = InKamehameOwner;
+	this->InTarget = InKamehameTarget; 
+
+	{
+		StartKamehameAnim = true;
+		// 발사 시작
+		// 발사자 발사하는 애니메이션 나온다
+		// 나도 멈추고, 쟤도 멈춘다
+		InOwner->SetHold(true);
+		InTarget->SetHold(true);
+
+		// 발사 준비 시작
+		EventManager->SendSpecialAttack(Owner, 1);
+		// 발사자 애니메이션 재생
+		InOwner->PlayTypeMontage(EAnimMontageType::Kamehame);
+		// 카메하메 애니메이션 총 프레임 딜레이
+		float PlayDelay = InOwner->KamehameMontage->GetPlayLength();
+	}
+
+	//일정 시간후에 발사한다
+	// DelayKamehameFire();
+}
+
+void AKamehamehaActor::DelayKamehameFire()
+{
+	//일정 시간후에 발사한다
+
+	// 발사 !!!!
+	// 발사 시작할때 카메하페마 Shoot이벤트 송신
+	//EventManager->SendSpecialAttack(Owner, 2);
+}
+
+void AKamehamehaActor::EndKamehame()
+{
+	if ( StartKamehameAnim == false)
+		return;
+
+	StartKamehameAnim = false;
+
+	// 발사 종료 3
+	//발사 시작할때 카메하페마 Shoot이벤트 송신
+	//EventManager->SendSpecialAttack(Owner, 3);
+	InOwner->SetHold(false);
+	InTarget->SetHold(false);
 }
