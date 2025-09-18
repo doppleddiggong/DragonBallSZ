@@ -15,31 +15,94 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 
-public:
-	void UpdateTimer();
-
+protected:
 	UFUNCTION()
 	void OnReceiveMessage(FString Msg);
 
-	
-protected:
 	UFUNCTION()
-	void OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP);
+	void OnDamage(bool bIsPalyer, float Damage);
+
+#pragma region COMBAT_TIME
+public:
+	UFUNCTION(BlueprintCallable, Category="Time")
+	void StartCombatTime();
+
+	UFUNCTION(BlueprintCallable, Category="Time")
+	void ClearCombatTime();
+	
+private:
+	void UpdateTimer();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Time")
 	float CombatTime = 0.0f;
-	
-protected:
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> Text_RemainTime;
 
+	FTimerHandle CombatTimerHandle;
+#pragma endregion COMBAT_TIME
+
+#pragma region UPATE_GAUGE
+protected:
+	UFUNCTION()
+	void OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP);
+
+	UFUNCTION()
+	void OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi);
+
+protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Player;
-
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Enemy;
-	
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> ProgressBar_Player_Ki;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> ProgressBar_Enemy_Ki;
+#pragma endregion UPATE_GAUGE
+
+#pragma region DAMAGE_COMBO
 private:
-	FTimerHandle CombatTimerHandle;
+	void OnPlayerAttackHit(float Damage);
+	void ResetPlayerCombo();
+	void ShowPlayerDamageUI();
+	void HidePlayerDamageUI();
+
+	void OnEnemyAttackHit(float Damage);
+	void ResetEnemyCombo();
+	void ShowEnemyDamageUI();
+	void HideEnemyDamageUI();
+
+private:
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> Text_PlayerDamage;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> Text_PlayerCombo;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> Text_EnemyDamage;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UTextBlock> Text_EnemyCombo;
+
+	// 플레이어 관련 변수
+	float PlayerDamageSum = 0.0f;
+	int32 PlayerComboCount = 0;
+	FTimerHandle PlayerComboResetTimerHandle;
+	FTimerHandle PlayerUIDisplayTimerHandle;
+
+	// 적 관련 변수
+	float EnemyDamageSum = 0.0f;
+	int32 EnemyComboCount = 0;
+	FTimerHandle EnemyComboResetTimerHandle;
+	FTimerHandle EnemyUIDisplayTimerHandle;
+
+	// 블루프린트에서 설정할 수 있는 시간 변수들
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	float ComboResetTime = 2.0f;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	float UIDisplayTime = 3.0f;
+#pragma endregion DAMAGE_COMBO
 };

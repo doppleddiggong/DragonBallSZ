@@ -53,7 +53,32 @@ try {
     $py = (Get-Command py -ErrorAction SilentlyContinue)
     if ($py) { $exe = $py.Source }
   }
-  if (-not $exe) { throw 'Python interpreter not found (python/py)' }
+
+  if (-not $exe) {
+    # Fallback to PowerShell generator (no Python available)
+    $flagDir = Join-Path $root 'Saved/DevLog'
+    New-Item -ItemType Directory -Force -Path $flagDir | Out-Null
+    $flagFile = Join-Path $flagDir 'last_generate_devlog.txt'
+    $kst = [DateTime]::UtcNow.AddHours(9)
+    $today = $kst.ToString('yyyy-MM-dd')
+    if ((Test-Path $flagFile) -and ((Get-Content -Path $flagFile -ErrorAction SilentlyContinue).Trim() -eq $today) -and (-not $Force)) {
+      $sw.Stop()
+      Write-StructuredLog -Operation $op -Attempt 1 -MaxAttempts 1 -Duration $sw.Elapsed -Outcome 'Success' -ErrorType '' -Message 'DevLog already generated today (fallback PS).'
+      exit 0
+    }
+
+    $psGen = Join-Path $projRootForGenerator 'Tools/DevLog/generate_daily_devlog_ps.ps1'
+    if (-not (Test-Path $psGen)) { throw "Fallback generator not found: $psGen" }
+    $psArgs = @('-File', $psGen, '-BackfillDays', "$BackfillDays")
+    if ($BuildSummary) { $psArgs += '-BuildSummary' }
+    $out = powershell -NoProfile @psArgs 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Fallback generator failed: $out" }
+    Set-Content -Path $flagFile -Value $today -Encoding UTF8
+    $sw.Stop()
+    Write-StructuredLog -Operation $op -Attempt 1 -MaxAttempts 1 -Duration $sw.Elapsed -Outcome 'Success' -ErrorType '' -Message 'DevLog generated via PowerShell fallback.'
+    if ($out) { Write-Output $out }
+    exit 0
+  }
 
   $args = @($pyRunner,'-BackfillDays',"$BackfillDays")
   if ($BuildSummary) { $args += '-BuildSummary' }
@@ -73,7 +98,35 @@ try {
   $code = $proc.ExitCode
 
   if ($code -ne 0) {
-    throw "Generator failed ($code): $stderr $stdout"
+    # Attempt PowerShell fallback if Python invocation failed
+    try {
+      $psGen = Join-Path $projRootForGenerator 'Tools/DevLog/generate_daily_devlog_ps.ps1'
+      if (-not (Test-Path $psGen)) { throw "Fallback generator not found: $psGen" }
+      $flagDir = Join-Path $root 'Saved/DevLog'
+      New-Item -ItemType Directory -Force -Path $flagDir | Out-Null
+      $flagFile = Join-Path $flagDir 'last_generate_devlog.txt'
+      $kst = [DateTime]::UtcNow.AddHours(9)
+      $today = $kst.ToString('yyyy-MM-dd')
+      if (-not $Force) {
+        if ((Test-Path $flagFile) -and ((Get-Content -Path $flagFile -ErrorAction SilentlyContinue).Trim() -eq $today)) {
+          $sw.Stop()
+          Write-StructuredLog -Operation $op -Attempt 1 -MaxAttempts 1 -Duration $sw.Elapsed -Outcome 'Success' -ErrorType '' -Message 'DevLog already generated today (fallback PS after Python fail).'
+          exit 0
+        }
+      }
+      $psArgs = @('-File', $psGen, '-BackfillDays', "$BackfillDays")
+      if ($BuildSummary) { $psArgs += '-BuildSummary' }
+      $out = powershell -NoProfile @psArgs 2>&1
+      if ($LASTEXITCODE -ne 0) { throw "Fallback generator failed: $out" }
+      Set-Content -Path $flagFile -Value $today -Encoding UTF8
+      $sw.Stop()
+      Write-StructuredLog -Operation $op -Attempt 1 -MaxAttempts 1 -Duration $sw.Elapsed -Outcome 'Success' -ErrorType '' -Message 'DevLog generated via PowerShell fallback (after Python fail).'
+      if ($out) { Write-Output $out }
+      exit 0
+    }
+    catch {
+      throw "Generator failed ($code): $stderr $stdout"
+    }
   }
 
   $sw.Stop()

@@ -3,9 +3,7 @@
 #include "UDashSystem.h"
 
 #include "ACombatCharacter.h"
-#include "APlayerActor.h"
 #include "UDBSZEventManager.h"
-#include "DragonBallSZ.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
@@ -50,12 +48,6 @@ void UDashSystem::ActivateEffect(const bool bState)
 	{
 		NiagaraComp->Deactivate();
 	}
-
-	// if ( auto Player = Cast<APlayerActor>(Owner))
-	// {
-	// 	const TCHAR* PrintMsg = bState ? TEXT("Dash Activate Start") : TEXT("Dash Deactivate End");
-	// 	PRINT_STRING(TEXT("%s"), PrintMsg);
-	// }
 };
 
 void UDashSystem::OnUpstream(AActor* Target, bool bState)

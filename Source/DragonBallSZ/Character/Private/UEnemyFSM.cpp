@@ -4,7 +4,9 @@
 #include "UEnemyFSM.h"
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
+
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "AEnergyBlastActor.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
@@ -33,7 +35,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Owner->IsHold() )
+	if (Owner->IsHolding() )
 		return;
 	
 	if (bDefeated)
@@ -47,7 +49,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		return;
 	}
 
-	if (Owner->IsHit)
+	if (Owner->IsHitting())
 	{
 		void Damaged();
 		return;
@@ -76,7 +78,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			// ToDo: LookAt 비활성화
 			// 현재 상태 출력
 			FString distStr = FString::Printf(TEXT("%hhd"), Owner->RushAttackSystem->bIsDashing);
-			PRINTLOG(TEXT("%s"), *distStr);
+			// PRINTLOG(TEXT("%s"), *distStr);
 			GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
 			BeizerMove();
 			return;
@@ -113,6 +115,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying) // Not flying: Jump & Fly
 			{
 				Owner->FlySystem->OnJump();
+
 				FTimerHandle JumpTimer;
 				GetWorld()->GetTimerManager().SetTimer(
 					JumpTimer,
@@ -312,13 +315,25 @@ void UEnemyFSM::Move()
 
 void UEnemyFSM::Attack()
 {
-	bActing = true;
-	Owner->RushAttackSystem->OnAttack();
-	
-	// Follow Player flying state
-	if ((Owner->GetCharacterMovement()->MovementMode == MOVE_Flying) != (Target->GetCharacterMovement()->MovementMode == MOVE_Flying)) Owner->GetCharacterMovement()->SetMovementMode((Target->GetCharacterMovement()->MovementMode == MOVE_Flying) ? MOVE_Flying : MOVE_Walking);
-	
-	bActing = false;
+    bActing = true;
+
+    Owner->RushAttackSystem->OnAttack();
+
+    // 대상의 비행 상태에 따라 소유자의 이동 모드를 동기화합니다.
+    const EMovementMode OwnerMoveMode = Owner->GetCharacterMovement()->MovementMode;
+    const EMovementMode TargetMoveMode = Target->GetCharacterMovement()->MovementMode;
+
+    const bool bOwnerIsFlying = (OwnerMoveMode == EMovementMode::MOVE_Flying);
+    const bool bTargetIsFlying = (TargetMoveMode == EMovementMode::MOVE_Flying);
+
+    // 소유자와 대상의 비행 상태가 다를 경우
+    if (bOwnerIsFlying != bTargetIsFlying)
+    {
+        const EMovementMode ResultMode = bTargetIsFlying ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking;
+        Owner->GetCharacterMovement()->SetMovementMode(ResultMode);
+    }
+
+    bActing = false;
 }
 
 void UEnemyFSM::Charge()
@@ -355,6 +370,15 @@ void UEnemyFSM::EnemyLose()
 
 void UEnemyFSM::SpawnEnergyBlast()
 {
+	if (!Owner->IsBlastShootEnable() )
+	{
+		PRINT_STRING(TEXT("Enemy Is ShootBlastDisable!!!!"));
+		return;
+	}
+
+	Owner->UseBlast();
+	Owner->PlayTypeMontage(EAnimMontageType::Blast);
+	
 	FActorSpawnParameters Params;
 	Params.Owner = Owner;
 	Params.Instigator = Owner;
@@ -368,10 +392,12 @@ void UEnemyFSM::SpawnEnergyBlast()
 
 void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 {
-	if (Remaining <= 0) return;
+	if (Remaining <= 0)
+		return;
 
 	SpawnEnergyBlast();
-
+	Owner->PlaySoundAttack();
+	
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()
 	{

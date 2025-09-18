@@ -10,6 +10,11 @@ void UDBSZEventManager::SendMessage(const FString& InMsg)
 	OnMessage.Broadcast(InMsg);
 }
 
+void UDBSZEventManager::SendDamage(const bool IsPlayer, const float Damage)
+{
+	OnDamage.Broadcast(IsPlayer, Damage);
+}
+
 void UDBSZEventManager::SendCamera(const int& Group, const int& Index)
 {
 	OnCamera.Broadcast(Group, Index);
@@ -18,6 +23,11 @@ void UDBSZEventManager::SendCamera(const int& Group, const int& Index)
 void UDBSZEventManager::SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp)
 {
 	OnUpdateHealth.Broadcast(IsPlayer, CurHP, MaxHp);
+}
+
+void UDBSZEventManager::SendUpdateKi(const bool IsPlayer, const float CurKi, const float MaxKi)
+{
+	OnUpdateKi.Broadcast(IsPlayer, CurKi, MaxKi);
 }
 
 void UDBSZEventManager::SendHitStop(AActor* Target, const EAttackPowerType Type)

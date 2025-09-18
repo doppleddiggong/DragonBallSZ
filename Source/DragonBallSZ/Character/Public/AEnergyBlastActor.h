@@ -40,21 +40,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<USphereComponent> SphereComp;
 	UPROPERTY()
-	TObjectPtr<ACharacter> Target;
+	TObjectPtr<class ACombatCharacter> Target;
 	UPROPERTY()
-	TObjectPtr<ACharacter> Shooter;
-	
-	// UPROPERTY(EditAnywhere, Category = "VFX")
-	// TObjectPtr<UNiagaraSystem> Explosion;
-
-	// void SpawnExplosionVFX();
+	TObjectPtr<class ACombatCharacter> Shooter;
 	
 	float ElapsedTime;
 	float SpeedUpTime = 0.6f;
 	float Speed;
 	float MinSpeed = 3700;
 	float MaxSpeed = 5400;
-
-	UPROPERTY(EditAnywhere)
-	float Damage = 10;
 };

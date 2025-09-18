@@ -75,12 +75,89 @@ bool UCharacterData::LoadDeathMontage(TObjectPtr<UAnimMontage>& OutDeathMontage)
 	return true;
 }
 
-bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutDashVFX) const
+bool UCharacterData::LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage) const
 {
-	OutDashVFX = DashVFX.LoadSynchronous();
-	if (!OutDashVFX)
+	OutMontage.Empty();
+
+	for (const FRushData& Data : RushData)
+	{
+		UAnimMontage* LoadedMontage = Data.AttackAsset.LoadSynchronous();
+		if (LoadedMontage)
+		{
+			OutMontage.Add(LoadedMontage);
+		}
+		else
+		{
+			PRINTLOG( TEXT("Failed to LoadBlastMontage"));
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool UCharacterData::LoadChargeKiMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = ChargeKiAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadChargeKiMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadKamehameMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = KamehameAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadKamehameMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadIntroMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = IntroAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadIntroMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadWinMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = WinAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
+{
+	OutVFX = DashVFX.LoadSynchronous();
+	if (!OutVFX)
 	{
 		PRINTLOG(TEXT("Failed to LoadDashVFX"));
+		return false;
+	}
+	return true;
+}
+
+
+bool UCharacterData::LoadChargeKiVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
+{
+	OutVFX = ChargeKiVFX.LoadSynchronous();
+	if (!OutVFX)
+	{
+		PRINTLOG(TEXT("Failed to LoadChargeKiVFX"));
 		return false;
 	}
 	return true;

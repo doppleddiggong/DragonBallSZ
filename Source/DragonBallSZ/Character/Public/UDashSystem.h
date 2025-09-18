@@ -17,7 +17,7 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Dash")
-	void InitSystem(ACombatCharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem);
+	void InitSystem(class ACombatCharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem);
 
 	UFUNCTION(BlueprintCallable, Category="Dash")
 	void ActivateEffect(const bool bState);
