@@ -88,22 +88,31 @@ void UCombatUI::OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi)
 	}
 }
 
+void UCombatUI::StartCombat( const float PlayerKi, const float EnemyKi )
+{
+	this->HidePlayerDamageUI();
+	this->HideEnemyDamageUI();
+	
+	ProgressBar_Player->SetPercent(1.0f);
+	ProgressBar_Enemy->SetPercent(1.0f);
+
+	ProgressBar_Player_Ki->SetPercent(PlayerKi);
+	ProgressBar_Enemy_Ki->SetPercent(EnemyKi);
+
+	StartCombatTime();
+}
+
 void UCombatUI::StartCombatTime()
 {
 	CombatTime = 0.0f;
 
-	// this->HidePlayerDamageUI();
-	// this->HideEnemyDamageUI();
-	//
-	// // TODO.. 이벤트의 순서의 문제인데...
-	// ProgressBar_Player->SetPercent(1.0f);
-	// ProgressBar_Enemy->SetPercent(1.0f);
-	// ProgressBar_Player_Ki->SetPercent(0.5f);
-	// ProgressBar_Enemy_Ki->SetPercent(0.5f);
+
 	
 	UpdateTimer();
 	GetWorld()->GetTimerManager().SetTimer(CombatTimerHandle, this, &UCombatUI::UpdateTimer, 1.0f, true);
 }
+
+
 
 void UCombatUI::ClearCombatTime()
 {

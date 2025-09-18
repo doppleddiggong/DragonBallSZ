@@ -11,6 +11,9 @@ class DRAGONBALLSZ_API UCombatUI : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
+	void StartCombat(const float PlayerKi, const float EnemyKi);
+	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
