@@ -31,10 +31,13 @@ public:
 	UPROPERTY()
 	TObjectPtr<class UNiagaraComponent> ExplosionSmokeComp;
 
+	UPROPERTY(EditAnywhere, Category=PostProcess)
+	TObjectPtr<class UMaterialInterface> ImpactFrameMaterial;
+	
 	UPROPERTY()
-	TObjectPtr<ACharacter> Target;
+	TObjectPtr<class ACombatCharacter> Target;
 	UPROPERTY()
-	TObjectPtr<ACharacter> Shooter;
+	TObjectPtr<ACombatCharacter> Shooter;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -52,15 +55,15 @@ public:
 	float BeamSpeed = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Charge Speed")
 	float LoopSpeed = 0.001;
-	
-	
+	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Impact Frame")
+	float ImpactTime = 0.11f;
 
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
 	UFUNCTION()
 	void OnKamehamehaFinished(class UNiagaraComponent* PSystem);
 	
-
+	void AKamehamehaActor::HitProcess(AActor* DamagedActor, EVFXType VFXType);
 
 
 

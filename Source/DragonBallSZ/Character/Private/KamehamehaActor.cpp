@@ -2,21 +2,21 @@
 
 
 #include "KamehamehaActor.h"
-
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
-#include "DragonBallSZ.h"
 #include "EAnimMontageType.h"
+#include "EVFXType.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "UDBSZEventManager.h"
+#include "UDBSZFunctionLibrary.h"
+#include "UDBSZVFXManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
-// Sets default values
 AKamehamehaActor::AKamehamehaActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	RootComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootComp1"));
@@ -35,32 +35,11 @@ AKamehamehaActor::AKamehamehaActor()
 	FinishDust->bAutoActivate = false;
 }
 
-// Called when the game starts or when spawned
 void AKamehamehaActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// Shooter = Cast<ACharacter>(GetOwner());
-	// if (Shooter)
-	// {
-	// 	if (Shooter->IsA(APlayerActor::StaticClass())) // Shooter: Player
-	// 	{
-	// 		// Target: Enemy
-	// 		Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
-	// 		ensureMsgf(Target, TEXT("AEnergyBlastActor: Target 캐스팅 실패! AEnemyActor 필요합니다!"));
-	// 	}
-	// 	else if (Shooter->IsA(AEnemyActor::StaticClass())) // Shooter: Enemy
-	// 	{
-	// 		// Target: Player
-	// 		Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	// 		ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
-	// 	}
-	// }
-
-	Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 }
 
-// Called every frame
 void AKamehamehaActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -93,6 +72,15 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					ENCPoolMethod::None,
 					true
 				);
+
+				UGameplayStatics::ApplyDamage(
+					Target,
+					Shooter->GetKamehamehaDamage(),
+					nullptr,
+					Owner,
+					UDBSZFunctionLibrary::GetDamageTypeClass(Type)
+				);
+				
 				bFirstExplosion = true;
 			}
 		}
@@ -126,9 +114,17 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					ENCPoolMethod::None,
 					true
 				);
+				
+				UGameplayStatics::ApplyDamage(
+					Target,
+					Shooter->GetBlastDamage(),
+					nullptr,
+					Owner,
+					UDBSZFunctionLibrary::GetDamageTypeClass(Type)
+				);
 
 				FTimerHandle TimerHandle;
-				GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+				GetWorldTimerManager().SetTimer(TimerHandle, [this]()
 				{
 					ExplosionSmokeComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 						GetWorld(),
@@ -147,7 +143,6 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					}
 				}, 1.5f, false);
 
-
 				bSecondExplosion = true;
 			}
 		}
@@ -156,6 +151,27 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 void AKamehamehaActor::FireKamehameha()
 {
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	APostProcessVolume* PPVolume = GetWorld()->SpawnActor<APostProcessVolume>(
+		APostProcessVolume::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	UMaterialInstanceDynamic* DynamicMat = UMaterialInstanceDynamic::Create(ImpactFrameMaterial, PPVolume);
+	PPVolume->Settings.AddBlendable(DynamicMat, 1.0f);
+	PPVolume->bUnbound = true; // Infinite Extent
+
+	// 1초 뒤에 끄기 (Timer 이용)
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle,
+		[PPVolume]()
+		{
+			PPVolume->BlendWeight = 0.f;
+			PPVolume->Destroy();
+		},
+		ImpactTime, // 1초 뒤
+		false // 반복X
+	);
+
 	FRotator LookRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target->GetActorLocation());
 	Kamehameha->SetWorldRotation(LookRot + FRotator(0, 90, 0));
 	FinishDust->SetWorldRotation(LookRot + FRotator(0, 90, 0));
@@ -167,6 +183,7 @@ void AKamehamehaActor::FireKamehameha()
 void AKamehamehaActor::OnKamehamehaFinished(class UNiagaraComponent* PSystem)
 {
 	// 이펙트 끝나면 액터 자동 소멸
+	EndKamehame();
 	this->Destroy();
 }
 
@@ -175,6 +192,8 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 {
 	this->InOwner = InKamehameOwner;
 	this->InTarget = InKamehameTarget;
+	Shooter = InOwner;
+	Target = InTarget;
 
 	{
 		StartKamehameAnim = true;
