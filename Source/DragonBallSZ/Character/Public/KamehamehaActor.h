@@ -63,9 +63,7 @@ public:
 	UFUNCTION()
 	void OnKamehamehaFinished(class UNiagaraComponent* PSystem);
 	
-	void AKamehamehaActor::HitProcess(AActor* DamagedActor, EVFXType VFXType);
-
-
+	
 
 
 

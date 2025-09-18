@@ -38,6 +38,8 @@ AKamehamehaActor::AKamehamehaActor()
 void AKamehamehaActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
 }
 
 void AKamehamehaActor::Tick(float DeltaTime)
@@ -75,10 +77,10 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 				UGameplayStatics::ApplyDamage(
 					Target,
-					Shooter->GetKamehamehaDamage(),
+					Shooter->GetKamehameDamage(),
 					nullptr,
 					Owner,
-					UDBSZFunctionLibrary::GetDamageTypeClass(Type)
+					UDBSZFunctionLibrary::GetDamageTypeClass(EAttackPowerType::Normal)
 				);
 				
 				bFirstExplosion = true;
@@ -120,7 +122,7 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					Shooter->GetBlastDamage(),
 					nullptr,
 					Owner,
-					UDBSZFunctionLibrary::GetDamageTypeClass(Type)
+					UDBSZFunctionLibrary::GetDamageTypeClass(EAttackPowerType::Huge)
 				);
 
 				FTimerHandle TimerHandle;
