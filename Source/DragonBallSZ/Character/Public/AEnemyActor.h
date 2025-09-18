@@ -54,8 +54,4 @@ public: // Enemy Component
 	class AEnemyAIController* AIEnemy;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
 	float RotateLerpSpeed = 5.0f;
-
-private:
-	UPROPERTY()
-	class UDBSZEventManager* EventManager;
 };

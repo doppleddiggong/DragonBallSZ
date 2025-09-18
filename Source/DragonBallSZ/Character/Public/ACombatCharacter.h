@@ -153,6 +153,13 @@ public:
 		return StatSystem->GetBlastDamage();
 	}
 
+	UFUNCTION(BlueprintCallable, Category="Stat")
+	FORCEINLINE float GetKamehameDamage()
+	{
+		return StatSystem->GetKamehameDamage();
+	}
+
+	
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void UseBlast()
 	{
@@ -161,13 +168,13 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Montage")
-	void PlayTypeMontage(EAnimMontageType Type);
+	void PlayTypeMontage(const EAnimMontageType Type);
 
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void PlayTargetMontage(UAnimMontage* AnimMontage);
 
 	UFUNCTION(BlueprintCallable, Category="Montage")
-	void StopTargetMontage(EAnimMontageType Type, float BlendInOutTime);
+	void StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime);
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
@@ -286,6 +293,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
 	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
-private:
+protected:
+	UPROPERTY()
 	class UDBSZEventManager* EventManager;
 };

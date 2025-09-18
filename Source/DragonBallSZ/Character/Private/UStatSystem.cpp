@@ -5,7 +5,6 @@
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 
-
 #define MIN_DMG_MUL 0.85f
 #define MAX_DMG_MUL 1.15f
 
@@ -46,6 +45,11 @@ float UStatSystem::GetAttackDamage(int ComboCount)
 float UStatSystem::GetBlastDamage()
 {
 	return GetRandDmg(BlastDamage);
+}
+
+float UStatSystem::GetKamehameDamage()
+{
+	return GetRandDmg(KamehameDamage);
 }
 
 void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)

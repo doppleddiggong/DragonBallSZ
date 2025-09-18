@@ -91,8 +91,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	float MinAttackDelay = 0.75f;	
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
+	// float MinAttackDelay = 0.75f;	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
 	bool bIsDashing = false;
@@ -118,7 +118,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|AutoTrack", meta=(ClampMin="0", AllowPrivateAccess="true"))
 	float AutoTrackMoveSpeed = 900.0f;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|ResetTime")
+	float ComboResetTime_Offset = 1.0f;
 
 private:
 	UPROPERTY()

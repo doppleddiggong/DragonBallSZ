@@ -134,17 +134,17 @@ void UCombatUI::OnDamage(bool bIsPlayer, float Damage)
 		// 맞았으니 초기화
 		PlayerDamageSum = 0;
 		PlayerComboCount = 0;
-		OnPlayerAttackHit(0);
+		HidePlayerDamageUI();
 	}
 	else
 	{
-		// 적가 맞았으니, 플레이어에게 점수
+		// 적이 맞았으니, 플레이어에게 점수
 		OnPlayerAttackHit(Damage);
 
 		// 맞았으니 초기화
 		EnemyDamageSum = 0;
 		EnemyComboCount = 0;
-		OnEnemyAttackHit(0);
+		HideEnemyDamageUI();
 	}
 }
 
