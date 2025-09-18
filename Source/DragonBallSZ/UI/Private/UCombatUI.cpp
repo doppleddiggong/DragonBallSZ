@@ -59,11 +59,17 @@ void UCombatUI::OnRecvUpdateHealth(bool bIsPlayer, float CurHP, float MaxHP)
 
 	if (bIsPlayer)
 	{
+		this->PlayerCurHP = CurHP;
+		this->PlayerMaxHP = MaxHP;
+
 		if (ProgressBar_Player)
 			ProgressBar_Player->SetPercent(Percent);
 	}
 	else
 	{
+		this->EnemyCurHP = CurHP;
+		this->EnemyMaxHP = MaxHP;
+
 		if (ProgressBar_Enemy)
 			ProgressBar_Enemy->SetPercent(Percent);
 	}
@@ -78,11 +84,17 @@ void UCombatUI::OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi)
 
 	if (bIsPlayer)
 	{
+		this->PlayerCurKi = CurKi;
+		this->PlayerMaxKi = MaxKi;
+
 		if (ProgressBar_Player_Ki)
 			ProgressBar_Player_Ki->SetPercent(Percent);
 	}
 	else
 	{
+		this->EnemyCurKi = CurKi;
+		this->EnemyMaxKi = MaxKi;
+
 		if (ProgressBar_Enemy_Ki)
 			ProgressBar_Enemy_Ki->SetPercent(Percent);
 	}
