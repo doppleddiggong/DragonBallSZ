@@ -95,10 +95,6 @@ void AEnergyBlastActor::Tick(float DeltaTime)
 	Speed = UEaseFunctionLibrary::LerpFloatEase(MinSpeed, MaxSpeed,
 		ElapsedTime / SpeedUpTime,
 		EEaseType::EaseInCirc);
-
-	FString distStr = FString::Printf(TEXT("%f"), ElapsedTime / SpeedUpTime);
-	PRINTLOG(TEXT("%s"), *distStr);
-	GEngine->AddOnScreenDebugMessage(4, 1, FColor::Cyan, distStr);
 	
 	SetActorLocation(this->GetActorLocation() + Direction * DeltaTime * Speed, true);
 }

@@ -25,7 +25,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UNiagaraComponent> FinishDust;
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class UNiagaraComponent> Explosion;
+	TObjectPtr<class UNiagaraSystem> Explosion;
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UParticleSystem> ExplosionWind;
 
 	UPROPERTY()
 	TObjectPtr<ACharacter> Target;
@@ -40,12 +42,16 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	bool bFirstExplosion = false;
+	bool bSecondExplosion = false;
+	float ElapsedTime = 0;
 	float LoopDuration = 0.37f;
 	FVector BeamVector = FVector(1,1,1);
 	
 	//ToDo: DataTable로 뽑기
 	float LoopSpeed = 0.001;
 	float BeamSpeed = 1.f;
+	float FinisherTime = 5.f;
 
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
