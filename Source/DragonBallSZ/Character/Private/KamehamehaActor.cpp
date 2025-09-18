@@ -58,6 +58,8 @@ void AKamehamehaActor::BeginPlay()
 	// }
 
 	Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
 }
 
 // Called every frame
