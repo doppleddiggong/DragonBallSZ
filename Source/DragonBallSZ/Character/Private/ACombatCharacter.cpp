@@ -14,6 +14,7 @@
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 #include "EAnimMontageType.h"
+#include "UDBSZDamageType.h"
 #include "UDBSZVFXManager.h"
 #include "UDBSZSoundManager.h"
 
@@ -223,19 +224,14 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
-	const UDBSZDamageType* DBSZDamageType = Cast<const UDBSZDamageType>(DamageType);
-	if (DBSZDamageType)
-	{
-		PRINTLOG(TEXT("OnDamage - AttackPowerType: %s"), *UEnum::GetValueAsString(DBSZDamageType->AttackPowerType));
-	}
-
+	const auto AttackPowerType = Cast<const UDBSZDamageType>(DamageType)->AttackPowerType;
 	this->PlaySoundHit();
-	
-	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
-					EVFXType::Hit_Small,
+
+	UDBSZVFXManager::Get(GetWorld())->ShowVFXAttackType(
+					AttackPowerType,
 					GetActorLocation(),
 					GetActorRotation(),
-					FVector(0.05f) );
+					FVector(1.f));
 	
 	bool IsDie = StatSystem->DecreaseHealth(Damage);
 
