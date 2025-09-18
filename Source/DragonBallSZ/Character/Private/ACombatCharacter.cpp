@@ -330,11 +330,10 @@ bool ACombatCharacter::IsKamehameEnable_Implementation()
 	if ( !IsControlEnable() )
 		return false;
 
-	int KamehameNeedKi = 100;
-	return StatSystem->CurKi > KamehameNeedKi;
+	return StatSystem->CurKi > StatSystem->KamehameNeedKi;
 }
 
-void ACombatCharacter::PlayTypeMontage(EAnimMontageType Type)
+void ACombatCharacter::PlayTypeMontage(const EAnimMontageType Type)
 {
 	UAnimMontage* AnimMontage = nullptr;
 
@@ -380,7 +379,7 @@ void ACombatCharacter::PlayTargetMontage(UAnimMontage* AnimMontage)
 	}
 }
 
-void ACombatCharacter::StopTargetMontage(EAnimMontageType Type, float BlendInOutTime)
+void ACombatCharacter::StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime)
 {
 	UAnimMontage* AnimMontage = nullptr;
 
