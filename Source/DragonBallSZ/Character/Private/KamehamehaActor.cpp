@@ -80,37 +80,44 @@ void AKamehamehaActor::Tick(float DeltaTime)
 			Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
 			return;
 		}
-		else if (!bFirstExplosion)
+
+		ElapsedTime += DeltaTime;
+		if (ElapsedTime > FirstExplosionTime)
 		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				Explosion,
-				Target->GetActorLocation(),
-				Target->GetActorRotation(),
-				FVector(1.f),
-				true,
-				true,
-				ENCPoolMethod::None,
-				true
-			);
-			bFirstExplosion = true;
+			if (!bFirstExplosion)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					Explosion,
+					Target->GetActorLocation(),
+					Target->GetActorRotation(),
+					FVector(1.f),
+					true,
+					true,
+					ENCPoolMethod::None,
+					true
+				);
+				bFirstExplosion = true;
+			}
 		}
 		
 		if (!bFirstExplosion) return;
 		
-		ElapsedTime += DeltaTime;
-		if (ElapsedTime > FinisherTime)
+		if (ElapsedTime > SecondExplosionTime)
 		{
 			if (BeamVector.X > 0)
 			{
 				BeamVector.X -= BeamSpeed / 6;
 				BeamVector.Z -= BeamSpeed / 6;
 				Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
-				//return;
 			}
-			else if (!bSecondExplosion)
+			else
 			{
-				Kamehameha->Deactivate();
+				Kamehameha->DeactivateImmediate();
+			}
+			
+			if (!bSecondExplosion && BeamVector.X < 10)
+			{
 				FinishDust->Activate();
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 					GetWorld(),
@@ -135,9 +142,11 @@ void AKamehamehaActor::Tick(float DeltaTime)
 				bSecondExplosion = true;
 			}
 		}
-		FString distStr = FString::Printf(TEXT("%f"), ElapsedTime);
-		PRINTLOG(TEXT("%s"), *distStr);
-		GEngine->AddOnScreenDebugMessage(4, 1, FColor::Cyan, distStr);
+		
+		if (ElapsedTime > 10)
+		{
+			this->Destroy();
+		}
 	}
 }
 
@@ -145,6 +154,7 @@ void AKamehamehaActor::FireKamehameha()
 {
 	FRotator LookRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target->GetActorLocation());
 	Kamehameha->SetWorldRotation(LookRot + FRotator(0, 90, 0));
+	FinishDust->SetWorldRotation(LookRot + FRotator(0, 90, 0));
 	ChargeSphere->DeactivateImmediate();
 
 	Kamehameha->Activate();
