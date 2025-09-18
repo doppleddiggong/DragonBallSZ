@@ -2,6 +2,8 @@
 
 #include "ACombatLevelScript.h"
 
+#include <UDBSZSoundManager.h>
+
 #include "ADynamicCameraActor.h"
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
@@ -11,6 +13,7 @@
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 #include "EngineUtils.h"
+#include "ESoundType.h"
 
 #include "LevelSequencePlayer.h"
 #include "MovieSceneSequencePlaybackSettings.h"
@@ -155,6 +158,14 @@ void ACombatLevelScript::PlaySequence(class ULevelSequence* InSequence)
 			SequencePlayer->OnFinished.AddDynamic(this, &ACombatLevelScript::OnSequenceFinished);
 			
 			SequencePlayer->Play();
+			if (InSequence == GokuWinSeq)
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Goku_Win);
+			}
+			else if ( (InSequence == VegeWinSeq))
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Vege_Win);
+			}
 		}
 	}
 }
