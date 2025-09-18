@@ -115,8 +115,11 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 
 	bDelegatesBound = false;
 }
+
 void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Notify Fired: %s"), *NotifyName.ToString());
+	
 	bIsAttacking = false;
 	
 	ComboCount++;
@@ -200,11 +203,11 @@ void URushAttackSystem::OnAttack()
         return;
     }
 
-	if (0.f < LastAttackTime &&
-		GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
-	{
-		return;
-	}
+	// if (0.f < LastAttackTime &&
+	// 	GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
+	// {
+	// 	return;
+	// }
 	
 	if (Owner->IsAttackEnable() == false )
         return;
@@ -304,7 +307,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 		Owner->PlaySoundAttack();
 
 		float AttackEndTime = AttackMontages[MontageIndex]->GetPlayLength();
-		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime; 
+		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime + ComboResetTime_Offset;
 		
 	    AnimInstance->Montage_Play(
 		    AttackMontages[MontageIndex],
