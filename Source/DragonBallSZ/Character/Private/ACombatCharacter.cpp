@@ -223,6 +223,12 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
+	const UDBSZDamageType* DBSZDamageType = Cast<const UDBSZDamageType>(DamageType);
+	if (DBSZDamageType)
+	{
+		PRINTLOG(TEXT("OnDamage - AttackPowerType: %s"), *UEnum::GetValueAsString(DBSZDamageType->AttackPowerType));
+	}
+
 	this->PlaySoundHit();
 	
 	UDBSZVFXManager::Get(GetWorld())->ShowVFX(

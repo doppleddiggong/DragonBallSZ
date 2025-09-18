@@ -10,6 +10,7 @@
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
+#include "UDBSZFunctionLibrary.h"
 #include "UDBSZVFXManager.h"
 
 
@@ -120,6 +121,6 @@ void AEnergyBlastActor::HitProcess(AActor* DamagedActor, EVFXType VFXType)
 		Shooter->GetBlastDamage(),
 		nullptr,
 		Owner,
-		UDamageType::StaticClass()
+		UDBSZFunctionLibrary::GetDamageTypeClass(Type)
 	);
 }

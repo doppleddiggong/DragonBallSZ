@@ -9,6 +9,7 @@
 #include "UCharacterData.h"
 
 #include "DragonBallSZ.h"
+#include "UDBSZFunctionLibrary.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -277,7 +278,7 @@ void URushAttackSystem::AttackTrace()
 		Owner->GetAttackDamage(ComboCount),
 		nullptr,
 		Owner,
-		UDamageType::StaticClass()
+		UDBSZFunctionLibrary::GetDamageTypeClass(Type)
 	);
 }
 
