@@ -9,6 +9,7 @@
 #include "UCharacterData.h"
 
 #include "DragonBallSZ.h"
+#include "UDBSZFunctionLibrary.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -41,6 +42,12 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 	if (bIsDashing)
 	{
+        if (!IsValid(Owner)) // Add this check
+        {
+            PRINTLOG(TEXT("TickComponent: Owner is invalid while dashing. Stopping dash."));
+            OnDashCompleted(); // Stop dashing if owner is invalid
+            return;
+        }
 		ElapsedTime += DeltaTime;
         
 		const float Alpha = FMath::Clamp(ElapsedTime / DashDuration, 0.0f, 1.0f);
@@ -66,8 +73,20 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 		if (AutoTrackMoveSpeed > 0.f)
 		{
 			const FVector NewLoc = OwnerLoc + Owner->GetActorForwardVector() * (AutoTrackMoveSpeed * DeltaTime);
-			Owner->SetActorLocation(NewLoc, true);
+
+			FVector OwnerProjectionLoc = FVector(Owner->GetActorLocation().X, Owner->GetActorLocation().Y, 0.f);
+			FVector TargetProjectionLoc = FVector(Target->GetActorLocation().X, Target->GetActorLocation().Y, 0.f);
+			float ProjectionDist = FVector::Dist(OwnerProjectionLoc, TargetProjectionLoc);
+
+			if (ProjectionDist > 90) Owner->SetActorLocation(NewLoc, true);
 		}
+	}
+
+	if ( ComboResetTime > 0.0f &&
+		GetWorld()->GetTimeSeconds() > ComboResetTime )
+	{
+		ComboResetTime = 0.0f;
+		ComboCount = 0;
 	}
 }
 
@@ -130,7 +149,14 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 	MoveComp = Owner->GetCharacterMovement();
 
 	this->Target = Owner->TargetActor;
-	TargetMoveComp = Target->GetCharacterMovement();
+	if (IsValid(Target))
+	{
+		TargetMoveComp = Target->GetCharacterMovement();
+	}
+	else
+	{
+		PRINTLOG(TEXT("InitSystem: Target is not valid. Owner: %s"), *Owner->GetName());
+	}
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 
@@ -138,6 +164,10 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 	{
 		InData->LoadRushAttackMontage(AttackMontages, AttackPowerType);
 		InData->LoadDashMontage(DashMontage);
+		if (!IsValid(DashMontage))
+		{
+			PRINTLOG(TEXT("InitSystem: DashMontage failed to load from InData."));
+		}
 	}
 	else
 	{
@@ -150,9 +180,12 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 void URushAttackSystem::OnDashCompleted()
 {
 	bIsDashing = false;
-	AnimInstance->Montage_Stop(0.1f, DashMontage);
+    if (IsValid(AnimInstance) && IsValid(DashMontage)) // Add check for DashMontage
+    {
+	    AnimInstance->Montage_Stop(0.1f, DashMontage);
+    }
 
-	if (!Owner->IsHit)
+	if (!Owner->IsHitting())
 		PlayMontage(PendingMontageIndex);
 
 	Owner->RecoveryMovementMode(PrevMovementMode);
@@ -161,6 +194,12 @@ void URushAttackSystem::OnDashCompleted()
 
 void URushAttackSystem::OnAttack()
 {
+    if (!IsValid(Target))
+    {
+        PRINTLOG(TEXT("OnAttack: Target is invalid. Skipping attack."));
+        return;
+    }
+
 	if (0.f < LastAttackTime &&
 		GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
 	{
@@ -212,6 +251,13 @@ void URushAttackSystem::AttackTrace()
 	if ( !Owner->IsInSight( Target ))
 		return;
 
+    // Add check for AttackPowerType
+    if (!AttackPowerType.IsValidIndex(ComboCount))
+    {
+        PRINTLOG(TEXT("AttackTrace: ComboCount (%d) is out of bounds for AttackPowerType. Skipping attack trace."), ComboCount);
+        return;
+    }
+
 	const EAttackPowerType Type = AttackPowerType[ComboCount];
 	float DelayKnockback = 0.f;
 	if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
@@ -224,19 +270,27 @@ void URushAttackSystem::AttackTrace()
 		EventManager->SendKnockback(Target, this->Owner, Type, 0.3f);
 	});
 
+	Owner->SetAttackChargeKi(ComboCount);
+	
 	GetWorld()->GetTimerManager().SetTimer(KnockbackTimerHandler, TimerDelegate, DelayKnockback, false);
-
 	UGameplayStatics::ApplyDamage(
 		Target,
-		Damage,
+		Owner->GetAttackDamage(ComboCount),
 		nullptr,
 		Owner,
-		UDamageType::StaticClass()
+		UDBSZFunctionLibrary::GetDamageTypeClass(Type)
 	);
 }
 
 void URushAttackSystem::PlayMontage(int32 MontageIndex)
 {
+	// 시스템이 준비되지 않았거나 월드가 유효하지 않으면 즉시 중단
+    if (!Owner || !GetWorld() || !EventManager || !AnimInstance)
+    {
+        PRINTLOG(TEXT("PlayMontage가 시스템 준비 전에 호출되어 중단됩니다."));
+        return;
+    }
+
 	if (!AttackMontages.IsValidIndex(MontageIndex))
 		return;
 
@@ -245,31 +299,43 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 	LastAttackTime = GetWorld()->GetTimeSeconds();
 	EventManager->SendAttack(Owner, MontageIndex);
 	
-	AnimInstance->Montage_Play(
-		AttackMontages[MontageIndex],
-		1.0f,
-		EMontagePlayReturnType::MontageLength,
-		0.f,
-		true);
-	
-	GetWorld()->GetTimerManager().ClearTimer(ComboTimeHandler);
-	GetWorld()->GetTimerManager().SetTimer(
-		ComboTimeHandler,
-		this,
-		&URushAttackSystem::ResetCounter,
-		ComboResetTime,
-		false
-	);
+	if (IsValid(AnimInstance) && IsValid(AttackMontages[MontageIndex]) )
+    {
+		Owner->PlaySoundAttack();
+
+		float AttackEndTime = AttackMontages[MontageIndex]->GetPlayLength();
+		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime; 
+		
+	    AnimInstance->Montage_Play(
+		    AttackMontages[MontageIndex],
+		    1.0f,
+		    EMontagePlayReturnType::MontageLength,
+		    0.f,
+		    true);
+    }
 }
 
 void URushAttackSystem::DashToTarget(int32 MontageIndex)
 {
+    if (!IsValid(Target))
+    {
+        PRINTLOG(TEXT("DashToTarget: Target is invalid. Skipping dash."));
+        PlayMontage(MontageIndex); // Still play the montage if target is invalid, but don't dash
+        return;
+    }
     const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Target->GetActorLocation();
 
 	// XY 평면에서의 벡터와 거리를 계산
 	FVector ToTargetXY = TargetLoc - OwnerLoc;
 	const float DistanceXY = ToTargetXY.Size();
+
+	if ( DistanceXY < KINDA_SMALL_NUMBER )
+	{
+		PRINTLOG(TEXT("DashToTarget: DistanceXY is too small, skipping dash. Owner: %s, Target: %s"), *Owner->GetName(), *Target->GetName());
+		PlayMontage(MontageIndex);
+		return;
+	}
 
 	// 대시 방향은 XY 평면으로, Z축은 그대로 유지
 	const FVector DirXY = ToTargetXY / DistanceXY;
@@ -293,12 +359,15 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	MoveComp->DisableMovement();
 
 
-	if ( TravelXY > 450.0f )
+	if ( TravelXY > DashEventRange )
 	{
 		EventManager->SendDash(Owner, true, (DashTargetLoc - DashStartLoc) );
 	}
 	
-    AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+    if (IsValid(AnimInstance) && IsValid(DashMontage) )
+    {
+		AnimInstance->Montage_Play(DashMontage, 1.0f, EMontagePlayReturnType::MontageLength, 0.f, true);
+    }
 }
 
 void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
@@ -372,6 +441,8 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
     }
 
     // 5) 텔레포트 및 회전: 타겟을 바라보게 정렬
+	Owner->PlaySoundTeleport();
+	
     Owner->SetActorLocation(Chosen, false, nullptr, ETeleportType::TeleportPhysics);
     const FRotator Face = (TargetLoc - Chosen).Rotation();
     Owner->SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));

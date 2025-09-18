@@ -11,6 +11,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UCharacterData.h"
+#include "UChargeKiSystem.h"
 
 // PlayerActor Only
 #include "AEnemyActor.h"
@@ -19,11 +20,13 @@
 // Shared
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
-#include "EnergyBlastActor.h"
+#include "AEnergyBlastActor.h"
+#include "KamehamehaActor.h"
+
+#include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Kismet/KismetMathLibrary.h"
 
 #define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
 
@@ -64,19 +67,28 @@ void APlayerActor::BeginPlay()
 	// AsyncLoad
 	CharacterData->LoadHitMontage(HitMontages);
 	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadBlastMontage(BlastMontages);
+	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
+	CharacterData->LoadKamehameMontage(KamehameMontage);
+	CharacterData->LoadIntroMontage(IntroMontage);
+	CharacterData->LoadWinMontage(WinMontage);
+
 	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
+
 	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	CharacterData->LoadKamehame(KamehamehaFactory);
 	
 	CameraShakeSystem->InitSystem(this);	
 
 	// ActorComponent 초기화
 	StatSystem->InitStat(true);
 	RushAttackSystem->InitSystem(this, CharacterData);
-	RushAttackSystem->SetDamage( StatSystem->Damage );
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
 	FlySystem->InitSystem(this, BIND_DYNAMIC_DELEGATE(FEndCallback, this, APlayerActor, OnFlyEnd));
 	HitStopSystem->InitSystem(this);
+	ChargeKiSystem ->InitSystem(this, ChargeKiVFX);
 
 	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
@@ -88,6 +100,22 @@ void APlayerActor::BeginPlay()
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
 	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
+	EventManager->SendUpdateKi(true, StatSystem->CurKi, StatSystem->MaxKi);
+}
+
+void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (!EventManager) return;
+	
+	EventManager->OnDash.RemoveDynamic(this, &APlayerActor::OnDash);
+	EventManager->OnTeleport.RemoveDynamic(this, &APlayerActor::OnTeleport);
+	EventManager->OnAttack.RemoveDynamic(this, &APlayerActor::OnAttack);
+	EventManager->OnSpecialAttack.RemoveDynamic(this, &APlayerActor::OnSpecialAttack);
+	EventManager->OnGuard.RemoveDynamic(this, &APlayerActor::OnGuard);
+	EventManager->OnAvoid.RemoveDynamic(this, &APlayerActor::OnAvoid);
+	EventManager->OnPowerCharge.RemoveDynamic(this, &APlayerActor::OnPowerCharge);
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -96,18 +124,6 @@ void APlayerActor::Tick(float DeltaTime)
 
 	if ( RushAttackSystem->ShouldLookAtTarget())
 		this->OnLookTarget();
-
-	// 에너지탄 재장전 로직
-	if (RemainBlastShot < MaxRepeatBlastShot)
-	{
-		BlastShotRechargeTime += DeltaTime;
-		if (BlastShotRechargeTime >= BlastShotRechargeDuration)
-		{
-			RemainBlastShot = MaxRepeatBlastShot;
-			BlastShotRechargeTime = 0.0f;
-			// PRINT_STRING(TEXT("Energy Blast Recharged"));
-		}
-	}
 }
 
 void APlayerActor::Landed(const FHitResult& Hit)
@@ -127,59 +143,42 @@ void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
 {
 	if ( this != Target )
 		return;
-	// const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnTeleport(AActor* Target)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("OnTeleport"));
 }
 
 void APlayerActor::OnAttack(AActor* Target, int ComboCount)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
 }
 
 void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
 {
 	if ( this != Target )
 		return;
-
-	// PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
 }
 
 void APlayerActor::OnGuard(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnAvoid(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
 {
 	if ( this != Target )
 		return;
-	//
-	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
 }
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
@@ -187,18 +186,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	if ( !IsMoveEnable() )
 		return;
 	
-	// {
-	// 	// Move By Actor
-	// 	const FVector Forward = GetActorForwardVector();
-	// 	const FVector Right   = GetActorRightVector();
-	//
-	// 	AddMovementInput(Forward, Axis.Y);
-	// 	AddMovementInput(Right,   Axis.X);
-	// }
-
-	// MOVE_Walking, MOVE_Falling	Yaw만 사용	Yaw + Roll 사용 (시각 효과용 가능)	수평 (XZ) 이동
-	// MOVE_Flying	Pitch + Yaw	Pitch + Yaw	3D 이동 (YZ 포함)
-
 	const FRotator ActorRot = GetActorRotation();
 	
 	auto MoveComp = GetCharacterMovement();
@@ -212,9 +199,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		const FVector RightDir   = FRotationMatrix(YawWithRollRot).GetUnitAxis(EAxis::Y);
 		const FVector ForwardDir = FRotationMatrix(YawOnlyRot).GetUnitAxis(EAxis::X);
 
-		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(ActorRot.Roll, 0.0f, ActorRot.Yaw));
-		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, 0.0f, ActorRot.Yaw));
-
 		AddMovementInput(RightDir, Axis.X);
 		AddMovementInput(ForwardDir, Axis.Y);
 	}
@@ -227,9 +211,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		const FVector RightDir   = FRotationMatrix(FullRot).GetUnitAxis(EAxis::Y);
 		const FVector ForwardDir = FRotationMatrix(FullRot).GetUnitAxis(EAxis::X);
 
-		// const auto RightDir = UKismetMathLibrary::GetRightVector(FRotator(0.0, ActorRot.Pitch, ActorRot.Yaw));
-		// const auto ForwardDir = UKismetMathLibrary::GetForwardVector(FRotator(0.0f, ActorRot.Pitch, ActorRot.Yaw));
-		
 		AddMovementInput(RightDir, Axis.X);
 		AddMovementInput(ForwardDir, Axis.Y);
 	}
@@ -271,7 +252,7 @@ void APlayerActor::Cmd_ChargeKi_Implementation(bool bPressed)
 	if ( !IsControlEnable() )
 		return;
 
-	EventManager->SendPowerCharge(this, bPressed);
+	ChargeKiSystem->ActivateEffect(bPressed);
 }
 
 void APlayerActor::Cmd_Guard_Implementation(bool bPressed)
@@ -305,45 +286,42 @@ void APlayerActor::Cmd_RushAttack_Implementation()
 
 void APlayerActor::Cmd_EnergyBlast_Implementation()
 {
-	if ( !IsControlEnable() )
+	if (!IsBlastShootEnable() )
 		return;
+	
+	EventManager->SendCameraShake(this, EAttackPowerType::Small );
+	
+	this->PlaySoundAttack();
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
 
-	// 발사 딜레이 체크
-	if (GetWorld()->GetTimeSeconds() < LastBlastShotTime + BlastShotDelay)
-		return;
+	this->UseBlast();
+	this->PlayTypeMontage(EAnimMontageType::Blast);
+	LastBlastShotTime = GetWorld()->GetTimeSeconds();
 
-	// 잔탄 체크
-	if (RemainBlastShot > 0)
-	{
-		FActorSpawnParameters Params;
-		Params.Owner = this;
-		Params.Instigator = this;
-
-		GetWorld()->SpawnActor<AEnergyBlastActor>(
-			EnergyBlastFactory,
-			this->GetActorTransform(),
-			Params
-		);
-
-		// 발사 처리
-		RemainBlastShot--;
-		LastBlastShotTime = GetWorld()->GetTimeSeconds();
-		BlastShotRechargeTime = 0.0f;
-
-		EventManager->SendCameraShake(this, EAttackPowerType::Normal );
-		
-		// PRINT_STRING( TEXT("Energy Blast Fired! %d / %d"), RemainBlastShot, MaxRepeatBlastShot);
-	}
-	else
-	{
-		// PRINT_STRING(TEXT("Out of Energy Blast"));
-	}
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		EnergyBlastFactory,
+		this->GetActorTransform(),
+		Params
+	);
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
 {
-	if ( !IsControlEnable() )
+	if ( !IsKamehameEnable() )
 		return;
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+	
+	auto KamehameActor = GetWorld()->SpawnActor<AKamehamehaActor>(
+		KamehamehaFactory,
+		this->GetActorTransform(),
+		Params
+	);
 
-	EventManager->SendSpecialAttack(this, 1);
+	KamehameActor->StartKamehame(this, TargetActor);
 }

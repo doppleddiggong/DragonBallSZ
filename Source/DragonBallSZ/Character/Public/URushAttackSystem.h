@@ -36,9 +36,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void InitSystem(class ACombatCharacter* InOwner, class UCharacterData* InData);
 
-	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	FORCEINLINE void SetDamage(float InDamage) { this->Damage = InDamage; }
-
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool IsAttackEnable() const { return !bIsAttacking && !bIsDashing; }
 	UFUNCTION(BlueprintPure, Category="RushAttack")
@@ -46,8 +43,6 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
-
-	FORCEINLINE void ResetCounter()	{ ComboCount = 0; bIsAttacking = false; }
 
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
@@ -97,8 +92,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	bool bIsAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
-	float ComboResetTime = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Combo")
 	float MinAttackDelay = 0.75f;	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
@@ -108,7 +101,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
     float AttackRange = 150.0f;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
+	float DashEventRange = 450.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
     float TeleportRange = 900.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage")
@@ -124,30 +119,32 @@ public:
 	float AutoTrackMoveSpeed = 900.0f;
 
 
+
+private:
+	UPROPERTY()
+	class UDBSZEventManager* EventManager;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
+	TArray<EAttackPowerType> AttackPowerType;
+	
+	UPROPERTY()
+	TObjectPtr<UAnimMontage> DashMontage;
 	
 private:
 	float ElapsedTime = 0.0f;
 	float LastAttackTime = 0.0f;
 	bool bDelegatesBound = false;
 
+	float ComboResetTime = 0.0f;
 	int ComboCount = 0;
-	float Damage = 30.0f;
 
 	int32 PendingMontageIndex = 0;
 	TEnumAsByte<EMovementMode> PrevMovementMode;
 
 	FTimerHandle KnockbackTimerHandler;
-    FTimerHandle ComboTimeHandler;
     FTimerHandle TraceTimeHandler;
 
 	FVector DashStartLoc;
 	FVector DashTargetLoc;
-
-    UPROPERTY()
-    class UDBSZEventManager* EventManager;
-
-	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
-	TArray<EAttackPowerType> AttackPowerType;
-	
-	TObjectPtr<UAnimMontage> DashMontage;
 };

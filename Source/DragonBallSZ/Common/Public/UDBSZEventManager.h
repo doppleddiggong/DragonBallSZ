@@ -23,6 +23,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendMessage(const FString& InMsg);
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDamage, bool, IsPlayer, float, Damage);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnDamage OnDamage;
+	
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendDamage(const bool IsPlayer, const float Damage);
+
+	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCamera, int32, Group, int32, Index);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnCamera OnCamera;
@@ -36,6 +44,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendUpdateHealth(const bool IsPlayer, const float CurHP, const float MaxHp);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnUpdateKi, bool, IsPlayer, float, CurKi, float, MaxKi );
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnUpdateKi OnUpdateKi;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendUpdateKi(const bool IsPlayer, const float CurKi, const float MaxKi);
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHitStop, AActor*, Target, EAttackPowerType, Type);
 	UPROPERTY(BlueprintAssignable, Category="Events")
@@ -87,7 +102,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendAttack(AActor* Target, int ComboCount);
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSpecialAttack, AActor*, Target, int32, SpecialIndex);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSpecialAttack, AActor*, Target, int32, SpecialStateIndex);
 	UPROPERTY(BlueprintAssignable, Category="Events")
 	FOnSpecialAttack OnSpecialAttack;
 

@@ -18,6 +18,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	virtual void Tick(float DeltaTime) override;
@@ -76,31 +77,6 @@ public:
 	void OnAvoid(AActor* Target, bool bState);
     UFUNCTION(BlueprintCallable, Category="Event")
     void OnPowerCharge(AActor* Target, bool bState);
-
-public:
-	// 에너지탄 발사 딜레이
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
-	float BlastShotDelay = 0.5;
-
-	// 에너지탄 최대 발사 연속 발사
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="EnergyBlastFactory")
-	int MaxRepeatBlastShot = 5;
-	
-	// 재충전 딜레이
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
-	float BlastShotRechargeDuration = 5.0;
-
-	// 현재 남은 잔탄
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EnergyBlastFactory")
-	int RemainBlastShot  = MaxRepeatBlastShot;
-
-	// 마지막 발사 시간
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
-	float LastBlastShotTime = 0;
-
-	// 재충전 시간
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
-	float BlastShotRechargeTime = 0;
 
 private:
 	UPROPERTY()

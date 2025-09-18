@@ -46,6 +46,7 @@ void UFlySystem::OnJump()
 	case 1:
 		{
 			Owner->Jump();
+			Owner->PlaySoundJump();
 		}
 		break;
 

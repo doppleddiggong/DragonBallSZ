@@ -18,10 +18,9 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
-	virtual void Tick(float DeltaTime) override;
-
 	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
 	{
 		switch (Part)
@@ -66,9 +65,21 @@ public:
 	};
 
 	UFUNCTION(BlueprintPure, Category="GameState")
-	FORCEINLINE bool IsHold() const
+	FORCEINLINE bool IsHolding() const
 	{
 		return bIsHold;
+	};
+
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE void SetHold(const bool bState)
+	{
+		this->bIsHold = bState;
+	};
+	
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE void IsChargeKi(const bool bState)
+	{
+		this->bIsChargeKi = bState;
 	};
 	
 public:
@@ -79,6 +90,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsAttackEnable();
 
+
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsHitting();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -87,6 +100,8 @@ public:
 	bool IsInSight(const AActor* Other) const;
 	UFUNCTION(BlueprintCallable, Category="Character|Montage")
 	UAnimMontage* GetRandomHitAnim();
+	UFUNCTION(BlueprintCallable, Category="Character|Montage")
+	UAnimMontage* GetRandomBlastAnim();
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void OnRecvMessage(FString InMsg);
@@ -106,7 +121,66 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void RecoveryMovementMode(const EMovementMode InMovementMode);
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	bool IsBlastShootEnable();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsKamehameEnable();
 	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void SetAttackChargeKi(int ComboCount)
+	{
+		StatSystem->SetAttackChargeKi(ComboCount);
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Command")
+	FORCEINLINE float GetBlastShootDelay()
+	{
+		return StatSystem->BlastShotDelay;
+	}
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Stat")
+	FORCEINLINE float GetAttackDamage(int ComboCount)
+	{
+		return StatSystem->GetAttackDamage(ComboCount);
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stat")
+	FORCEINLINE float GetBlastDamage()
+	{
+		return StatSystem->GetBlastDamage();
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseBlast()
+	{
+		return StatSystem->UseBlast();
+	}
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void PlayTypeMontage(EAnimMontageType Type);
+
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void PlayTargetMontage(UAnimMontage* AnimMontage);
+
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	void StopTargetMontage(EAnimMontageType Type, float BlendInOutTime);
+	
+public:
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundAttack();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundHit();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundJump();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundTeleport();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlaySoundWin();
+
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
 	class UStatSystem* StatSystem;
@@ -120,16 +194,12 @@ public: // Combat Character ShaderComp
 	class UDashSystem* DashSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
 	class UFlySystem* FlySystem;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
+	class UChargeKiSystem* ChargeKiSystem;
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
 	class ACombatCharacter* TargetActor;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
-	bool IsHit = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
-	bool bIsHold = false;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
@@ -166,22 +236,56 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Character|CombatState")
 	bool bIsWinner = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
+	bool IsHit = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsHold = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsChargeKi = false;
 
 
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 	
+protected:
+	// 블라스트 마지막 발사 시간
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float LastBlastShotTime = 0;
+	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
 	class UCharacterData* CharacterData;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
-	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
-	TObjectPtr<class UNiagaraSystem> DashVFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TArray<TObjectPtr<UAnimMontage>> HitMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<UAnimMontage> DeathMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TArray<TObjectPtr<UAnimMontage>> BlastMontages;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> ChargeKiMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> KamehameMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> IntroMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
+	TObjectPtr<UAnimMontage> WinMontage;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<class UNiagaraSystem> DashVFX;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<class UNiagaraSystem> ChargeKiVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
+	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
+	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
+	
+private:
+	class UDBSZEventManager* EventManager;
 };

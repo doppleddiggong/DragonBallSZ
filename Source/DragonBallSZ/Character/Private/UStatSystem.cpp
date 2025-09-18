@@ -5,6 +5,10 @@
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 
+
+#define MIN_DMG_MUL 0.85f
+#define MAX_DMG_MUL 1.15f
+
 UStatSystem::UStatSystem()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -26,6 +30,24 @@ void UStatSystem::InitStat_Implementation(bool IsPlayer)
 	this->IsDead = false;
 }
 
+float UStatSystem::GetRandDmg(float Damage)
+{
+	return FMath::RandRange( Damage * MIN_DMG_MUL, Damage * MAX_DMG_MUL);
+}
+
+float UStatSystem::GetAttackDamage(int ComboCount)
+{
+	if ( AttackDamage.IsValidIndex(ComboCount) )
+		return GetRandDmg( AttackDamage[ComboCount]);
+
+	return 0;
+}	
+
+float UStatSystem::GetBlastDamage()
+{
+	return GetRandDmg(BlastDamage);
+}
+
 void UStatSystem::IncreaseHealth_Implementation(float InHealPoint)
 {
 	this->CurHP += InHealPoint;
@@ -45,16 +67,32 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 	{
 		CurHP = 0;
 		this->IsDead = true;
-
-		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		{
-			FName SendEventType = bIsPlayer ? GameEvent::EnemyWin : GameEvent::PlayerWin;
-			EventManager->SendMessage( SendEventType.ToString() );
-		}
 	}
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
 		EventManager->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 
 	return IsDead;
+}
+
+void UStatSystem::IncreaseKi_Implementation(float InKi)
+{
+	this->CurKi += InKi;
+
+	if( CurKi > MaxKi )
+		CurKi = MaxKi;
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateKi(bIsPlayer, CurKi, MaxKi);
+}
+
+void UStatSystem::DecreaseKi_Implementation(float InKi)
+{
+	this->CurKi -= InKi;
+
+	if( CurKi < 0 )
+		CurKi = 0;
+
+	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
+		EventManager->SendUpdateKi(bIsPlayer, CurKi, MaxKi);
 }

@@ -8,11 +8,15 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UKnockbackSystem.h"
+#include "UChargeKiSystem.h"
 
 #include "GameEvent.h"
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
+#include "UDBSZDamageType.h"
 #include "UDBSZVFXManager.h"
+#include "UDBSZSoundManager.h"
 
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -34,6 +38,7 @@ ACombatCharacter::ACombatCharacter()
 	RushAttackSystem	= CreateDefaultSubobject<URushAttackSystem>(TEXT("RushAttackSystem"));
 	DashSystem			= CreateDefaultSubobject<UDashSystem>(TEXT("DashSystem"));
 	FlySystem			= CreateDefaultSubobject<UFlySystem>(TEXT("FlySystem"));
+	ChargeKiSystem		= CreateDefaultSubobject<UChargeKiSystem>(TEXT("ChargeKiSystem"));
 	
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
 	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
@@ -54,28 +59,28 @@ void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
-
 	MeshComp = this->GetMesh();
 	AnimInstance = MeshComp->GetAnimInstance();
 	
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
-}
 
+	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+ }
 
-void ACombatCharacter::Tick(float DeltaTime)
+void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::Tick(DeltaTime);
+	Super::EndPlay(EndPlayReason);
 
-	// ACombatCharacter 상속 객체에서 각자 합시다.
-	// if ( RushAttackSystem->ShouldLookAtTarget())
-	// 	this->OnLookTarget();
+	if (EventManager)
+	{
+		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
+	}
 }
 
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
-	if ( this->IsHold() )
+	if ( this->IsHolding() )
 		return false;
 	
 	if ( IsCombatStart() == false || IsCombatResult())
@@ -112,6 +117,7 @@ bool ACombatCharacter::IsAttackEnable_Implementation()
 
 	return true;
 }
+
 
 bool ACombatCharacter::IsHitting_Implementation()
 {
@@ -162,24 +168,25 @@ UAnimMontage* ACombatCharacter::GetRandomHitAnim()
 	return UCommonFunctionLibrary::GetRandomMontage(HitMontages);
 }
 
+UAnimMontage* ACombatCharacter::GetRandomBlastAnim()
+{
+	return UCommonFunctionLibrary::GetRandomMontage(BlastMontages);
+}
+
 void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 	{
-		if (auto EventManager = UDBSZEventManager::Get(GetWorld()))
-		{
-			if ( IsPlayer() )
-				EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
-			else if ( IsEnemy())
-				EventManager->SendUpdateHealth(false, StatSystem->CurHP, StatSystem->MaxHP);
-		}
+		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->CurHP, StatSystem->MaxHP);
+		EventManager->SendUpdateKi(IsPlayer(), StatSystem->CurKi, StatSystem->MaxKi);
+
 		bIsCombatStart = true;
 	}
 	else if ( InMsg == GameEvent::PlayerWin )
 	{
 		bIsCombatResult = true;
 		bIsWinner = this->IsPlayer();
-
+	
 		// PRINTLOG(TEXT("WINNER IS PLAYER"));
 	}
 	else if ( InMsg == GameEvent::EnemyWin )
@@ -218,44 +225,48 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
-	UDBSZVFXManager::Get(GetWorld())->ShowVFX(
-					EVFXType::Hit_Small,
+	const auto AttackPowerType = Cast<const UDBSZDamageType>(DamageType)->AttackPowerType;
+	this->PlaySoundHit();
+
+	UDBSZVFXManager::Get(GetWorld())->ShowVFXAttackType(
+					AttackPowerType,
 					GetActorLocation(),
 					GetActorRotation(),
-					FVector(0.05f) );
+					FVector(1.f));
 	
 	bool IsDie = StatSystem->DecreaseHealth(Damage);
+
+	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+	EventManager->SendDamage(IsPlayer(), Damage);
+
+	if ( ChargeKiSystem->IsActivateState() )
+	{
+		// 기 차지 캔슬!
+		ChargeKiSystem->ActivateEffect(false);
+	}
+	
 	
 	if ( IsDie )
 	{
-		AnimInstance->Montage_Play(
-			DeathMontage,
-			1.0f,
-			EMontagePlayReturnType::MontageLength,
-			0.f,
-			true);
-	
+		FName SendEventType = IsPlayer() ? GameEvent::EnemyWin : GameEvent::PlayerWin;
+		EventManager->SendMessage( SendEventType.ToString() );
+
+		this->PlaySoundWin();
+		this->PlayTypeMontage(EAnimMontageType::Death);
 		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
 	}
 	else
 	{
-		auto HitAnim = GetRandomHitAnim();
-		float HitEndTime = HitAnim->GetPlayLength();
-		AnimInstance->Montage_Play(
-			HitAnim,
-			1.0f,
-			EMontagePlayReturnType::MontageLength,
-			0.f,
-			true);
-	
+		auto HitAnimMontage = GetRandomHitAnim();
+		float HitEndTime = HitAnimMontage->GetPlayLength();
+
+		this->PlayTargetMontage(HitAnimMontage);
+
 		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this](){
 			IsHit = false;
 		});
 	}
 }
-
-
-
 
 void ACombatCharacter::SetFlying()
 {
@@ -298,4 +309,133 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 		this->bUseControllerRotationPitch = false;
 		Movement->bOrientRotationToMovement = true;
 	}
+}
+
+bool ACombatCharacter::IsBlastShootEnable()
+{
+	if ( !IsControlEnable() )
+		return false;
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	const float NextAvailableTime = LastBlastShotTime + GetBlastShootDelay();
+	if (NextAvailableTime > Now )
+		return false;
+	
+	return StatSystem->CurKi > StatSystem->BlastNeedKi;
+}
+
+
+bool ACombatCharacter::IsKamehameEnable_Implementation()
+{
+	if ( !IsControlEnable() )
+		return false;
+
+	int KamehameNeedKi = 100;
+	return StatSystem->CurKi > KamehameNeedKi;
+}
+
+void ACombatCharacter::PlayTypeMontage(EAnimMontageType Type)
+{
+	UAnimMontage* AnimMontage = nullptr;
+
+	switch (Type)
+	{
+	case EAnimMontageType::Death:
+		AnimMontage = DeathMontage;
+		break;
+	case EAnimMontageType::Blast:
+		AnimMontage = GetRandomBlastAnim();
+		break;
+	case EAnimMontageType::Kamehame:
+		AnimMontage = KamehameMontage;
+		break;
+	case EAnimMontageType::Intro:
+		AnimMontage = IntroMontage;
+		break;
+	case EAnimMontageType::Win:
+		AnimMontage = WinMontage;
+		break;
+	case EAnimMontageType::ChargeKi:
+		AnimMontage = ChargeKiMontage;
+		break;
+	}
+
+	this->PlayTargetMontage(AnimMontage);
+}
+
+void ACombatCharacter::PlayTargetMontage(UAnimMontage* AnimMontage)
+{
+	if ( IsValid(AnimInstance) && IsValid(AnimMontage) )
+	{
+		AnimInstance->Montage_Play(
+			AnimMontage,
+			1.0f,
+			EMontagePlayReturnType::MontageLength,
+			0.f,
+			true);
+	}
+	else
+	{
+		PRINTLOG(TEXT("Failed to PlayMontage"));
+	}
+}
+
+void ACombatCharacter::StopTargetMontage(EAnimMontageType Type, float BlendInOutTime)
+{
+	UAnimMontage* AnimMontage = nullptr;
+
+	switch (Type)
+	{
+	case EAnimMontageType::Death:
+		AnimMontage = DeathMontage;
+		break;
+	case EAnimMontageType::Blast:
+		AnimMontage = GetRandomBlastAnim();
+		break;
+	case EAnimMontageType::Kamehame:
+		AnimMontage = KamehameMontage;
+		break;
+	case EAnimMontageType::Intro:
+		AnimMontage = IntroMontage;
+		break;
+	case EAnimMontageType::Win:
+		AnimMontage = WinMontage;
+		break;
+	case EAnimMontageType::ChargeKi:
+		AnimMontage = ChargeKiMontage;
+		break;
+	}
+	
+	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
+}
+
+
+void ACombatCharacter::PlaySoundAttack()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Attack : ESoundType::Vege_Attack;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundHit()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Hit : ESoundType::Vege_Hit;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundJump()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Jump : ESoundType::Vege_Jump;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundTeleport()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Teleport : ESoundType::Vege_Teleport;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+}
+
+void ACombatCharacter::PlaySoundWin()
+{
+	auto SoundType = IsPlayer() ? ESoundType::Goku_Win : ESoundType::Vege_Win;
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
 }

@@ -7,10 +7,8 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 
-#include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 
-#include "Blueprint/WidgetLayoutLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -46,9 +44,22 @@ void ADynamicCameraActor::BeginPlay()
 	EventManager->OnSpecialAttack.AddDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
 	EventManager->OnGuard.AddDynamic(this, &ADynamicCameraActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &ADynamicCameraActor::OnAvoid);
-	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);
+	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);	
+}
 
+void ADynamicCameraActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (!EventManager) return;
 	
+	EventManager->OnDash.RemoveDynamic(this, &ADynamicCameraActor::OnDash);
+	EventManager->OnTeleport.RemoveDynamic(this, &ADynamicCameraActor::OnTeleport);
+	EventManager->OnAttack.RemoveDynamic(this, &ADynamicCameraActor::OnAttack);
+	EventManager->OnSpecialAttack.RemoveDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
+	EventManager->OnGuard.RemoveDynamic(this, &ADynamicCameraActor::OnGuard);
+	EventManager->OnAvoid.RemoveDynamic(this, &ADynamicCameraActor::OnAvoid);
+	EventManager->OnPowerCharge.RemoveDynamic(this, &ADynamicCameraActor::OnPowerCharge);
 }
 
 // Called every frame
@@ -259,16 +270,4 @@ void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
 	
 	// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
 	// PRINTLOG(TEXT("%s"), PrintMsg);
-}
-
-void ADynamicCameraActor::SetPlayerHold( bool bState)
-{
-	if ( IsValid(PlayerRef))
-		PlayerRef->bIsHold = bState;
-}
-
-void ADynamicCameraActor::SetTargetHold( bool bState )
-{
-	if ( IsValid(TargetRef))
-		TargetRef->bIsHold = bState;
 }

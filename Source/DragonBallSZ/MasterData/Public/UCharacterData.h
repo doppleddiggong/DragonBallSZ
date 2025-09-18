@@ -29,26 +29,45 @@ public:
 	bool LoadDashMontage( TObjectPtr<UAnimMontage>& OutDashMontage) const;
 	bool LoadHitMontage( TArray<TObjectPtr<UAnimMontage>>& OutHitMontage) const;
 	bool LoadDeathMontage( TObjectPtr<UAnimMontage>& OutDeathMontage) const;
+	bool LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage ) const;
+	bool LoadChargeKiMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadKamehameMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadIntroMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadWinMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
 
-	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutDashVFX) const;
+	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
+	bool LoadChargeKiVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
+
 	bool LoadEnergyBlast(TSubclassOf<class AEnergyBlastActor>& OutEnergyBlast);
+	bool LoadKamehame(TSubclassOf<class AKamehamehaActor>& OutActor);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<FRushData> RushData;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DashAsset;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<TSoftObjectPtr<UAnimMontage>> HitAsset;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<UAnimMontage> DeathAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TArray<TSoftObjectPtr<UAnimMontage>> BlastAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> ChargeKiAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> KamehameAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> IntroAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<UAnimMontage> WinAsset;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
 	TSoftObjectPtr<class UNiagaraSystem> DashVFX;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
+	TSoftObjectPtr<class UNiagaraSystem> ChargeKiVFX;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Actor)
 	TSubclassOf<class AEnergyBlastActor> EnergyBlast;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Actor)
+	TSubclassOf<class AKamehamehaActor> Kamehame;
 };
