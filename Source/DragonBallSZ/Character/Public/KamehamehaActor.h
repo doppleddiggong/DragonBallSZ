@@ -45,7 +45,7 @@ public:
 	
 	//ToDo: DataTable로 뽑기
 	float LoopSpeed = 0.001;
-	float BeamSpeed = 1.5f;
+	float BeamSpeed = 1.f;
 
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
