@@ -65,11 +65,11 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 	if (Kamehameha && Kamehameha->IsActive())
 	{
-		if (BeamVector.Y < 150)
+		if (BeamVector.Y < 135)
 		{
 			BeamVector.Y += BeamSpeed;
-			BeamVector.X += BeamSpeed/10;
-			BeamVector.Z += BeamSpeed/10;
+			BeamVector.X += BeamSpeed / 6;
+			BeamVector.Z += BeamSpeed / 6;
 			Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
 		}
 
