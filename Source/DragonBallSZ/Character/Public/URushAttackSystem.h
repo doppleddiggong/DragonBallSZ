@@ -44,6 +44,12 @@ public:
 	UFUNCTION(BlueprintPure, Category="RushAttack")
 	FORCEINLINE bool ShouldLookAtTarget() const { return bIsAttacking || bIsDashing; }
 
+	UFUNCTION(BlueprintCallable, Category="RushAttack")
+	FORCEINLINE void ResetComboCount() {
+		ComboResetTime = 0.0f;
+		ComboCount = 0;
+	};
+	
 public:
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
 	void OnDashCompleted();

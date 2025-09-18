@@ -85,8 +85,7 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	if ( ComboResetTime > 0.0f &&
 		GetWorld()->GetTimeSeconds() > ComboResetTime )
 	{
-		ComboResetTime = 0.0f;
-		ComboCount = 0;
+		ResetComboCount();
 	}
 }
 

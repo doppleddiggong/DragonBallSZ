@@ -239,6 +239,8 @@ void ACombatCharacter::OnDamage(
 	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 	EventManager->SendDamage(IsPlayer(), Damage);
 
+	RushAttackSystem->ResetComboCount();
+	
 	if ( ChargeKiSystem->IsActivateState() )
 	{
 		// 기 차지 캔슬!
