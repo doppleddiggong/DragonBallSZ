@@ -6,8 +6,10 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "UDBSZEventManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -56,6 +58,8 @@ void AKamehamehaActor::BeginPlay()
 	// }
 
 	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+
+	EventManager = UDBSZEventManager::Get(GetWorld());
 }
 
 // Called every frame
