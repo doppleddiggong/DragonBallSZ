@@ -6,8 +6,10 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "DragonBallSZ.h"
+#include "EAnimMontageType.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "UDBSZEventManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -26,7 +28,7 @@ AKamehamehaActor::AKamehamehaActor()
 
 	ChargeSphere = CreateDefaultSubobject<UNiagaraComponent>(TEXT("ChargeSphere"));
 	ChargeSphere->SetupAttachment(RootComponent);
-	ChargeSphere->bAutoActivate = true;
+	ChargeSphere->bAutoActivate = false;
 
 	FinishDust = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FinishDust"));
 	FinishDust->SetupAttachment(RootComponent);
@@ -55,7 +57,7 @@ void AKamehamehaActor::BeginPlay()
 	// 	}
 	// }
 
-	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Target = Cast<ACharacter>(UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyActor::StaticClass()));
 }
 
 // Called every frame
@@ -63,25 +65,19 @@ void AKamehamehaActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (LoopDuration > 0.1f)
-	{
-		LoopDuration -= LoopSpeed;
-
-		ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
-	}
+	ElapsedTime += DeltaTime;
 
 	if (Kamehameha && Kamehameha->IsActive())
 	{
 		if (BeamVector.Y < 135)
 		{
 			BeamVector.Y += BeamSpeed;
-			BeamVector.X += BeamSpeed / 6;
-			BeamVector.Z += BeamSpeed / 6;
+			BeamVector.X += BeamSpeed / 5;
+			BeamVector.Z += BeamSpeed / 5;
 			Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
 			return;
 		}
 
-		ElapsedTime += DeltaTime;
 		if (ElapsedTime > FirstExplosionTime)
 		{
 			if (!bFirstExplosion)
@@ -100,9 +96,9 @@ void AKamehamehaActor::Tick(float DeltaTime)
 				bFirstExplosion = true;
 			}
 		}
-		
+
 		if (!bFirstExplosion) return;
-		
+
 		if (ElapsedTime > SecondExplosionTime)
 		{
 			if (BeamVector.X > 0)
@@ -115,8 +111,8 @@ void AKamehamehaActor::Tick(float DeltaTime)
 			{
 				Kamehameha->DeactivateImmediate();
 			}
-			
-			if (!bSecondExplosion && BeamVector.X < 10)
+
+			if (!bSecondExplosion && BeamVector.X < 14)
 			{
 				FinishDust->Activate();
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -131,21 +127,29 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					true
 				);
 
-				UGameplayStatics::SpawnEmitterAtLocation(
-					GetWorld(),
-					ExplosionWind,
-					Target->GetActorLocation(),
-				Target->GetActorRotation(),
-					FVector(1.f),
-					true
-				);
+				FTimerHandle TimerHandle;
+				GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+				{
+					ExplosionSmokeComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+						GetWorld(),
+						ExplosionSmoke,
+						Target->GetActorLocation(),
+						Target->GetActorRotation(),
+						FVector(1.f),
+						true,
+						true,
+						ENCPoolMethod::None,
+						true
+					);
+					if (ExplosionSmokeComp)
+					{
+						ExplosionSmokeComp->OnSystemFinished.AddDynamic(this, &AKamehamehaActor::OnKamehamehaFinished);
+					}
+				}, 1.5f, false);
+
+
 				bSecondExplosion = true;
 			}
-		}
-		
-		if (ElapsedTime > 10)
-		{
-			this->Destroy();
 		}
 	}
 }
@@ -160,16 +164,28 @@ void AKamehamehaActor::FireKamehameha()
 	Kamehameha->Activate();
 }
 
+void AKamehamehaActor::OnKamehamehaFinished(class UNiagaraComponent* PSystem)
+{
+	// 이펙트 끝나면 액터 자동 소멸
+	this->Destroy();
+}
 
 
 void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatCharacter* InKamehameTarget)
 {
 	this->InOwner = InKamehameOwner;
-	this->InTarget = InKamehameTarget; 
+	this->InTarget = InKamehameTarget;
 
 	{
 		StartKamehameAnim = true;
 		// 발사 시작
+		ChargeSphere->Activate();
+		if (LoopDuration > 0.1f)
+		{
+			LoopDuration -= LoopSpeed;
+
+			ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
+		}
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
 		InOwner->SetHold(true);
@@ -190,15 +206,15 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 void AKamehamehaActor::DelayKamehameFire()
 {
 	//일정 시간후에 발사한다
-
 	// 발사 !!!!
+	FireKamehameha();
 	// 발사 시작할때 카메하페마 Shoot이벤트 송신
 	//EventManager->SendSpecialAttack(Owner, 2);
 }
 
 void AKamehamehaActor::EndKamehame()
 {
-	if ( StartKamehameAnim == false)
+	if (StartKamehameAnim == false)
 		return;
 
 	StartKamehameAnim = false;

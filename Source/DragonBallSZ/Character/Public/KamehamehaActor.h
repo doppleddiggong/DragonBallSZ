@@ -27,7 +27,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UNiagaraSystem> Explosion;
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<class UParticleSystem> ExplosionWind;
+	TObjectPtr<class UNiagaraSystem> ExplosionSmoke;
+	UPROPERTY()
+	TObjectPtr<class UNiagaraComponent> ExplosionSmokeComp;
 
 	UPROPERTY()
 	TObjectPtr<ACharacter> Target;
@@ -35,11 +37,9 @@ public:
 	TObjectPtr<ACharacter> Shooter;
 	
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	bool bFirstExplosion = false;
@@ -47,15 +47,19 @@ public:
 	float ElapsedTime = 0;
 	float LoopDuration = 0.37f;
 	FVector BeamVector = FVector(1,1,1);
-	
-	//ToDo: DataTable로 뽑기
+	float FirstExplosionTime = 3.9f;
+	float SecondExplosionTime = 8.1f;
+	float BeamSpeed = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Charge Speed")
 	float LoopSpeed = 0.001;
-	float BeamSpeed = 1.f;
-	float FirstExplosionTime = 0.7f;
-	float SecondExplosionTime = 6.5f;
+	
+	
 
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
+	UFUNCTION()
+	void OnKamehamehaFinished(class UNiagaraComponent* PSystem);
+	
 
 
 
