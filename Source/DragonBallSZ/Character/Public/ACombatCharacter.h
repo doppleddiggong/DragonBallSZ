@@ -263,7 +263,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	bool bIsChargeKi = false;
 
-
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 	
@@ -271,6 +270,10 @@ protected:
 	// 블라스트 마지막 발사 시간
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
 	float LastBlastShotTime = 0;
+
+	// 경직 시간. HitEnd후 시간 보정
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	float HitEndOffset = 0.15f;
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
@@ -311,5 +314,4 @@ protected:
 	TEnumAsByte<EMovementMode>  PrevMoveMode;
 
 	bool bDelegatesBound = false;
-
 };
