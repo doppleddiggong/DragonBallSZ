@@ -162,7 +162,11 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
     {
         bIsAttacking = false;
         ComboCount = 0;
-        Owner->RecoveryMovementMode(PrevMovementMode);
+        // Only recover movement mode if the owner is not currently flying
+        if (Owner && Owner->GetCharacterMovement()->MovementMode != MOVE_Flying)
+        {
+            Owner->RecoveryMovementMode(PrevMovementMode);
+        }
     }
 }
 
@@ -325,7 +329,13 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 
 		float AttackEndTime = AttackMontages[MontageIndex]->GetPlayLength();
 		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime + ComboResetTime_Offset;
-		
+
+		const FVector TargetLoc = Target->GetActorLocation();
+		FHitResult TargetTraceHit;
+		const bool bTargetOnGround = GetWorld()->LineTraceSingleByChannel(TargetTraceHit, TargetLoc, TargetLoc - FVector(0,0,1000.f), ECC_Visibility);
+		if (!bTargetOnGround)
+			Owner->SetFlying();
+	
 	    AnimInstance->Montage_Play(
 		    AttackMontages[MontageIndex],
 		    1.0f,
@@ -480,15 +490,15 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
     Owner->SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
     EventManager->SendTeleport(Owner);
 
-    // 6) 공중 콤보 보조: 타겟이 공중이면 비행 모드로
-    {
-        FHitResult TargetTraceHit;
-        const bool bTargetOnGround = GetWorld()->LineTraceSingleByChannel(TargetTraceHit, TargetLoc, TargetLoc - FVector(0,0,1000.f), ECC_Visibility);
-        if (!bTargetOnGround)
-        {
-        	Owner->SetFlying();
-        }
-    }
+    // // 6) 공중 콤보 보조: 타겟이 공중이면 비행 모드로
+    // {
+    //     FHitResult TargetTraceHit;
+    //     const bool bTargetOnGround = GetWorld()->LineTraceSingleByChannel(TargetTraceHit, TargetLoc, TargetLoc - FVector(0,0,1000.f), ECC_Visibility);
+    //     if (!bTargetOnGround)
+    //     {
+    //     	Owner->SetFlying();
+    //     }
+    // }
 
 	PrevMovementMode = MoveComp->MovementMode;
 	PlayMontage(MontageIndex);

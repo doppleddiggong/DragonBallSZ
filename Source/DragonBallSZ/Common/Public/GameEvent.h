@@ -7,4 +7,6 @@ namespace GameEvent
 	
 	static FName PlayerWin = FName(TEXT("PlayerWin"));
 	static FName EnemyWin = FName(TEXT("EnemyWin"));
+
+	static FName KameShoot = FName(TEXT("KameShoot"));
 }

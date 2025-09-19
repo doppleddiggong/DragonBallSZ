@@ -20,6 +20,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+private:
+	void BindMontageDelegates(UAnimInstance* Anim);
+	void UnbindMontageDelegates(UAnimInstance* Anim);
+
+	UFUNCTION()
+	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
+	
 public:
 	FORCEINLINE UArrowComponent* GetBodyPart(EBodyPartType Part) const
 	{
@@ -212,6 +219,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class USkeletalMeshComponent* MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
+	class UCharacterMovementComponent* MoveComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
 	class UAnimInstance* AnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
@@ -295,5 +305,11 @@ public:
 	
 protected:
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+	class UDBSZEventManager*	EventManager;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TEnumAsByte<EMovementMode>  PrevMoveMode;
+
+	bool bDelegatesBound = false;
+
 };

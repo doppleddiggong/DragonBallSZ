@@ -188,7 +188,6 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 	
 	const FRotator ActorRot = GetActorRotation();
 	
-	auto MoveComp = GetCharacterMovement();
 	if ( MoveComp->MovementMode == MOVE_Walking || MoveComp->MovementMode == MOVE_Falling )
 	{
 		// Right : XZ

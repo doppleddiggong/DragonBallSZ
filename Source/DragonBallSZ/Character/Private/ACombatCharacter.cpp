@@ -60,22 +60,59 @@ void ACombatCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	MeshComp = this->GetMesh();
+	MoveComp = this->GetCharacterMovement();
+
 	AnimInstance = MeshComp->GetAnimInstance();
 	
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
+
+
+	BindMontageDelegates(AnimInstance);
  }
 
 void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
+	if (AnimInstance && bDelegatesBound)
+		UnbindMontageDelegates(AnimInstance);
+	bDelegatesBound = false;
 
 	if (EventManager)
-	{
 		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
-	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+void ACombatCharacter::BindMontageDelegates(UAnimInstance* Anim)
+{
+	if (!Anim || bDelegatesBound)
+		return;
+
+	// 중복 방지용으로 먼저 제거
+	Anim->OnPlayMontageNotifyBegin.RemoveDynamic(this, &ACombatCharacter::OnMontageNotifyBegin);
+	Anim->OnPlayMontageNotifyBegin.AddDynamic(this, &ACombatCharacter::OnMontageNotifyBegin);
+	bDelegatesBound = true;
+}
+
+void ACombatCharacter::UnbindMontageDelegates(UAnimInstance* Anim)
+{
+	if (!Anim || !bDelegatesBound)
+		return;
+
+	Anim->OnPlayMontageNotifyBegin.RemoveDynamic(this, &ACombatCharacter::OnMontageNotifyBegin);
+
+	bDelegatesBound = false;
+}
+
+
+void ACombatCharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Notify Fired: %s"), *NotifyName.ToString());
+
+	if ( NotifyName == GameEvent::KameShoot )
+		EventManager->SendMessage(GameEvent::KameShoot.ToString());
 }
 
 bool ACombatCharacter::IsControlEnable_Implementation()
@@ -234,7 +271,7 @@ void ACombatCharacter::OnDamage(
 					GetActorRotation(),
 					FVector(1.f));
 	
-	bool IsDie = StatSystem->DecreaseHealth(Damage);
+	const bool IsDie = StatSystem->DecreaseHealth(Damage);
 
 	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
 	EventManager->SendDamage(IsPlayer(), Damage);
@@ -260,20 +297,33 @@ void ACombatCharacter::OnDamage(
 	else
 	{
 		auto HitAnimMontage = GetRandomHitAnim();
-		float HitEndTime = HitAnimMontage->GetPlayLength();
+		float HitEndOffset = 0.5f;
+		float HitEndTime = HitAnimMontage->GetPlayLength() + HitEndOffset;
 
+
+		if ( MoveComp->MovementMode != EMovementMode::MOVE_None )
+		{
+			PrevMoveMode = MoveComp->MovementMode;
+			MoveComp->DisableMovement();
+		}
+		
 		this->PlayTargetMontage(HitAnimMontage);
 
-		UDelayTaskManager::Get(this)->Delay(this, HitEndTime, [this](){
-			IsHit = false;
-		});
+		if ( auto DelayManager = UDelayTaskManager::Get(this) )
+		{
+			DelayManager->CancelAll(this);
+			DelayManager->Delay(this, HitEndTime, [this](){
+				IsHit = false;
+				MoveComp->SetMovementMode(PrevMoveMode);
+			});
+		}
 	}
 }
 
 void ACombatCharacter::SetFlying()
 {
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
 	MoveComp->SetMovementMode(MOVE_Flying);
+	PrevMoveMode = EMovementMode::MOVE_Flying;
 
 	this->bUseControllerRotationYaw = true;
 	this->bUseControllerRotationPitch = true;
@@ -282,8 +332,8 @@ void ACombatCharacter::SetFlying()
 
 void ACombatCharacter::SetFallingToWalk()
 {
-	UCharacterMovementComponent* MoveComp = GetCharacterMovement();
 	MoveComp->SetMovementMode( EMovementMode::MOVE_Falling );
+	PrevMoveMode = EMovementMode::MOVE_Falling;
 
 	this->bUseControllerRotationYaw = false;
 	this->bUseControllerRotationPitch = false;

@@ -6,6 +6,7 @@
 #include "APlayerActor.h"
 #include "EAnimMontageType.h"
 #include "EVFXType.h"
+#include "GameEvent.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "UDBSZEventManager.h"
@@ -40,6 +41,15 @@ void AKamehamehaActor::BeginPlay()
 	Super::BeginPlay();
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
+	EventManager->OnMessage.AddDynamic(this, &AKamehamehaActor::OnRecvMessage);
+}
+
+void AKamehamehaActor::OnRecvMessage(FString InMsg)
+{
+	if ( InMsg.Equals(GameEvent::KameShoot.ToString(), ESearchCase::IgnoreCase ))
+	{
+		DelayKamehameFire();
+	}
 }
 
 void AKamehamehaActor::Tick(float DeltaTime)

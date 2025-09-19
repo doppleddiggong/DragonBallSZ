@@ -42,6 +42,9 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void OnRecvMessage(FString InMsg);
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
