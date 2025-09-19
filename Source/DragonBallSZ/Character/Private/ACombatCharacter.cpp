@@ -297,7 +297,6 @@ void ACombatCharacter::OnDamage(
 	else
 	{
 		auto HitAnimMontage = GetRandomHitAnim();
-		float HitEndOffset = 0.5f;
 		float HitEndTime = HitAnimMontage->GetPlayLength() + HitEndOffset;
 
 
