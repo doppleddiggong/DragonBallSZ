@@ -56,7 +56,7 @@ protected:
 	TObjectPtr<class UProgressBar> ProgressBar_Player;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Enemy;
-
+	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> ProgressBar_Player_Ki;
 	UPROPERTY(meta = (BindWidget))
