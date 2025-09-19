@@ -60,7 +60,7 @@ void UChargeKiSystem::ActivateEffect(const bool bState)
 	}
 	else
 	{
-		NiagaraComp->Deactivate();
+		NiagaraComp->DeactivateImmediate();
 		Owner->StopTargetMontage(EAnimMontageType::ChargeKi, 0.15f);
 
 		if (GetWorld())
