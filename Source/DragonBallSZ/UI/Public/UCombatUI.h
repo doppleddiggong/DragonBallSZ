@@ -80,26 +80,26 @@ private:
 
 public:
 	// 플레이어 체력
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerCurHP;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerMaxHP;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerCurKi;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerMaxKi;
 
 	
 	// 적 체력
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float EnemyCurHP;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float EnemyMaxHP;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float EnemyCurKi;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float EnemyMaxKi;
 	
 private:
