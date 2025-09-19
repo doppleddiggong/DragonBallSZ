@@ -57,7 +57,7 @@ public:
 	float SecondExplosionTime = 8.1f;
 	float BeamSpeed = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Charge Speed")
-	float LoopSpeed = 0.001;
+	float LoopSpeed = 0.0005;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Impact Frame")
 	float ImpactTime = 0.11f;
 
