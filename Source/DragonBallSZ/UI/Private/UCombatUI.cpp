@@ -100,16 +100,30 @@ void UCombatUI::OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi)
 	}
 }
 
-void UCombatUI::StartCombat( const float PlayerKi, const float EnemyKi )
+void UCombatUI::StartCombat(
+	const float PlayerHP, const float EnemyHP, 
+	const float PlayerKi, const float EnemyKi )
 {
+	PlayerMaxHP = PlayerHP;
+	PlayerCurHP = PlayerMaxHP;
+
+	PlayerMaxKi = PlayerKi;
+	PlayerCurKi = PlayerMaxKi;
+
+	EnemyMaxHP = EnemyHP;
+	EnemyCurHP = EnemyMaxHP;
+
+	EnemyMaxKi = EnemyKi;
+	EnemyCurKi = EnemyMaxKi;
+	
 	this->HidePlayerDamageUI();
 	this->HideEnemyDamageUI();
 	
-	ProgressBar_Player->SetPercent(1.0f);
-	ProgressBar_Enemy->SetPercent(1.0f);
+	ProgressBar_Player->SetPercent(PlayerCurHP/PlayerMaxHP);
+	ProgressBar_Enemy->SetPercent(EnemyCurHP/EnemyMaxHP);
 
-	ProgressBar_Player_Ki->SetPercent(PlayerKi);
-	ProgressBar_Enemy_Ki->SetPercent(EnemyKi);
+	ProgressBar_Player_Ki->SetPercent(PlayerCurKi/PlayerMaxKi);
+	ProgressBar_Enemy_Ki->SetPercent(EnemyCurKi/EnemyMaxKi);
 
 	StartCombatTime();
 }
@@ -117,14 +131,10 @@ void UCombatUI::StartCombat( const float PlayerKi, const float EnemyKi )
 void UCombatUI::StartCombatTime()
 {
 	CombatTime = 0.0f;
-
-
 	
 	UpdateTimer();
 	GetWorld()->GetTimerManager().SetTimer(CombatTimerHandle, this, &UCombatUI::UpdateTimer, 1.0f, true);
 }
-
-
 
 void UCombatUI::ClearCombatTime()
 {
@@ -132,7 +142,6 @@ void UCombatUI::ClearCombatTime()
 	
 	GetWorld()->GetTimerManager().ClearTimer(CombatTimerHandle);
 }
-
 
 void UCombatUI::OnReceiveMessage(FString Msg)
 {
