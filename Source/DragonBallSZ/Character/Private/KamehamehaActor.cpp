@@ -204,8 +204,11 @@ void AKamehamehaActor::FireKamehameha()
 	);
 
 	FRotator LookRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target->GetActorLocation());
-	Kamehameha->SetWorldRotation(LookRot + FRotator(0, 90, 0));
-	FinishDust->SetWorldRotation(LookRot + FRotator(0, 90, 0));
+	FRotator OffsetRot(0.f, 90.f, 0.f);
+	FQuat FinalRot = LookRot.Quaternion() * OffsetRot.Quaternion();
+	Kamehameha->SetWorldRotation(FinalRot);
+	FinishDust->SetWorldRotation(FinalRot);
+	
 	ChargeSphere->DeactivateImmediate();
 
 	Kamehameha->Activate();
