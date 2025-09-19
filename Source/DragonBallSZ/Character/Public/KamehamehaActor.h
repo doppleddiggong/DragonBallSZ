@@ -54,10 +54,10 @@ public:
 	float LoopDuration = 0.37f;
 	FVector BeamVector = FVector(1,1,1);
 	float FirstExplosionTime = 3.9f;
-	float SecondExplosionTime = 8.1f;
+	float SecondExplosionTime = 15.8f;
 	float BeamSpeed = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Charge Speed")
-	float LoopSpeed = 0.0005;
+	float LoopSpeed = 0.001;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Impact Frame")
 	float ImpactTime = 0.11f;
 

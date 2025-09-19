@@ -114,6 +114,10 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 		if (!bFirstExplosion) return;
 
+		// 현재 상태 출력
+		FString StateStr = FString::Printf(TEXT("ElapsedTime: %f"), ElapsedTime);
+		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, StateStr);
+
 		if (ElapsedTime > SecondExplosionTime)
 		{
 			if (BeamVector.X > 0)
@@ -236,6 +240,8 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		EventManager->SendSpecialAttack(Owner, 1);
 		// 발사자 애니메이션 재생
 		InOwner->PlayTypeMontage(EAnimMontageType::Kamehame);
+
+		
 		// 카메하메 애니메이션 총 프레임 딜레이
 		float PlayDelay = InOwner->KamehameMontage->GetPlayLength();
 	}
@@ -249,6 +255,19 @@ void AKamehamehaActor::DelayKamehameFire()
 	//일정 시간후에 발사한다
 	// 발사 !!!!
 	FireKamehameha();
+
+	USkeletalMeshComponent* Mesh = Shooter->GetMesh();
+	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+	UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
+	if(MyAnimBP->Montage_IsPlaying(InOwner->KamehameMontage))
+	{
+		FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(InOwner->KamehameMontage);
+		if (CurrentSection == FName("Default"))
+		{
+			MyAnimBP->Montage_SetPlayRate(InOwner->KamehameMontage, 0.5);
+		}
+	}
+
 	// 발사 시작할때 카메하페마 Shoot이벤트 송신
 	//EventManager->SendSpecialAttack(Owner, 2);
 }
