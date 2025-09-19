@@ -102,8 +102,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Dash")
 	bool bIsDashing = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.05", ClampMax="3.0", AllowPrivateAccess="true"))
-    float DashDuration = 0.5f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Dash", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
+	float DashArrivalTolerance = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Engage", meta=(ClampMin="0.0", AllowPrivateAccess="true"))
     float AttackRange = 150.0f;
@@ -154,4 +154,6 @@ private:
 
 	FVector DashStartLoc;
 	FVector DashTargetLoc;
+
+	float DashDuration = 0.05f;
 };
