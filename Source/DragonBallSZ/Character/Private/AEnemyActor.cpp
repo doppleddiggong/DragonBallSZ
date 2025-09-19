@@ -95,10 +95,20 @@ void AEnemyActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if ( !IsHit || !RushAttackSystem->bIsDashing )
+	if (this->IsCombatStart() == false ||
+		this->IsCombatResult())
 	{
-		this->OnLookTarget();
+		// 전투 시작전
+		// 전투 결과후
+		return;
 	}
+
+	// 연출적 고정 시점에는 Pass
+	if ( IsHolding())
+		return;
+	
+	if ( !IsHit || !RushAttackSystem->bIsDashing )
+		this->OnLookTarget();
 	else if ( RushAttackSystem->ShouldLookAtTarget() )
 		this->OnLookTarget();
 }

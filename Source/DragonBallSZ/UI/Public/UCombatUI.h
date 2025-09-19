@@ -12,7 +12,9 @@ class DRAGONBALLSZ_API UCombatUI : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void StartCombat(const float PlayerKi, const float EnemyKi);
+	void StartCombat(
+	const float PlayerHP, const float EnemyHP,
+	const float PlayerKi, const float EnemyKi);
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -90,7 +92,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
 	float PlayerMaxKi;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
+	float PlayerDamageSum = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Player")
+	int32 PlayerComboCount = 0;
+
 	// 적 체력
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	float EnemyCurHP;
@@ -101,6 +107,12 @@ public:
 	float EnemyCurKi;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	float EnemyMaxKi;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	float EnemyDamageSum = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	int32 EnemyComboCount = 0;
+
 	
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -114,14 +126,10 @@ private:
 	TObjectPtr<class UTextBlock> Text_EnemyCombo;
 
 	
-	float PlayerDamageSum = 0.0f;
-	int32 PlayerComboCount = 0;
 	FTimerHandle PlayerComboResetTimerHandle;
 	FTimerHandle PlayerUIDisplayTimerHandle;
 
 	// 적 관련 변수
-	float EnemyDamageSum = 0.0f;
-	int32 EnemyComboCount = 0;
 	FTimerHandle EnemyComboResetTimerHandle;
 	FTimerHandle EnemyUIDisplayTimerHandle;
 

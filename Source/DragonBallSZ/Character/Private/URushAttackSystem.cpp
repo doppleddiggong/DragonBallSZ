@@ -40,6 +40,24 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	/*
+	 * bIsDashing 상태 제어 및 대시 이동 처리 로직
+	 *
+	 * 1. 시작: OnAttack() -> DashToTarget() 함수가 호출되면서 bIsDashing = true로 설정됩니다.
+	 *    - 이 때, 대시 시작/목표 위치(DashStartLoc/DashTargetLoc)와 대시 시간(DashDuration)이 계산됩니다.
+	 *
+	 * 2. 진행 (매 틱): bIsDashing이 true인 동안 아래 로직이 실행됩니다.
+	 *    - 경과 시간(ElapsedTime)을 계속 누적합니다.
+	 *    - 경과 시간과 총 대시 시간(DashDuration)을 이용해 보간 알파값(Alpha)을 계산합니다.
+	 *    - Lerp를 사용해 시작 위치와 목표 위치 사이를 부드럽게 이동시킵니다.
+	 *
+	 * 3. 종료: 아래 두 조건 중 하나라도 만족하면 OnDashCompleted()가 호출됩니다.
+	 *    - bArrived: 캐릭터가 목표 지점에 도착했을 때
+	 *    - bDurationExpired: 대시 시간이 모두 경과했을 때
+	 *
+	 * 4. 완료: OnDashCompleted() 함수 내에서 bIsDashing = false로 설정되어, 다음 틱부터 이 블록은 실행되지 않습니다.
+	 *    - 이후 대시 몽타주를 중지하고, 대기 중이던 공격 몽타주(PendingMontageIndex)를 재생합니다.
+	 */
 	if (bIsDashing)
 	{
         if (!IsValid(Owner)) // Add this check
@@ -49,14 +67,20 @@ void URushAttackSystem::TickComponent(float DeltaTime, ELevelTick TickType, FAct
             return;
         }
 		ElapsedTime += DeltaTime;
-        
-		const float Alpha = FMath::Clamp(ElapsedTime / DashDuration, 0.0f, 1.0f);
+		
+		const float SafeDashDuration = FMath::Max(DashDuration, KINDA_SMALL_NUMBER);
+		const float Alpha = FMath::Clamp(ElapsedTime / SafeDashDuration, 0.0f, 1.0f);
 		const FVector Location = FMath::Lerp(DashStartLoc, DashTargetLoc, Alpha);
-        
+		
 		Owner->SetActorLocation(Location, true);
-        
-		const float Distance = FVector::Dist(Owner->GetActorLocation(), DashTargetLoc);
-        if ( Distance <= AttackRange || ElapsedTime >= DashDuration )
+		
+		const FVector CurrentLoc = Owner->GetActorLocation();
+		const float DistanceSq = FVector::DistSquared(CurrentLoc, DashTargetLoc);
+		const float ArrivalToleranceSq = FMath::Square(FMath::Max(DashArrivalTolerance, 0.0f));
+
+        const bool bArrived = DistanceSq <= ArrivalToleranceSq;
+        const bool bDurationExpired = ElapsedTime >= SafeDashDuration;
+        if ( bArrived || bDurationExpired )		
             OnDashCompleted();
     }
 
@@ -201,12 +225,6 @@ void URushAttackSystem::OnAttack()
         PRINTLOG(TEXT("OnAttack: Target is invalid. Skipping attack."));
         return;
     }
-
-	// if (0.f < LastAttackTime &&
-	// 	GetWorld()->GetTimeSeconds() < LastAttackTime + MinAttackDelay)
-	// {
-	// 	return;
-	// }
 	
 	if (Owner->IsAttackEnable() == false )
         return;
@@ -322,9 +340,10 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
     if (!IsValid(Target))
     {
         PRINTLOG(TEXT("DashToTarget: Target is invalid. Skipping dash."));
-        PlayMontage(MontageIndex); // Still play the montage if target is invalid, but don't dash
+        PlayMontage(MontageIndex);
         return;
     }
+	
     const FVector OwnerLoc = Owner->GetActorLocation();
     const FVector TargetLoc = Target->GetActorLocation();
 
@@ -351,6 +370,17 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	DashStartLoc = OwnerLoc;
 	DashTargetLoc = TargetDashWorld;
 
+	float Distance = FVector::Dist(DashStartLoc, DashTargetLoc);
+	// 거리 기준 최대/최소값 설정 (원하는 값으로 조정)
+	float MinDistance = 100.f;
+	float MaxDistance = 2000.f;
+	// 거리 비례해서 DashDuration 계산 (0.05 ~ 1 사이)
+	DashDuration = FMath::GetMappedRangeValueClamped(
+		FVector2D(MinDistance, MaxDistance),
+		FVector2D(0.05f, 1.f),
+		Distance
+	);	
+	
 	bIsAttacking = true;
     bIsDashing = true;
 	
