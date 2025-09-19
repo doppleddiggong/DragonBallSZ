@@ -45,8 +45,23 @@ void AKamehamehaActor::BeginPlay()
 void AKamehamehaActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if (LoopDuration > 0.1f)
+	{
+		LoopDuration -= LoopSpeed;
 
+		ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
+	}
+	
 	ElapsedTime += DeltaTime;
+
+	if (Shooter->IsHitting())
+	{
+		if (ChargeSphere) ChargeSphere->DeactivateImmediate();
+		if (Kamehameha) ChargeSphere->DeactivateImmediate();
+		if (Kamehameha) ChargeSphere->DeactivateImmediate();
+		if (FinishDust) ChargeSphere->DeactivateImmediate();
+	}
 
 	if (Kamehameha && Kamehameha->IsActive())
 	{
@@ -201,12 +216,7 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		StartKamehameAnim = true;
 		// 발사 시작
 		ChargeSphere->Activate();
-		if (LoopDuration > 0.1f)
-		{
-			LoopDuration -= LoopSpeed;
-
-			ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
-		}
+		
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
 		InOwner->SetHold(true);
