@@ -8,6 +8,7 @@
 #include "DragonBallSZ.h"
 #include "EAnimMontageType.h"
 #include "AEnergyBlastActor.h"
+#include "UChargeKiSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "URushAttackSystem.h"
@@ -35,9 +36,9 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (Owner->IsHolding() )
+	if (Owner->IsHolding())
 		return;
-	
+
 	if (bDefeated)
 		return; // Return if the Game is Over
 
@@ -68,7 +69,8 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		return;
 	}
 
-	if (bActing) return; // 행동 수행 중에는 선택하지 않는다.
+	if (Owner->RushAttackSystem->bIsAttacking || Owner->ChargeKiSystem->IsActivateState()) return;
+	// 행동 수행 중에는 선택하지 않는다.
 
 	if (bMoving)
 	{
@@ -76,10 +78,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		if (TargetDistance > LongDistance)
 		{
 			// ToDo: LookAt 비활성화
-			// 현재 상태 출력
-			FString distStr = FString::Printf(TEXT("%hhd"), Owner->RushAttackSystem->bIsDashing);
-			// PRINTLOG(TEXT("%s"), *distStr);
-			GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
+
 			BeizerMove();
 			return;
 		}
@@ -89,7 +88,7 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 			bMoving = false;
 			ElapsedMoving = 0;
 		}
-		
+
 		switch (CurrentMove)
 		{
 		case EMoveInputType::Forward:
@@ -139,11 +138,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// Distance between Target
 	TargetDistance = FVector::Dist(Owner->GetActorLocation(), Target->GetActorLocation());
 
-	// 현재 상태 출력
-	FString distStr = FString::Printf(TEXT("%f"), TargetDistance);
-	// PRINTLOG(TEXT("Distance: %s"), *distStr);
-	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
-
 	CurrentTime += DeltaTime;
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
 	CurrentTime = 0;
@@ -187,10 +181,10 @@ void UEnemyFSM::ModifyWeightArray()
 	}))
 	{
 		AttackState->Value = (TargetDistance < MeleeDistance)
-							  ? 75.f
-							  : 2.f;
+			                     ? 75.f
+			                     : 1.f;
 	}
-	
+
 	// Enemy Flying == Player Flying -> Jump: 0.f
 	// Enemy Flying != Player Flying -> Jump: 150.f
 	if (auto* JumpMove = Moves.FindByPredicate([](const auto& Elem)
@@ -212,8 +206,8 @@ void UEnemyFSM::ModifyWeightArray()
 	}))
 	{
 		ApproachMove->Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
-							  ? 10.f
-							  : 70.f;
+			                      ? 10.f
+			                      : 70.f;
 	}
 
 	// Enemy CurrentHP > Player CurrentHP -> Left, Right: 40.f
@@ -223,13 +217,41 @@ void UEnemyFSM::ModifyWeightArray()
 		if (Elem.Key == EMoveInputType::Left || Elem.Key == EMoveInputType::Right)
 		{
 			Elem.Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
-						 ? 40.f
-						 : 70.f;
+				             ? 40.f
+				             : 70.f;
 		}
 	}
 
 	// Enemy CurrentHP < Player CurrentHP -> FireRate: 0.2 -> 0.4
 	Owner->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
+
+	// Enemy CurrentKi < MaxKi / 2 -> Add: 0.3
+	// Enemy CurrentKi > MaxKi / 2 -> Subtract: 0.3
+	if (auto* Found = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
+	{
+		float ChargeValue = Found->Value;
+		if (ChargeValue < 0.f) Found->Value = 0.f;	// Initialize if Charge Weight is under 0.f
+		else if (ChargeValue < 10.f)	// Charge Weight can't exceed 10.f
+		{
+			if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi / 2)
+			{
+				States.Add({EEnemyState::Charge, 3.f});
+			}
+			if (Owner->StatSystem->CurKi > Target->StatSystem->MaxKi / 2)
+			{
+				States.Add({EEnemyState::Charge, -3.f});
+			}
+		}
+	}
+
+	// Enemy CurrentKi < MaxKi / 3
+	if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi / 3)
+	{
+		if (auto* Found = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
+		{
+			Found->Value = 10.f;
+		}
+	}
 }
 
 EEnemyState UEnemyFSM::SelectWeightedRandomState()
@@ -315,31 +337,36 @@ void UEnemyFSM::Move()
 
 void UEnemyFSM::Attack()
 {
-    bActing = true;
+	bActing = true;
 
-    Owner->RushAttackSystem->OnAttack();
+	Owner->RushAttackSystem->OnAttack();
 
-    // 대상의 비행 상태에 따라 소유자의 이동 모드를 동기화합니다.
-    const EMovementMode OwnerMoveMode = Owner->GetCharacterMovement()->MovementMode;
-    const EMovementMode TargetMoveMode = Target->GetCharacterMovement()->MovementMode;
+	// 대상의 비행 상태에 따라 소유자의 이동 모드를 동기화합니다.
+	const EMovementMode OwnerMoveMode = Owner->GetCharacterMovement()->MovementMode;
+	const EMovementMode TargetMoveMode = Target->GetCharacterMovement()->MovementMode;
 
-    const bool bOwnerIsFlying = (OwnerMoveMode == EMovementMode::MOVE_Flying);
-    const bool bTargetIsFlying = (TargetMoveMode == EMovementMode::MOVE_Flying);
+	const bool bOwnerIsFlying = (OwnerMoveMode == EMovementMode::MOVE_Flying);
+	const bool bTargetIsFlying = (TargetMoveMode == EMovementMode::MOVE_Flying);
 
-    // 소유자와 대상의 비행 상태가 다를 경우
-    if (bOwnerIsFlying != bTargetIsFlying)
-    {
-        const EMovementMode ResultMode = bTargetIsFlying ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking;
-        Owner->GetCharacterMovement()->SetMovementMode(ResultMode);
-    }
+	// 소유자와 대상의 비행 상태가 다를 경우
+	if (bOwnerIsFlying != bTargetIsFlying)
+	{
+		const EMovementMode ResultMode = bTargetIsFlying ? EMovementMode::MOVE_Flying : EMovementMode::MOVE_Walking;
+		Owner->GetCharacterMovement()->SetMovementMode(ResultMode);
+	}
 
-    bActing = false;
+	bActing = false;
 }
 
 void UEnemyFSM::Charge()
 {
-	bActing = true;
-	PRINTINFO();
+	Owner->ChargeKiSystem->ActivateEffect(true);
+	float ChargeTime = FMath::RandRange(1.5f, 3.9f);
+	FTimerHandle ChargeTimer;
+	GetWorld()->GetTimerManager().SetTimer(ChargeTimer, [this]()
+	{
+		Owner->ChargeKiSystem->ActivateEffect(false);
+	}, ChargeTime, false);
 }
 
 void UEnemyFSM::Special()
@@ -370,7 +397,7 @@ void UEnemyFSM::EnemyLose()
 
 void UEnemyFSM::SpawnEnergyBlast()
 {
-	if (!Owner->IsBlastShootEnable() )
+	if (!Owner->IsBlastShootEnable())
 	{
 		PRINT_STRING(TEXT("Enemy Is ShootBlastDisable!!!!"));
 		return;
@@ -378,7 +405,7 @@ void UEnemyFSM::SpawnEnergyBlast()
 
 	Owner->UseBlast();
 	Owner->PlayTypeMontage(EAnimMontageType::Blast);
-	
+
 	FActorSpawnParameters Params;
 	Params.Owner = Owner;
 	Params.Instigator = Owner;
@@ -397,7 +424,7 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 
 	SpawnEnergyBlast();
 	Owner->PlaySoundAttack();
-	
+
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()
 	{
@@ -445,8 +472,9 @@ FVector UEnemyFSM::Bezier(const FVector Pa, const FVector ControlPoint, const FV
 void UEnemyFSM::BeizerMove()
 {
 	// Fly
-	if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying) Owner->GetCharacterMovement()->
-	                                                                         SetMovementMode(MOVE_Flying);
+	if (Owner->GetCharacterMovement()->MovementMode != MOVE_Flying)
+		Owner->GetCharacterMovement()->
+		       SetMovementMode(MOVE_Flying);
 
 	CumulativeDistance += MoveSpeed * GetWorld()->GetDeltaSeconds();
 	float t = FindT(CumulativeDistance);

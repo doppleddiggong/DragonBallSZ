@@ -70,7 +70,7 @@ public:
 		{EEnemyState::Idle, 1.f},
 		{EEnemyState::Move, 10.f},
 		{EEnemyState::Attack, 0.f},
-		{EEnemyState::Charge, 0.f},
+		{EEnemyState::Charge, 2.f},
 		{EEnemyState::Special, 0.f},
 	};
 	EEnemyState CurrentState = EEnemyState::Idle;
