@@ -168,12 +168,6 @@ void APlayerActor::OnAvoid(AActor* Target, bool bState)
 		return;
 }
 
-void APlayerActor::OnPowerCharge(AActor* Target, bool bState)
-{
-	if ( this != Target )
-		return;
-}
-
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 {
 	if ( !IsMoveEnable() )

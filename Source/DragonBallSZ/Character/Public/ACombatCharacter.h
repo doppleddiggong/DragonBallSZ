@@ -384,6 +384,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
 	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
+	UPROPERTY()
+	TObjectPtr<UMaterialInterface> OverlayMaterial;
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> OverlayMID;
+	
 protected:
 	UPROPERTY()
 	class UDBSZEventManager*	EventManager;
