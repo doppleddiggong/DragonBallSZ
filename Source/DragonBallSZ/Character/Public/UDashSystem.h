@@ -15,6 +15,9 @@ class DRAGONBALLSZ_API UDashSystem : public UActorComponent
 public:
 	UDashSystem();
 
+protected:
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 public:
 	UFUNCTION(BlueprintCallable, Category="Dash")
 	void InitSystem(class ACombatCharacter* InOwner, UNiagaraSystem* InDashNiagaraSystem);
@@ -37,6 +40,9 @@ public:
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
 	class UNiagaraComponent* NiagaraComp = nullptr;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
+	class UNiagaraComponent* DashWindComp = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Dash")
 	float DashActivateValue = 1000.f;
