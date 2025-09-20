@@ -129,7 +129,7 @@ public:
 
 private:
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UAnimMontage>> AttackMontages;

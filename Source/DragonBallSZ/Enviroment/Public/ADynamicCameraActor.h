@@ -77,7 +77,9 @@ public:// Event-Delegate
 	void OnPowerCharge(AActor* Target, bool bState);
 
 private:
-	class UDBSZEventManager* EventManager;
+	UPROPERTY()
+	TObjectPtr<UDBSZEventManager> EventManager;
+	
 	bool bIsCameraResetting = false;
 
 public:

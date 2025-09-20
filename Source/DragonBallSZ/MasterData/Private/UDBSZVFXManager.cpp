@@ -6,22 +6,33 @@
 #include "DragonBallSZ.h"
 #include "UVFXDataAsset.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Shared/FComponentHelper.h"
 
 #define VFX_DATA_PATH TEXT("/Game/CustomContents/MasterData/VFX_Data.VFX_Data")
+
+UDBSZVFXManager::UDBSZVFXManager()
+{
+	if (auto LoadedAsset = FComponentHelper::LoadAsset<UVFXDataAsset>(VFX_DATA_PATH))
+	{
+		VFXAsset = LoadedAsset;
+		VFXDataMap = VFXAsset->VFXData;
+	}
+}
 
 void UDBSZVFXManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	FSoftObjectPath AssetPath(VFX_DATA_PATH);
-	UVFXDataAsset* LoadedAsset = Cast<UVFXDataAsset>(StaticLoadObject(UVFXDataAsset::StaticClass(), nullptr, *AssetPath.ToString()));
-
-	if (LoadedAsset)
-	{
-		VFXAsset = LoadedAsset;
-		VFXDataMap = VFXAsset->VFXData;
-	}
-	else
+	// FSoftObjectPath AssetPath(VFX_DATA_PATH);
+	// UVFXDataAsset* LoadedAsset = Cast<UVFXDataAsset>(StaticLoadObject(UVFXDataAsset::StaticClass(), nullptr, *AssetPath.ToString()));
+	//
+	// if (LoadedAsset)
+	// {
+	// 	VFXAsset = LoadedAsset;
+	// 	VFXDataMap = VFXAsset->VFXData;
+	// }
+	// else
+	if (!VFXAsset)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load VFXDataAsset from path"));
 	}

@@ -18,6 +18,8 @@ class DRAGONBALLSZ_API UDBSZVFXManager : public UGameInstanceSubsystem
 public:
 	DEFINE_SUBSYSTEM_GETTER_INLINE(UDBSZVFXManager);
 
+	UDBSZVFXManager();
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable, Category="VFX")

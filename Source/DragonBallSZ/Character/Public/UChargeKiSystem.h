@@ -36,13 +36,13 @@ private:
 	
 public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category="ChargeKi")
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category="ChargeKi")
-	class UNiagaraComponent* NiagaraComp = nullptr;
+	TObjectPtr<class UNiagaraComponent> NiagaraComp = nullptr;
 
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
 	float ChargeDelay = 0.1f;

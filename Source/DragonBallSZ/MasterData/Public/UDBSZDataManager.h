@@ -40,6 +40,8 @@ private:
 	void Clear_HitStopTable();
 	void LoadData_HitStopTable();
 	bool bLoadHitStop = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<EAttackPowerType, FHitStopData> HitStopCache;
 #pragma endregion HIT_STOP
 
@@ -56,6 +58,8 @@ private:
 	void Clear_KnockbackTable();
 	void LoadData_KnockbackTable();
 	bool bLoadKnockback = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<EAttackPowerType, FKnockbackData> KnockbackCache;
 #pragma endregion KNOCKBACK
 
@@ -74,6 +78,8 @@ private:
 	void Clear_CharacterInfoData();
 	void LoadData_CharacterInfoData();
 	bool bLoadCharacterInfo = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<ECharacterType, FCharacterInfoData> CharacterInfoCache;
 #pragma endregion CHARACTER_DATA
 };

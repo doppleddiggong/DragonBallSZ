@@ -66,7 +66,7 @@ public:
 	bool bCombatResult = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Event" )
-	class UDBSZEventManager* EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 
 	
 public:
@@ -78,7 +78,7 @@ public:
 	void PlaySoundWin();
 
 	UPROPERTY()
-	class ULevelSequence* PlayingSequence;
+	TObjectPtr<class ULevelSequence> PlayingSequence;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	float CombatStartDelay = 2.0f;
@@ -97,5 +97,5 @@ public:
 	class ULevelSequence* VegeWinSeq;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	AActor* GokuWinActor;
+	TObjectPtr<class AActor> GokuWinActor;
 };

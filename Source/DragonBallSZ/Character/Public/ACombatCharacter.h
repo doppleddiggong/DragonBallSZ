@@ -391,7 +391,7 @@ public:
 	
 protected:
 	UPROPERTY()
-	class UDBSZEventManager*	EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TEnumAsByte<EMovementMode>  PrevMoveMode;
@@ -400,5 +400,5 @@ protected:
 
 
 	UPROPERTY()
-	class AKamehamehaActor* KamehamehaActor = nullptr;
+	TObjectPtr<class AKamehamehaActor> KamehamehaActor;
 };

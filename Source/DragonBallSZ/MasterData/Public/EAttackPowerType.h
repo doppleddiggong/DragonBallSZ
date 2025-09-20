@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿
+#pragma once
 
 UENUM(BlueprintType)
 enum class EAttackPowerType : uint8

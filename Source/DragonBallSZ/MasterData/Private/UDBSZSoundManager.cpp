@@ -3,17 +3,15 @@
 #include "UDBSZSoundManager.h"
 #include "USoundData.h"
 #include "Kismet/GameplayStatics.h"
+#include "Shared/FComponentHelper.h"
 
 #define SOUND_DATA_PATH TEXT("/Game/CustomContents/MasterData/Sound_Data.Sound_Data")
 
-void UDBSZSoundManager::Initialize(FSubsystemCollectionBase& Collection)
+
+UDBSZSoundManager::UDBSZSoundManager()
 {
-	Super::Initialize(Collection);
-
-	FSoftObjectPath AssetPath(SOUND_DATA_PATH);
-	USoundData* LoadedAsset = Cast<USoundData>(StaticLoadObject(USoundData::StaticClass(), nullptr, *AssetPath.ToString()));
-
-	if (LoadedAsset)
+	// FComponentHelper를 사용해 생성자에서 안전하게 에셋을 로드합니다.
+	if (auto LoadedAsset = FComponentHelper::LoadAsset<USoundData>(SOUND_DATA_PATH))
 	{
 		for (const auto& Pair : LoadedAsset->SoundData)
 		{
@@ -21,13 +19,41 @@ void UDBSZSoundManager::Initialize(FSubsystemCollectionBase& Collection)
 			SoundData = SoundAsset->SoundData;
 			
 			TSoftObjectPtr<USoundBase> SoundAssetPtr = Pair.Value;
-			if (!SoundAssetPtr.IsNull())
-			{
+			if (!SoundAssetPtr.IsNull()) {
 				SoundData.Add(Pair.Key, SoundAssetPtr.LoadSynchronous());
 			}
 		}
 	}
 	else
+	{
+		// 실패 시, 에디터 실행 시 Output Log에 에러를 출력합니다.
+		UE_LOG(LogTemp, Error, TEXT("UDBSZSoundManager failed to load USoundData at path: %s"), SOUND_DATA_PATH);
+	}
+}
+
+void UDBSZSoundManager::Initialize(FSubsystemCollectionBase& Collection)
+{
+	Super::Initialize(Collection);
+
+	// FSoftObjectPath AssetPath(SOUND_DATA_PATH);
+	// USoundData* LoadedAsset = Cast<USoundData>(StaticLoadObject(USoundData::StaticClass(), nullptr, *AssetPath.ToString()));
+	//
+	// if (LoadedAsset)
+	// {
+	// 	for (const auto& Pair : LoadedAsset->SoundData)
+	// 	{
+	// 		SoundAsset = LoadedAsset;
+	// 		SoundData = SoundAsset->SoundData;
+	// 		
+	// 		TSoftObjectPtr<USoundBase> SoundAssetPtr = Pair.Value;
+	// 		if (!SoundAssetPtr.IsNull())
+	// 		{
+	// 			SoundData.Add(Pair.Key, SoundAssetPtr.LoadSynchronous());
+	// 		}
+	// 	}
+	// }
+	// else
+	if (!SoundAsset)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load SoundDataAsset from path"));
 	}

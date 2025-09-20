@@ -16,6 +16,8 @@ class DRAGONBALLSZ_API UDBSZSoundManager : public UGameInstanceSubsystem
 public:
 	DEFINE_SUBSYSTEM_GETTER_INLINE(UDBSZSoundManager);
 
+	UDBSZSoundManager();
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable, Category="Sound")

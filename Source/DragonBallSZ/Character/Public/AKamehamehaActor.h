@@ -84,5 +84,5 @@ public:
 	void ClearKamehame();
 	
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 };

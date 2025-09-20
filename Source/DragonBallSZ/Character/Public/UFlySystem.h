@@ -55,7 +55,7 @@ public:
 	float DownstreamDuration = 1.5f;
 
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Fly")
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Fly")
 	float AlmostDist = 50.0f;
@@ -73,5 +73,5 @@ private:
 
 
 	UPROPERTY()
-	class UDBSZEventManager* EventManager;
+	TObjectPtr<class UDBSZEventManager> EventManager;
 };
