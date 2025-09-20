@@ -2,6 +2,8 @@
 
 #include "ACombatCharacter.h"
 
+#include "AEnergyBlastActor.h"
+#include "AKamehamehaActor.h"
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
@@ -68,7 +70,7 @@ void ACombatCharacter::BeginPlay()
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
-
+	EventManager->OnPowerCharge.AddDynamic(this, &ACombatCharacter::OnPowerCharge);
 
 	BindMontageDelegates(AnimInstance);
  }
@@ -80,7 +82,11 @@ void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	bDelegatesBound = false;
 
 	if (EventManager)
+	{
 		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
+		EventManager->OnPowerCharge.RemoveDynamic(this, &ACombatCharacter::OnPowerCharge);
+	}
+
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -115,6 +121,14 @@ void ACombatCharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchingPo
 		EventManager->SendMessage(GameEvent::KameShoot.ToString());
 }
 
+FVector ACombatCharacter::GetKamehameHandLocation() const
+{
+	const FVector LeftHandLoc = LeftHandComp->GetComponentLocation();
+	const FVector RightHandLoc = RightHandComp->GetComponentLocation();
+
+	return (LeftHandLoc + RightHandLoc) / 2.0f;
+}
+
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
 	if ( this->IsHolding() )
@@ -130,7 +144,7 @@ bool ACombatCharacter::IsControlEnable_Implementation()
 	if ( IsHit )
 		return false;
 
-	if ( StatSystem->IsDead )
+	if ( StatSystem->IsDead() )
 		return false;
 
 	return true;
@@ -144,6 +158,9 @@ bool ACombatCharacter::IsMoveEnable_Implementation()
 	if ( IsAttackIng() )
 		return false;
 
+	if ( IsChargeKi() )
+		return false;
+
 	return true;
 }
 
@@ -155,6 +172,10 @@ bool ACombatCharacter::IsAttackEnable_Implementation()
 	return true;
 }
 
+bool ACombatCharacter::IsDead_Implementation()
+{
+	return StatSystem->IsDead();
+}
 
 bool ACombatCharacter::IsHitting_Implementation()
 {
@@ -165,6 +186,7 @@ bool ACombatCharacter::IsAttackIng_Implementation()
 {
 	return RushAttackSystem->IsAttackIng();
 }
+
 
 bool ACombatCharacter::IsInSight(const AActor* Other) const
 {
@@ -214,8 +236,8 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 	{
-		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->CurHP, StatSystem->MaxHP);
-		EventManager->SendUpdateKi(IsPlayer(), StatSystem->CurKi, StatSystem->MaxKi);
+		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->GetCurHP(), StatSystem->GetMaxHP());
+		EventManager->SendUpdateKi(IsPlayer(), StatSystem->GetCurKi(), StatSystem->GetMaxKi());
 
 		bIsCombatStart = true;
 	}
@@ -234,6 +256,23 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 		// PRINTLOG(TEXT("ENEMY IS PLAYER"));
 	}
 }
+
+void ACombatCharacter::OnPowerCharge(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+
+	if ( bState )
+	{
+		// 차지 이펙트 White 껴!
+	
+	}
+	else
+	{
+		// 차지 이펙트 White 꺼!
+	}
+}
+
 
 void ACombatCharacter::OnLookTarget_Implementation()
 {
@@ -262,7 +301,11 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
-	const auto AttackPowerType = Cast<const UDBSZDamageType>(DamageType)->AttackPowerType;
+	EAttackPowerType AttackPowerType = EAttackPowerType::Normal;
+	if (const UDBSZDamageType* DBSZDamageType = Cast<const UDBSZDamageType>(DamageType))
+	{
+		AttackPowerType = DBSZDamageType->AttackPowerType;
+	}
 	this->PlaySoundHit();
 
 	UDBSZVFXManager::Get(GetWorld())->ShowVFXAttackType(
@@ -277,6 +320,8 @@ void ACombatCharacter::OnDamage(
 	EventManager->SendDamage(IsPlayer(), Damage);
 
 	RushAttackSystem->ResetComboCount();
+
+	
 	
 	if ( ChargeKiSystem->IsActivateState() )
 	{
@@ -284,7 +329,12 @@ void ACombatCharacter::OnDamage(
 		ChargeKiSystem->ActivateEffect(false);
 	}
 	
-	
+	if ( IsShootKamehame() || IsValid(KamehamehaActor) )
+	{
+		// 카메하메 파 캔슬!
+		this->ClearKamehame();
+	}
+
 	if ( IsDie )
 	{
 		FName SendEventType = IsPlayer() ? GameEvent::EnemyWin : GameEvent::PlayerWin;
@@ -362,6 +412,55 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 	}
 }
 
+void ACombatCharacter::EnergyBlastShoot()
+{
+	EventManager->SendCameraShake(this, EAttackPowerType::Small );
+	this->PlaySoundAttack();
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+
+	this->UseBlast();
+	this->PlayTypeMontage(EAnimMontageType::Blast);
+	LastBlastShotTime = GetWorld()->GetTimeSeconds();
+
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		EnergyBlastFactory,
+		this->GetBodyPart(EBodyPartType::Hand_R)->GetComponentTransform(),
+		Params
+	);
+}
+
+void ACombatCharacter::KamehameShoot()
+{
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+	
+	KamehamehaActor = GetWorld()->SpawnActor<AKamehamehaActor>(
+		KamehamehaFactory,
+		this->GetActorTransform(),
+		Params
+	);
+
+	if ( IsValid(KamehamehaActor))
+	{
+		this->SetShootKamehame(true, KamehamehaActor);
+		
+		KamehamehaActor->StartKamehame(this, TargetActor);
+	}
+}
+
+void ACombatCharacter::ClearKamehame()
+{
+	if ( IsValid(KamehamehaActor) )
+	{
+		KamehamehaActor->ClearKamehame();
+		this->SetShootKamehame(false, nullptr);
+	}
+}
+
 bool ACombatCharacter::IsBlastShootEnable()
 {
 	if ( !IsControlEnable() )
@@ -372,7 +471,7 @@ bool ACombatCharacter::IsBlastShootEnable()
 	if (NextAvailableTime > Now )
 		return false;
 	
-	return StatSystem->CurKi > StatSystem->BlastNeedKi;
+	return StatSystem->IsBlastShotEnable();
 }
 
 
@@ -381,7 +480,7 @@ bool ACombatCharacter::IsKamehameEnable_Implementation()
 	if ( !IsControlEnable() )
 		return false;
 
-	return StatSystem->CurKi > StatSystem->KamehameNeedKi;
+	return StatSystem->IsKamehameEnable();
 }
 
 void ACombatCharacter::PlayTypeMontage(const EAnimMontageType Type)
@@ -458,7 +557,6 @@ void ACombatCharacter::StopTargetMontage(const EAnimMontageType Type, const floa
 	
 	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
 }
-
 
 void ACombatCharacter::PlaySoundAttack()
 {

@@ -2,17 +2,19 @@
 
 
 #include "AKamehamehaActor.h"
-#include "AEnemyActor.h"
-#include "APlayerActor.h"
-#include "EAnimMontageType.h"
-#include "EngineUtils.h"
-#include "EVFXType.h"
-#include "GameEvent.h"
-#include "NiagaraComponent.h"
-#include "NiagaraFunctionLibrary.h"
+
+#include "ACombatCharacter.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZFunctionLibrary.h"
-#include "UDBSZVFXManager.h"
+#include "EAnimMontageType.h"
+
+#include "EngineUtils.h"
+#include "GameEvent.h"
+
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+
+#include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -64,10 +66,32 @@ void AKamehamehaActor::OnRecvMessage(FString InMsg)
 	}
 }
 
+void AKamehamehaActor::ClearKamehame()
+{
+	if (IsValid(ChargeSphere))
+		ChargeSphere->DeactivateImmediate();
+
+	if (IsValid(Kamehameha))
+		Kamehameha->DeactivateImmediate();
+
+	if (IsValid(FinishDust))
+		FinishDust->DeactivateImmediate();
+}
+
 void AKamehamehaActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
+	ElapsedTime += DeltaTime;
+
+	// if (Shooter->IsHitting())
+	// {
+	// 	if (ChargeSphere) ChargeSphere->DeactivateImmediate();
+	// 	if (Kamehameha) ChargeSphere->DeactivateImmediate();
+	// 	if (Kamehameha) ChargeSphere->DeactivateImmediate();
+	// 	if (FinishDust) ChargeSphere->DeactivateImmediate();
+	// }
+
 	if (LoopDuration > 0.1f)
 	{
 		LoopDuration -= LoopSpeed;
@@ -75,14 +99,13 @@ void AKamehamehaActor::Tick(float DeltaTime)
 		ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
 	}
 	
-	ElapsedTime += DeltaTime;
-
-	if (Shooter->IsHitting())
+	
+	if ( bTrackingOwnerHand )
 	{
-		if (ChargeSphere) ChargeSphere->DeactivateImmediate();
-		if (Kamehameha) ChargeSphere->DeactivateImmediate();
-		if (Kamehameha) ChargeSphere->DeactivateImmediate();
-		if (FinishDust) ChargeSphere->DeactivateImmediate();
+		if ( IsValid(Shooter))
+		{
+			this->SetActorLocation( Shooter->GetKamehameHandLocation());
+		}
 	}
 
 	if (Kamehameha && Kamehameha->IsActive())
@@ -228,33 +251,31 @@ void AKamehamehaActor::OnKamehamehaFinished(class UNiagaraComponent* PSystem)
 
 void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatCharacter* InKamehameTarget)
 {
-	this->InOwner = InKamehameOwner;
-	this->InTarget = InKamehameTarget;
-	Shooter = InOwner;
-	Target = InTarget;
+	this->Shooter = InKamehameOwner;
+	this->Target = InKamehameTarget;
 
 	{
 		StartKamehameAnim = true;
+		bTrackingOwnerHand = true;
 		// 발사 시작
 		ChargeSphere->Activate();
 		
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
-		InOwner->SetHold(true);
-		InTarget->SetHold(true);
+		Shooter->SetHold(true);
+		Target->SetHold(true);
+
+		Shooter->UseKamehame();
 
 		// 발사 준비 시작
 		EventManager->SendSpecialAttack(Owner, 1);
 		// 발사자 애니메이션 재생
-		InOwner->PlayTypeMontage(EAnimMontageType::Kamehame);
+		Shooter->PlayTypeMontage(EAnimMontageType::Kamehame);
 
 		
-		// 카메하메 애니메이션 총 프레임 딜레이
-		float PlayDelay = InOwner->KamehameMontage->GetPlayLength();
+		// // 카메하메 애니메이션 총 프레임 딜레이
+		// float PlayDelay = InOwner->KamehameMontage->GetPlayLength();
 	}
-
-	//일정 시간후에 발사한다
-	// DelayKamehameFire();
 }
 
 void AKamehamehaActor::DelayKamehameFire()
@@ -263,15 +284,18 @@ void AKamehamehaActor::DelayKamehameFire()
 	// 발사 !!!!
 	FireKamehameha();
 
-	USkeletalMeshComponent* Mesh = Shooter->GetMesh();
-	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
-	UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
-	if(MyAnimBP->Montage_IsPlaying(InOwner->KamehameMontage))
+	// USkeletalMeshComponent* Mesh = Shooter->GetMesh();
+	// UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+	// UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
+	if(auto MyAnimBP = Shooter->GetAnimInstance() )
 	{
-		FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(InOwner->KamehameMontage);
-		if (CurrentSection == FName("Default"))
+		if ( MyAnimBP->Montage_IsPlaying(Shooter->KamehameMontage) )
 		{
-			MyAnimBP->Montage_SetPlayRate(InOwner->KamehameMontage, 0.5);
+			FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(Shooter->KamehameMontage);
+			if (CurrentSection == FName("Default"))
+			{
+				MyAnimBP->Montage_SetPlayRate(Shooter->KamehameMontage, 0.5);
+			}
 		}
 	}
 
@@ -285,10 +309,13 @@ void AKamehamehaActor::EndKamehame()
 		return;
 
 	StartKamehameAnim = false;
+	bTrackingOwnerHand = false;
 
 	// 발사 종료 3
 	//발사 시작할때 카메하페마 Shoot이벤트 송신
 	//EventManager->SendSpecialAttack(Owner, 3);
-	InOwner->SetHold(false);
-	InTarget->SetHold(false);
+	Shooter->SetHold(false);
+	Target->SetHold(false);
+
+	Shooter->ClearKamehame();
 }

@@ -128,10 +128,8 @@ void ACombatLevelScript::ShowCombatUI(const ESlateVisibility InSetVisiblity)
 	if( InSetVisiblity == ESlateVisibility::Visible )
 	{
 		CombatUI->StartCombat(
-		PlayerActor->StatSystem->MaxHP,
-		EnemyActor->StatSystem->MaxHP,
-		PlayerActor->StatSystem->MaxKi,
-		EnemyActor->StatSystem->MaxKi );
+		PlayerActor->MaxHP(),EnemyActor->MaxHP(),
+		PlayerActor->MaxKi(), EnemyActor->MaxKi() );
 	}
 	else if( InSetVisiblity == ESlateVisibility::Hidden )
 		CombatUI->ClearCombatTime();

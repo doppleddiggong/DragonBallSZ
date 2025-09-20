@@ -35,9 +35,9 @@ public:
 	TObjectPtr<class APostProcessVolume> PPVolume;
 	
 	UPROPERTY()
-	TObjectPtr<class ACombatCharacter> Target;
+	TObjectPtr<class ACombatCharacter> Shooter;
 	UPROPERTY()
-	TObjectPtr<ACombatCharacter> Shooter;
+	TObjectPtr<class ACombatCharacter> Target;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -66,21 +66,11 @@ public:
 	UFUNCTION()
 	void OnKamehamehaFinished(class UNiagaraComponent* PSystem);
 	
-	
-
-
-
-
-
 
 public:
 	bool StartKamehameAnim = false;
+	bool bTrackingOwnerHand = false;
 
-	UPROPERTY()
-	ACombatCharacter* InOwner;
-	UPROPERTY()
-	ACombatCharacter* InTarget;
-	
 	UFUNCTION(BlueprintCallable, Category="Player")
 	void StartKamehame(class ACombatCharacter* InKamehameOwner, class ACombatCharacter* InKamehameTarget);
 
@@ -90,6 +80,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Player")
 	void EndKamehame();
 
+	UFUNCTION(BlueprintCallable)
+	void ClearKamehame();
+	
 	UPROPERTY()
 	class UDBSZEventManager* EventManager;
 };

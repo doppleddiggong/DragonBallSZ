@@ -5,14 +5,14 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 
-#include "DragonBallSZ.h"
-#include "EAnimMontageType.h"
-#include "AEnergyBlastActor.h"
 #include "UChargeKiSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "URushAttackSystem.h"
+#include "DragonBallSZ.h"
+
 #include "VectorTypes.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -56,13 +56,13 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		return;
 	}
 
-	if (Target->StatSystem->IsDead)
+	if (Target->IsDead())
 	{
 		void EnemyWin();
 		bDefeated = true;
 		return;
 	}
-	else if (Owner->StatSystem->IsDead)
+	else if (Owner->IsDead())
 	{
 		void EnemyLose();
 		bDefeated = true;
@@ -205,7 +205,7 @@ void UEnemyFSM::ModifyWeightArray()
 		return Elem.Key == EMoveInputType::Backward;
 	}))
 	{
-		ApproachMove->Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
+		ApproachMove->Value = (Owner->CurHP() > Target->CurHP())
 			                      ? 10.f
 			                      : 60.f;
 	}
@@ -216,14 +216,14 @@ void UEnemyFSM::ModifyWeightArray()
 	{
 		if (Elem.Key == EMoveInputType::Left || Elem.Key == EMoveInputType::Right)
 		{
-			Elem.Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
+			Elem.Value = (Owner->CurHP() > Target->CurHP())
 				             ? 40.f
 				             : 70.f;
 		}
 	}
 
 	// Enemy CurrentHP < Player CurrentHP -> FireRate: 0.2 -> 0.4
-	Owner->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
+	Owner->CurHP() > Target->CurHP() ? FireRate = 0.2f : FireRate = 0.4f;
 
 	if (auto* Charge = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
 	{
@@ -231,12 +231,12 @@ void UEnemyFSM::ModifyWeightArray()
 		// Enemy CurrentKi > MaxKi * 0.4 -> Subtract: 0.3
 		if (Charge->Value < 10.f) // Charge Weight can't exceed 10.f
 		{
-			if (Owner->StatSystem->CurKi <= Target->StatSystem->MaxKi * 0.4f)
+			if (Owner->CurKi() <= Target->MaxKi(0.4f))
 			{
 				Charge->Value = Charge->Value + 2.f;
 				if (Charge->Value >= 10.f) Charge->Value = 0.f;
 			}
-			else if (Owner->StatSystem->CurKi > Target->StatSystem->MaxKi * 0.4f)
+			else if (Owner->CurKi() > Target->MaxKi(0.4f))
 			{
 				Charge->Value = Charge->Value - 2.f;
 				if (Charge->Value <= 0.f) Charge->Value = 0.f; // Initialize if Charge Weight is under 0.f
@@ -244,7 +244,7 @@ void UEnemyFSM::ModifyWeightArray()
 		}
 
 		// Enemy CurrentKi < MaxKi * 0.2
-		if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi * 0.2f)
+		if (Owner->CurKi() < Target->MaxKi(0.2f))
 		{
 			Charge->Value = 10.f;
 		}
@@ -253,17 +253,18 @@ void UEnemyFSM::ModifyWeightArray()
 		if (TargetDistance > MeleeDistance)
 		{
 			Charge->Value = Charge->Value + 2.f;
-			if (Charge->Value >= 10.f) Charge->Value = 0.f;
+			if (Charge->Value >= 10.f)
+				Charge->Value = 0.f;
 		}
 
 		// Enemy CurrentKi > MaxKi * 0.6
-		if (Owner->StatSystem->CurKi >= Target->StatSystem->MaxKi * 0.6f)
+		if (Owner->CurKi() >= Target->MaxKi(0.6f))
 		{
 			Charge->Value = 2.f;
 		}
 
 		// Enemy CurrentKi == MaxKi * 0.8
-		if (Owner->StatSystem->CurKi >= Target->StatSystem->MaxKi * 0.8f)
+		if (Owner->CurKi() >= Target->MaxKi(0.8f))
 		{
 			Charge->Value = 0.f;
 		}
@@ -419,19 +420,21 @@ void UEnemyFSM::SpawnEnergyBlast()
 		PRINT_STRING(TEXT("Enemy Is ShootBlastDisable!!!!"));
 		return;
 	}
-
-	Owner->UseBlast();
-	Owner->PlayTypeMontage(EAnimMontageType::Blast);
-
-	FActorSpawnParameters Params;
-	Params.Owner = Owner;
-	Params.Instigator = Owner;
-
-	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		Owner->EnergyBlastFactory,
-		Owner->GetActorTransform(),
-		Params
-	);
+	Owner->EnergyBlastShoot();
+	
+	//
+	// Owner->UseBlast();
+	// Owner->PlayTypeMontage(EAnimMontageType::Blast);
+	//
+	// FActorSpawnParameters Params;
+	// Params.Owner = Owner;
+	// Params.Instigator = Owner;
+	//
+	// GetWorld()->SpawnActor<AEnergyBlastActor>(
+	// 	Owner->EnergyBlastFactory,
+	// 	Owner->GetBodyPart(EBodyPartType::Hand_R)->GetComponentTransform(),
+	// 	Params
+	// );
 }
 
 void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
@@ -440,7 +443,6 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 		return;
 
 	SpawnEnergyBlast();
-	Owner->PlaySoundAttack();
 
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()

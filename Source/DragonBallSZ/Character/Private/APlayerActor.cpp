@@ -20,10 +20,7 @@
 // Shared
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
-#include "AEnergyBlastActor.h"
-#include "AKamehamehaActor.h"
 
-#include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -82,7 +79,7 @@ void APlayerActor::BeginPlay()
 	CameraShakeSystem->InitSystem(this);	
 
 	// ActorComponent 초기화
-	StatSystem->InitStat(true);
+	StatSystem->InitStat(true, ECharacterType::Songoku);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
@@ -98,9 +95,6 @@ void APlayerActor::BeginPlay()
 	EventManager->OnSpecialAttack.AddDynamic(this, &APlayerActor::OnSpecialAttack);
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
-	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
-	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
-	EventManager->SendUpdateKi(true, StatSystem->CurKi, StatSystem->MaxKi);
 }
 
 void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -115,7 +109,6 @@ void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	EventManager->OnSpecialAttack.RemoveDynamic(this, &APlayerActor::OnSpecialAttack);
 	EventManager->OnGuard.RemoveDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.RemoveDynamic(this, &APlayerActor::OnAvoid);
-	EventManager->OnPowerCharge.RemoveDynamic(this, &APlayerActor::OnPowerCharge);
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -288,23 +281,7 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 	if (!IsBlastShootEnable() )
 		return;
 	
-	EventManager->SendCameraShake(this, EAttackPowerType::Small );
-	
-	this->PlaySoundAttack();
-	
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.Instigator = this;
-
-	this->UseBlast();
-	this->PlayTypeMontage(EAnimMontageType::Blast);
-	LastBlastShotTime = GetWorld()->GetTimeSeconds();
-
-	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		EnergyBlastFactory,
-		this->GetActorTransform(),
-		Params
-	);
+	this->EnergyBlastShoot();
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
@@ -312,15 +289,5 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 	if ( !IsKamehameEnable() )
 		return;
 	
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.Instigator = this;
-	
-	auto KamehameActor = GetWorld()->SpawnActor<AKamehamehaActor>(
-		KamehamehaFactory,
-		this->GetActorTransform(),
-		Params
-	);
-
-	KamehameActor->StartKamehame(this, TargetActor);
+	this->KamehameShoot();
 }

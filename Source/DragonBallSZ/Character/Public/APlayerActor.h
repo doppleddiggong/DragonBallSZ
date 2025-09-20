@@ -75,6 +75,4 @@ public:
 	void OnGuard(AActor* Target, bool bState);
 	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnAvoid(AActor* Target, bool bState);
-    UFUNCTION(BlueprintCallable, Category="Event")
-    void OnPowerCharge(AActor* Target, bool bState);
 };

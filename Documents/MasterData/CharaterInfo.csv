@@ -1,0 +1,3 @@
+Index,Type,CurHP,MaxHP,AttackDamage,AttackChargeKi,StartKi,MaxKi,BlastNeedKi,BlastDamage,BlastShotDelay,KamehameNeedKi,KamehameDamage,SightLength,SightAngle
+1,Songoku,1000,1000,30;45;50;70;100,3;4;5;7;10;10;10;10;10,300,500,20,30,0.5,100,300,1000,45
+2,Vegeta,1000,1000,30;45;50;70;100,3;4;5;7;10;10;10;10;10,300,500,20,30,0.5,100,300,1000,45

@@ -81,20 +81,19 @@ bool UCharacterData::LoadBlastMontage(TArray<TObjectPtr<UAnimMontage>>& OutMonta
 {
 	OutMontage.Empty();
 
-	for (const FRushData& Data : RushData)
+	for (const TSoftObjectPtr<UAnimMontage>& BlastAssetPtr : BlastAsset)
 	{
-		UAnimMontage* LoadedMontage = Data.AttackAsset.LoadSynchronous();
+		UAnimMontage* LoadedMontage = BlastAssetPtr.LoadSynchronous();
 		if (LoadedMontage)
 		{
 			OutMontage.Add(LoadedMontage);
 		}
 		else
 		{
-			PRINTLOG( TEXT("Failed to LoadBlastMontage"));
+			PRINTLOG(TEXT("Failed to LoadBlastMontage"));
 			return false;
 		}
 	}
-
 	return true;
 }
 

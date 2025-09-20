@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ECharacterType.h"
 #include "Components/ActorComponent.h"
 #include "UStatSystem.generated.h"
 
@@ -27,9 +28,66 @@ public:
 		return bIsPlayer;
 	}
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
-	void InitStat(bool IsPlayer);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE bool IsDead()
+	{
+		return bIsDead;
+	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetMaxHP()
+	{
+		return MaxHP;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetCurHP()
+	{
+		return CurHP;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetMaxKi()
+	{
+		return MaxKi;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetCurKi()
+	{
+		return CurKi;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE bool IsBlastShotEnable()
+	{
+		return CurKi >= BlastNeedKi;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE bool IsKamehameEnable()
+	{
+		return CurKi >= KamehameNeedKi;
+	}
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetBlastShotDelay()
+	{
+		return BlastShotDelay;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetSightLength()
+	{
+		return SightLength;
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Stats")
+	FORCEINLINE float GetSightAngle()
+	{
+		return SightAngle;
+	}	
+	
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	float GetRandDmg(float Damage);
 
@@ -41,11 +99,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	float GetKamehameDamage();
 
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
+	void InitStat(const bool InIsPlayer, const ECharacterType InECharacterType);
+
 	UFUNCTION(BlueprintCallable, Category="Stats")
-	FORCEINLINE void SetAttackChargeKi(int ComboCount)
+	FORCEINLINE void IncreaseKi_ComboCount(int ComboCount)
 	{
-		if ( ChargeKi.IsValidIndex(ComboCount) )
-			IncreaseKi(ChargeKi[ComboCount]);
+		if ( AttackChargeKi.IsValidIndex(ComboCount) )
+			IncreaseKi(AttackChargeKi[ComboCount]);
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
@@ -53,7 +115,12 @@ public:
 	{
 		DecreaseKi(BlastNeedKi);
 	}
-	
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseKamehame()
+	{
+		DecreaseKi(KamehameNeedKi);
+	}
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void IncreaseHealth(float InHealPoint);	
@@ -68,49 +135,49 @@ public:
 	void DecreaseKi(float InKi);	
 
 	
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|State")
-	bool bIsPlayer = false;
-	
+protected:
 	// Health
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|HP")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|HP")
 	float CurHP = 1000;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|HP")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|HP")
 	float MaxHP = 1000;
 
 	// Attack
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
 	TArray<float> AttackDamage { 30, 45, 50, 70, 100 };
-	
+	// 공격시 회복기
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
+	TArray<float> AttackChargeKi  { 3, 4, 5, 7, 10, 10, 10, 10, 10 };
+
 	// Ki
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Ki")
 	float CurKi = 300;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Ki")
 	float MaxKi = 500;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Blast")
 	float BlastNeedKi = 20;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Blast")
 	float BlastDamage = 30;
-	// 에너지탄 발사 딜레이
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Blast")
 	float BlastShotDelay = 0.5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Kamehame")
 	float KamehameNeedKi = 100;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Kamehame")
 	float KamehameDamage = 300;
 	
-	// 공격시 회복기
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	TArray<float> ChargeKi  { 3, 4, 5, 7, 10, 10, 10, 10, 10 };
-	
-	// STATE
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	bool IsDead = false;
-
-	// Sight
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Sight")
 	float SightLength = 1000;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Sight")
 	float SightAngle = 45;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|State")
+	ECharacterType CharacterType;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|State")
+	bool bIsPlayer = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|State")
+	bool bIsDead = false;
 };

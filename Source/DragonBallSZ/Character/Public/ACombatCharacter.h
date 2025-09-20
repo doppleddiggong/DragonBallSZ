@@ -65,6 +65,30 @@ public:
 		return StatSystem->IsPlayer() == false;
 	};
 
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float CurHP(float Per = 1.0f)
+	{
+		return StatSystem->GetCurHP() * Per;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float MaxHP(float Per = 1.0f)
+	{
+		return StatSystem->GetMaxHP() * Per;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float CurKi(float Per = 1.0f)
+	{
+		return StatSystem->GetCurKi() * Per;
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float MaxKi(float Per = 1.0f)
+	{
+		return StatSystem->GetMaxKi() * Per;
+	}
+	
 	UFUNCTION(BlueprintPure, Category="GameState")
 	FORCEINLINE bool IsWinner() const
 	{
@@ -84,10 +108,33 @@ public:
 	};
 	
 	UFUNCTION(BlueprintCallable, Category="GameState")
-	FORCEINLINE void IsChargeKi(const bool bState)
+	FORCEINLINE void SetChargeKi(const bool bState)
 	{
 		this->bIsChargeKi = bState;
 	};
+
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE bool IsChargeKi()
+	{
+		return bIsChargeKi;
+	};
+
+	
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE bool IsShootKamehame()
+	{
+		return bIsShootKamehame;
+	};
+
+	UFUNCTION(BlueprintCallable, Category="Kamehame")
+	FORCEINLINE void SetShootKamehame(const bool bState, class AKamehamehaActor* InKamehamehaActor )
+	{
+		this->bIsShootKamehame = bState;
+		this->KamehamehaActor = InKamehamehaActor;
+	};
+	
+	UFUNCTION(BlueprintPure, Category="Kamehame")
+	FVector GetKamehameHandLocation() const;
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -98,7 +145,8 @@ public:
 	bool IsAttackEnable();
 
 
-	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsDead();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsHitting();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -112,6 +160,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void OnRecvMessage(FString InMsg);
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void OnPowerCharge(AActor* Target, bool bState);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void OnLookTarget();
@@ -130,6 +181,15 @@ public:
 	void RecoveryMovementMode(const EMovementMode InMovementMode);
 
 	UFUNCTION(BlueprintCallable, Category="Command")
+	void EnergyBlastShoot();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void KamehameShoot();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void ClearKamehame();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
 	bool IsBlastShootEnable();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -138,16 +198,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void SetAttackChargeKi(int ComboCount)
 	{
-		StatSystem->SetAttackChargeKi(ComboCount);
+		StatSystem->IncreaseKi_ComboCount(ComboCount);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	FORCEINLINE float GetBlastShootDelay()
 	{
-		return StatSystem->BlastShotDelay;
+		return StatSystem->GetBlastShotDelay();
 	}
-
-public:
 	UFUNCTION(BlueprintCallable, Category="Stat")
 	FORCEINLINE float GetAttackDamage(int ComboCount)
 	{
@@ -173,7 +231,22 @@ public:
 		return StatSystem->UseBlast();
 	}
 
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseKamehame()
+	{
+		return StatSystem->UseKamehame();
+	}
+	
+
 public:
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	FORCEINLINE UAnimInstance* GetAnimInstance()
+	{
+		return AnimInstance;
+	}
+	
+
+	
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void PlayTypeMontage(const EAnimMontageType Type);
 
@@ -182,6 +255,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime);
+
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
@@ -263,6 +337,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	bool bIsChargeKi = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsShootKamehame = false;
+
+
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 	
@@ -314,4 +392,8 @@ protected:
 	TEnumAsByte<EMovementMode>  PrevMoveMode;
 
 	bool bDelegatesBound = false;
+
+
+	UPROPERTY()
+	class AKamehamehaActor* KamehamehaActor = nullptr;
 };
