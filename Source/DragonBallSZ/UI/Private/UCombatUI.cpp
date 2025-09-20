@@ -245,7 +245,7 @@ void UCombatUI::OnPlayerAttackHit(float Damage)
 	if (Text_PlayerDamage && Text_PlayerCombo)
 	{
 		Text_PlayerCombo->SetText(
-			FText::Format(FText::FromString(TEXT("{0} Combo")), FText::AsNumber(PlayerComboCount)));
+			FText::Format(FText::FromString(TEXT("{0} Hits")), FText::AsNumber(PlayerComboCount)));
 		ShowPlayerDamageUI();
 	}
 
@@ -294,7 +294,7 @@ void UCombatUI::OnEnemyAttackHit(float Damage)
 	// 적 UI 텍스트 업데이트
 	if (Text_EnemyDamage && Text_EnemyCombo)
 	{
-		Text_EnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0} Combo")), FText::AsNumber(EnemyComboCount)));
+		Text_EnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0} Hits")), FText::AsNumber(EnemyComboCount)));
 		ShowEnemyDamageUI();
 	}
 
