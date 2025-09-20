@@ -72,18 +72,18 @@ public:
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class USkeletalMeshComponent* MeshComp;
+	TObjectPtr<class USkeletalMeshComponent> MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class UAnimInstance* AnimInstance;
+	TObjectPtr<class UAnimInstance> AnimInstance;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class UCharacterMovementComponent* MoveComp;
+	TObjectPtr<class UCharacterMovementComponent> MoveComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
-	class ACombatCharacter* Target;
+	TObjectPtr<class ACombatCharacter> Target;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Target")
-	class UCharacterMovementComponent* TargetMoveComp;
+	TObjectPtr<class UCharacterMovementComponent> TargetMoveComp;
 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="RushAttack|Debug")

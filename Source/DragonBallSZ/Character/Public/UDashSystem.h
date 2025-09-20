@@ -36,14 +36,14 @@ public:
 
 public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 	
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
-	class UNiagaraComponent* NiagaraComp = nullptr;
-
+	TObjectPtr<class UNiagaraComponent> NiagaraComp;
+	
 	UPROPERTY(Transient, BlueprintReadOnly, Category="Dash")
-	class UNiagaraComponent* DashWindComp = nullptr;
-
+	TObjectPtr<class UNiagaraComponent> DashWindComp;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Dash")
 	float DashActivateValue = 1000.f;
 

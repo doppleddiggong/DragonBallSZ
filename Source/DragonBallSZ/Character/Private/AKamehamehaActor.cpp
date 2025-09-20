@@ -139,19 +139,23 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					true
 				);
 
+				auto AttackPowerType = EAttackPowerType::Normal;
+				EventManager->SendForceCameraShake(AttackPowerType);
+				
 				UGameplayStatics::ApplyDamage(
 					Target,
-					Shooter->GetKamehameDamage(),
+					Shooter->GetKamehameDamage()*0.25f,
 					nullptr,
 					Owner,
-					UDBSZFunctionLibrary::GetDamageTypeClass(EAttackPowerType::Normal)
+					UDBSZFunctionLibrary::GetDamageTypeClass(AttackPowerType)
 				);
 
 				bFirstExplosion = true;
 			}
 		}
 
-		if (!bFirstExplosion) return;
+		if (!bFirstExplosion)
+			return;
 
 		// 현재 상태 출력
 		FString StateStr = FString::Printf(TEXT("ElapsedTime: %f"), ElapsedTime);
@@ -196,12 +200,15 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					FVector(17.9f)
 				);
 
+				auto AttackPowerType = EAttackPowerType::Huge;
+				EventManager->SendForceCameraShake(AttackPowerType);
+				
 				UGameplayStatics::ApplyDamage(
 					Target,
-					Shooter->GetBlastDamage(),
+					Shooter->GetKamehameDamage()*0.75f,
 					nullptr,
 					Owner,
-					UDBSZFunctionLibrary::GetDamageTypeClass(EAttackPowerType::Huge)
+					UDBSZFunctionLibrary::GetDamageTypeClass(AttackPowerType)
 				);
 
 				FTimerHandle TimerHandle;

@@ -45,7 +45,6 @@ private:
 	TMap<EAttackPowerType, FHitStopData> HitStopCache;
 #pragma endregion HIT_STOP
 
-
 #pragma region KNOCKBACK
 public:
 	UPROPERTY(EditAnywhere, Category="MasterData|Knockback")
@@ -62,9 +61,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<EAttackPowerType, FKnockbackData> KnockbackCache;
 #pragma endregion KNOCKBACK
-
-
-	
 
 #pragma region CHARACTER_DATA
 public:

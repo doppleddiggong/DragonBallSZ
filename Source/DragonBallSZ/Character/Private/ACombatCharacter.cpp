@@ -324,12 +324,10 @@ void ACombatCharacter::OnDamage(
 	
 	const bool IsDie = StatSystem->DecreaseHealth(Damage);
 
-	EventManager->SendCameraShake(this, EAttackPowerType::Normal );
+	EventManager->SendCameraShake(this, AttackPowerType );
 	EventManager->SendDamage(IsPlayer(), Damage);
 
 	RushAttackSystem->ResetComboCount();
-
-	
 	
 	if ( ChargeKiSystem->IsActivateState() )
 	{

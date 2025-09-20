@@ -69,6 +69,14 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Events")
 	void SendCameraShake(AActor* Target, const EAttackPowerType Type);
+
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnForceCameraShake, EAttackPowerType, Type);
+	UPROPERTY(BlueprintAssignable, Category="Events")
+	FOnForceCameraShake OnForceCameraShake;
+
+	UFUNCTION(BlueprintCallable, Category="Events")
+	void SendForceCameraShake(const EAttackPowerType Type);
+
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnKnockback,
 		AActor*,		   Target,

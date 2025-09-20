@@ -48,6 +48,11 @@ void UDBSZEventManager::SendCameraShake(AActor* Target, const EAttackPowerType T
 	OnCameraShake.Broadcast(Target, Type);
 }
 
+void UDBSZEventManager::SendForceCameraShake(const EAttackPowerType Type)
+{
+	OnForceCameraShake.Broadcast(Type);
+}
+
 void UDBSZEventManager::SendKnockback(AActor* Target, AActor* Instigator, EAttackPowerType Type, float Resistance)
 {
 	OnKnockback.Broadcast(Target, Instigator, Type, Resistance);

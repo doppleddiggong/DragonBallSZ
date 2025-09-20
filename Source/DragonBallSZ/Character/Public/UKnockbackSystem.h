@@ -35,11 +35,11 @@ private:
 
 private:
 	UPROPERTY()
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 	UPROPERTY()
-	class USkeletalMeshComponent* MeshComp;
+	TObjectPtr<class USkeletalMeshComponent> MeshComp;
 	UPROPERTY()
-	class UCharacterMovementComponent* MoveComp;
+	TObjectPtr<class UCharacterMovementComponent> MoveComp;
 
 	float PrevBrakingFriction = 1.f;
 	bool  bFriction = false;

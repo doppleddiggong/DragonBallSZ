@@ -24,6 +24,9 @@ private:
 	UFUNCTION()
 	void OnCameraShake(AActor* Target, EAttackPowerType Type);
 
+	UFUNCTION()
+	void OnForceCameraShake(EAttackPowerType Type);
+
 	UPROPERTY()
-	class ACombatCharacter* Owner;
+	TObjectPtr<class ACombatCharacter> Owner;
 };
