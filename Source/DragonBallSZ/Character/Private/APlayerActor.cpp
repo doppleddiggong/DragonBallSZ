@@ -95,7 +95,6 @@ void APlayerActor::BeginPlay()
 	EventManager->OnSpecialAttack.AddDynamic(this, &APlayerActor::OnSpecialAttack);
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
-	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
 }
 
 void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -110,7 +109,6 @@ void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	EventManager->OnSpecialAttack.RemoveDynamic(this, &APlayerActor::OnSpecialAttack);
 	EventManager->OnGuard.RemoveDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.RemoveDynamic(this, &APlayerActor::OnAvoid);
-	EventManager->OnPowerCharge.RemoveDynamic(this, &APlayerActor::OnPowerCharge);
 }
 
 void APlayerActor::Tick(float DeltaTime)

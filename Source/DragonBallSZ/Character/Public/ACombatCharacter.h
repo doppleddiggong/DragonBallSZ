@@ -160,6 +160,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	void OnRecvMessage(FString InMsg);
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void OnPowerCharge(AActor* Target, bool bState);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Command")
 	void OnLookTarget();

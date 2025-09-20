@@ -70,7 +70,7 @@ void ACombatCharacter::BeginPlay()
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
-
+	EventManager->OnPowerCharge.AddDynamic(this, &ACombatCharacter::OnPowerCharge);
 
 	BindMontageDelegates(AnimInstance);
  }
@@ -82,7 +82,11 @@ void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	bDelegatesBound = false;
 
 	if (EventManager)
+	{
 		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
+		EventManager->OnPowerCharge.RemoveDynamic(this, &ACombatCharacter::OnPowerCharge);
+	}
+
 	
 	Super::EndPlay(EndPlayReason);
 }
@@ -252,6 +256,23 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 		// PRINTLOG(TEXT("ENEMY IS PLAYER"));
 	}
 }
+
+void ACombatCharacter::OnPowerCharge(AActor* Target, bool bState)
+{
+	if ( this != Target )
+		return;
+
+	if ( bState )
+	{
+		// 차지 이펙트 White 껴!
+	
+	}
+	else
+	{
+		// 차지 이펙트 White 꺼!
+	}
+}
+
 
 void ACombatCharacter::OnLookTarget_Implementation()
 {
