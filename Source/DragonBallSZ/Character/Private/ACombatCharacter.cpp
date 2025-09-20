@@ -55,6 +55,11 @@ ACombatCharacter::ACombatCharacter()
 
 	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
 	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
+
+	if (const ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(TEXT("'/Game/VFX/InGame/ChargeKi/M_WhiteOutline_Inst.M_WhiteOutline_Inst'")); MaterialFinder.Succeeded())
+	{
+		OverlayMaterial = MaterialFinder.Object;
+	}
 }
 
 void ACombatCharacter::BeginPlay()
@@ -62,6 +67,8 @@ void ACombatCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	MeshComp = this->GetMesh();
+	OverlayMID = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
+	MeshComp->SetOverlayMaterial(OverlayMID);
 	MoveComp = this->GetCharacterMovement();
 
 	AnimInstance = MeshComp->GetAnimInstance();
@@ -264,12 +271,13 @@ void ACombatCharacter::OnPowerCharge(AActor* Target, bool bState)
 
 	if ( bState )
 	{
-		// 차지 이펙트 White 껴!
-	
+		// 차지 이펙트 White 켜!
+		OverlayMID->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
 	}
 	else
 	{
 		// 차지 이펙트 White 꺼!
+		OverlayMID->SetScalarParameterValue(TEXT("Opacity"), 0.0f);
 	}
 }
 
