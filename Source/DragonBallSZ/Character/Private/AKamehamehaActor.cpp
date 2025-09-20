@@ -46,7 +46,7 @@ void AKamehamehaActor::BeginPlay()
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &AKamehamehaActor::OnRecvMessage);
 
-	
+
 	for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
 	{
 		auto* PPV = *It;
@@ -60,7 +60,7 @@ void AKamehamehaActor::BeginPlay()
 
 void AKamehamehaActor::OnRecvMessage(FString InMsg)
 {
-	if ( InMsg.Equals(GameEvent::KameShoot.ToString(), ESearchCase::IgnoreCase ))
+	if (InMsg.Equals(GameEvent::KameShoot.ToString(), ESearchCase::IgnoreCase))
 	{
 		DelayKamehameFire();
 	}
@@ -98,13 +98,13 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 		ChargeSphere->SetVariableFloat(FName("LoopDuration"), LoopDuration);
 	}
-	
-	
-	if ( bTrackingOwnerHand )
+
+
+	if (bTrackingOwnerHand)
 	{
-		if ( IsValid(Shooter))
+		if (IsValid(Shooter))
 		{
-			this->SetActorLocation( Shooter->GetKamehameHandLocation());
+			this->SetActorLocation(Shooter->GetKamehameHandLocation());
 		}
 	}
 
@@ -116,6 +116,10 @@ void AKamehamehaActor::Tick(float DeltaTime)
 			BeamVector.X += BeamSpeed / 5;
 			BeamVector.Z += BeamSpeed / 5;
 			Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
+			SecondBeamHeight.Y -= BeamSpeed * 23;
+			Kamehameha->SetVariableVec3(FName("BeamHeight"), SecondBeamHeight);
+			SecondBeamWidth += BeamSpeed * 4.8f;
+			Kamehameha->SetVariableFloat(FName("BeamWidth"), SecondBeamWidth);
 			return;
 		}
 
@@ -142,7 +146,7 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					Owner,
 					UDBSZFunctionLibrary::GetDamageTypeClass(EAttackPowerType::Normal)
 				);
-				
+
 				bFirstExplosion = true;
 			}
 		}
@@ -157,16 +161,19 @@ void AKamehamehaActor::Tick(float DeltaTime)
 		{
 			if (BeamVector.X > 0)
 			{
-				BeamVector.X -= BeamSpeed / 6;
-				BeamVector.Z -= BeamSpeed / 6;
+				BeamVector.X -= BeamSpeed / 7;
+				BeamVector.Z -= BeamSpeed / 7;
 				Kamehameha->SetVariableVec3(FName("BeamVector"), BeamVector);
+				SecondBeamWidth -= BeamSpeed * 3.1f;
+				if (SecondBeamWidth <= 0.f) SecondBeamWidth = 0.f;
+				Kamehameha->SetVariableFloat(FName("BeamWidth"), SecondBeamWidth);
 			}
 			else
 			{
 				Kamehameha->DeactivateImmediate();
 			}
 
-			if (!bSecondExplosion && BeamVector.X < 14)
+			if (!bSecondExplosion && BeamVector.X < 22)
 			{
 				FinishDust->Activate();
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -180,7 +187,15 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					ENCPoolMethod::None,
 					true
 				);
-				
+
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(),
+					ExplosionWind,
+					Target->GetActorLocation(),
+					Target->GetActorRotation(),
+					FVector(17.9f)
+				);
+
 				UGameplayStatics::ApplyDamage(
 					Target,
 					Shooter->GetBlastDamage(),
@@ -207,6 +222,14 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					{
 						ExplosionSmokeComp->OnSystemFinished.AddDynamic(this, &AKamehamehaActor::OnKamehamehaFinished);
 					}
+
+					UGameplayStatics::SpawnEmitterAtLocation(
+						GetWorld(),
+						ExplosionWind,
+						Target->GetActorLocation(),
+						Target->GetActorRotation(),
+						FVector(7.7f)
+					);
 				}, 1.5f, false);
 
 				bSecondExplosion = true;
@@ -218,7 +241,7 @@ void AKamehamehaActor::Tick(float DeltaTime)
 void AKamehamehaActor::FireKamehameha()
 {
 	PPVolume->BlendWeight = 1.f;
-	
+
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
@@ -235,7 +258,7 @@ void AKamehamehaActor::FireKamehameha()
 	FQuat FinalRot = LookRot.Quaternion() * OffsetRot.Quaternion();
 	Kamehameha->SetWorldRotation(FinalRot);
 	FinishDust->SetWorldRotation(FinalRot);
-	
+
 	ChargeSphere->DeactivateImmediate();
 
 	Kamehameha->Activate();
@@ -259,7 +282,7 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		bTrackingOwnerHand = true;
 		// 발사 시작
 		ChargeSphere->Activate();
-		
+
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
 		Shooter->SetHold(true);
@@ -272,7 +295,7 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		// 발사자 애니메이션 재생
 		Shooter->PlayTypeMontage(EAnimMontageType::Kamehame);
 
-		
+
 		// // 카메하메 애니메이션 총 프레임 딜레이
 		// float PlayDelay = InOwner->KamehameMontage->GetPlayLength();
 	}
@@ -287,9 +310,9 @@ void AKamehamehaActor::DelayKamehameFire()
 	// USkeletalMeshComponent* Mesh = Shooter->GetMesh();
 	// UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
 	// UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
-	if(auto MyAnimBP = Shooter->GetAnimInstance() )
+	if (auto MyAnimBP = Shooter->GetAnimInstance())
 	{
-		if ( MyAnimBP->Montage_IsPlaying(Shooter->KamehameMontage) )
+		if (MyAnimBP->Montage_IsPlaying(Shooter->KamehameMontage))
 		{
 			FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(Shooter->KamehameMontage);
 			if (CurrentSection == FName("Default"))

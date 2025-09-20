@@ -18,18 +18,20 @@ public:
 	UPROPERTY()
 	TObjectPtr<class USceneComponent> RootComp;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="VFX")
 	TObjectPtr<class UNiagaraComponent> ChargeSphere;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="VFX")
 	TObjectPtr<class UNiagaraComponent> Kamehameha;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="VFX")
 	TObjectPtr<class UNiagaraComponent> FinishDust;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="VFX")
 	TObjectPtr<class UNiagaraSystem> Explosion;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="VFX")
 	TObjectPtr<class UNiagaraSystem> ExplosionSmoke;
 	UPROPERTY()
 	TObjectPtr<class UNiagaraComponent> ExplosionSmokeComp;
+	UPROPERTY(EditAnywhere, Category="VFX")
+	TObjectPtr<class UParticleSystem> ExplosionWind;
 	
 	UPROPERTY()
 	TObjectPtr<class APostProcessVolume> PPVolume;
@@ -54,13 +56,16 @@ public:
 	float LoopDuration = 0.37f;
 	FVector BeamVector = FVector(1,1,1);
 	float FirstExplosionTime = 3.9f;
-	float SecondExplosionTime = 15.8f;
+	float SecondExplosionTime = 15.2f;
 	float BeamSpeed = 2.f;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Charge Speed")
 	float LoopSpeed = 0.001;
 	UPROPERTY(EditDefaultsOnly, Category="Kamehameha Impact Frame")
 	float ImpactTime = 0.11f;
 
+	FVector SecondBeamHeight = FVector(0,0,0);;
+	float SecondBeamWidth = 0.0f;
+	
 	UFUNCTION(BlueprintCallable)
 	void FireKamehameha();
 	UFUNCTION()
