@@ -377,14 +377,15 @@ public:
 	TObjectPtr<class UNiagaraSystem> DashVFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
 	TObjectPtr<class UNiagaraSystem> ChargeKiVFX;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
+	TObjectPtr<UNiagaraSystem> DashWindVFX;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
 	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
 	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
-	UPROPERTY()
 	TObjectPtr<UMaterialInterface> OverlayMaterial;
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> OverlayMID;
