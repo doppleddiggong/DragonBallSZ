@@ -29,21 +29,30 @@ AEnergyBlastActor::AEnergyBlastActor()
 	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	SetRootComponent(SphereComp);
 
-	SphereComp->SetCollisionEnabled(ECollisionEnabled::Type::QueryAndPhysics);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 	SphereComp->SetGenerateOverlapEvents(true);
-	SphereComp->SetCollisionProfileName(TEXT(""));
+	SphereComp->SetCollisionResponseToAllChannels(ECR_Overlap);
 }
 
 void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                   const FHitResult& SweepResult)
 {
+	if (OtherActor == Shooter)
+		return;
+	
 	if (Shooter->IsA(APlayerActor::StaticClass()))
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
 			this->HitProcess(TargetActor, EVFXType::Explosion_Yellow);
-			// SpawnExplosionVFX();
+			this->Destroy();
+		}
+		else
+		{
+			UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+			EVFXType::Explosion_Yellow,
+			GetActorLocation(), GetActorRotation(),FVector(0.4f) );
 			this->Destroy();
 		}
 	}
@@ -52,7 +61,13 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
 			this->HitProcess(TargetActor, EVFXType::Explosion_Blue);
-			// SpawnExplosionVFX();
+			this->Destroy();
+		}
+		else
+		{
+			UDBSZVFXManager::Get(GetWorld())->ShowVFX(
+			EVFXType::Explosion_Blue,
+			GetActorLocation(), GetActorRotation(),FVector(0.4f) );
 			this->Destroy();
 		}
 	}

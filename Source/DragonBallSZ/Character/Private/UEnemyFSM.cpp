@@ -138,6 +138,11 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	// Distance between Target
 	TargetDistance = FVector::Dist(Owner->GetActorLocation(), Target->GetActorLocation());
 
+	FString distStr = FString::SanitizeFloat(TargetDistance);
+	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, distStr);
+	FString stateStr = UEnum::GetValueAsString(CurrentState);
+	GEngine->AddOnScreenDebugMessage(1, 1, FColor::Cyan, stateStr);
+
 	CurrentTime += DeltaTime;
 	if (CurrentTime < DecisionTime) return; // 시간이 됐으면 행동을 선택한다.
 	CurrentTime = 0;
@@ -145,11 +150,6 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	ModifyWeightArray(); // Add & Remove Weight
 
 	ChangeState(SelectWeightedRandomState()); // Change state randomly
-
-	// 현재 상태 출력
-	FString stateStr = UEnum::GetValueAsString(CurrentState);
-	// PRINTLOG(TEXT("EnemyState %s"), *stateStr);
-	GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, stateStr);
 
 	switch (CurrentState)
 	{
@@ -182,7 +182,7 @@ void UEnemyFSM::ModifyWeightArray()
 	{
 		AttackState->Value = (TargetDistance < MeleeDistance)
 			                     ? 75.f
-			                     : 1.f;
+			                     : 0.7f;
 	}
 
 	// Enemy Flying == Player Flying -> Jump: 0.f
@@ -199,7 +199,7 @@ void UEnemyFSM::ModifyWeightArray()
 	}
 
 	// Enemy CurrentHP > Player CurrentHP -> Backward: 10.f
-	// Enemy CurrentHP < Player CurrentHP -> Backward: 70.f
+	// Enemy CurrentHP < Player CurrentHP -> Backward: 60.f
 	if (auto* ApproachMove = Moves.FindByPredicate([](const auto& Elem)
 	{
 		return Elem.Key == EMoveInputType::Backward;
@@ -207,7 +207,7 @@ void UEnemyFSM::ModifyWeightArray()
 	{
 		ApproachMove->Value = (Owner->StatSystem->CurHP > Target->StatSystem->CurHP)
 			                      ? 10.f
-			                      : 70.f;
+			                      : 60.f;
 	}
 
 	// Enemy CurrentHP > Player CurrentHP -> Left, Right: 40.f
@@ -225,34 +225,51 @@ void UEnemyFSM::ModifyWeightArray()
 	// Enemy CurrentHP < Player CurrentHP -> FireRate: 0.2 -> 0.4
 	Owner->StatSystem->CurHP > Target->StatSystem->CurHP ? FireRate = 0.2f : FireRate = 0.4f;
 
-	// Enemy CurrentKi < MaxKi / 2 -> Add: 0.3
-	// Enemy CurrentKi > MaxKi / 2 -> Subtract: 0.3
-	if (auto* Found = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
+	if (auto* Charge = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
 	{
-		float ChargeValue = Found->Value;
-		if (ChargeValue < 0.f) Found->Value = 0.f;	// Initialize if Charge Weight is under 0.f
-		else if (ChargeValue < 10.f)	// Charge Weight can't exceed 10.f
+		// Enemy CurrentKi < MaxKi * 0.4 -> Add: 0.3
+		// Enemy CurrentKi > MaxKi * 0.4 -> Subtract: 0.3
+		if (Charge->Value < 10.f) // Charge Weight can't exceed 10.f
 		{
-			if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi / 2)
+			if (Owner->StatSystem->CurKi <= Target->StatSystem->MaxKi * 0.4f)
 			{
-				States.Add({EEnemyState::Charge, 3.f});
+				Charge->Value = Charge->Value + 2.f;
+				if (Charge->Value >= 10.f) Charge->Value = 0.f;
 			}
-			if (Owner->StatSystem->CurKi > Target->StatSystem->MaxKi / 2)
+			else if (Owner->StatSystem->CurKi > Target->StatSystem->MaxKi * 0.4f)
 			{
-				States.Add({EEnemyState::Charge, -3.f});
+				Charge->Value = Charge->Value - 2.f;
+				if (Charge->Value <= 0.f) Charge->Value = 0.f; // Initialize if Charge Weight is under 0.f
 			}
 		}
-	}
 
-	// Enemy CurrentKi < MaxKi / 3
-	if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi / 3)
-	{
-		if (auto* Found = States.FindByPredicate([](const auto& P) { return P.Key == EEnemyState::Charge; }))
+		// Enemy CurrentKi < MaxKi * 0.2
+		if (Owner->StatSystem->CurKi < Target->StatSystem->MaxKi * 0.2f)
 		{
-			Found->Value = 10.f;
+			Charge->Value = 10.f;
+		}
+
+		// TargetDistance > MeleeDistance
+		if (TargetDistance > MeleeDistance)
+		{
+			Charge->Value = Charge->Value + 2.f;
+			if (Charge->Value >= 10.f) Charge->Value = 0.f;
+		}
+
+		// Enemy CurrentKi > MaxKi * 0.6
+		if (Owner->StatSystem->CurKi >= Target->StatSystem->MaxKi * 0.6f)
+		{
+			Charge->Value = 2.f;
+		}
+
+		// Enemy CurrentKi == MaxKi * 0.8
+		if (Owner->StatSystem->CurKi >= Target->StatSystem->MaxKi * 0.8f)
+		{
+			Charge->Value = 0.f;
 		}
 	}
 }
+
 
 EEnemyState UEnemyFSM::SelectWeightedRandomState()
 {

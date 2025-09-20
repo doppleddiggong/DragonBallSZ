@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "KamehamehaActor.generated.h"
+#include "AKamehamehaActor.generated.h"
 
 UCLASS()
 class DRAGONBALLSZ_API AKamehamehaActor : public AActor
@@ -30,9 +30,9 @@ public:
 	TObjectPtr<class UNiagaraSystem> ExplosionSmoke;
 	UPROPERTY()
 	TObjectPtr<class UNiagaraComponent> ExplosionSmokeComp;
-
-	UPROPERTY(EditAnywhere, Category=PostProcess)
-	TObjectPtr<class UMaterialInterface> ImpactFrameMaterial;
+	
+	UPROPERTY()
+	TObjectPtr<class APostProcessVolume> PPVolume;
 	
 	UPROPERTY()
 	TObjectPtr<class ACombatCharacter> Target;

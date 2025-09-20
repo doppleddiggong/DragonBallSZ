@@ -37,7 +37,7 @@ private:
 	void HitProcess(AActor* DamagedActor, EVFXType VFXType);
 	
 public:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	TObjectPtr<USphereComponent> SphereComp;
 	UPROPERTY()
 	TObjectPtr<class ACombatCharacter> Target;

@@ -63,14 +63,13 @@ public:
 	                           FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	// States.Add({EEnemyState::Move, 100.f});	// 가중치 추가
 	void ModifyWeightArray();
 	EEnemyState SelectWeightedRandomState(); // EEnemyState Weights
 	TArray<TPair<EEnemyState, float>> States = {
 		{EEnemyState::Idle, 1.f},
 		{EEnemyState::Move, 10.f},
 		{EEnemyState::Attack, 0.f},
-		{EEnemyState::Charge, 2.f},
+		{EEnemyState::Charge, 4.f},
 		{EEnemyState::Special, 0.f},
 	};
 	EEnemyState CurrentState = EEnemyState::Idle;
@@ -84,7 +83,7 @@ public:
 	float MovingTime;
 	float TargetDistance;
 	float MeleeDistance = 1000;
-	float LongDistance = 4500;
+	float LongDistance = 4400;
 
 	void Idle();
 

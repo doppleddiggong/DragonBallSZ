@@ -4,7 +4,7 @@
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
 
-#include "KamehamehaActor.h"
+#include "AKamehamehaActor.h"
 
 #include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"
