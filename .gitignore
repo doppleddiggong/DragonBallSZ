@@ -35,9 +35,9 @@ Plugins/*/Binaries/
 Plugins/*/Intermediate/
 
 # Configuration
-Config/DefaultEditor.ini
-Config/DefaultEngine.ini
-Config/DefaultGame.ini
+#Config/DefaultEditor.ini
+#Config/DefaultEngine.ini
+#Config/DefaultGame.ini
 
 # Visual Studio
 .vs/
