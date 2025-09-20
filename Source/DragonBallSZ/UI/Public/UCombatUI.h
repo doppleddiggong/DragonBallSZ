@@ -19,7 +19,15 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
-
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	void UpdatePlayerDamageUI();
+	int32 PlayerDamage;
+	int32 IntPlayerDamageSum;
+	void UpdateEnemyDamageUI();
+	int32 EnemyDamage;
+	int32 IntEnemyDamageSum;
+	float SpeedFactor = 0.1f;
+	
 protected:
 	UFUNCTION()
 	void OnReceiveMessage(FString Msg);

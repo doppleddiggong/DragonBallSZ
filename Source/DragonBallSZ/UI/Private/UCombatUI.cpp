@@ -40,6 +40,62 @@ void UCombatUI::NativeDestruct()
 	GetWorld()->GetTimerManager().ClearTimer(CombatTimerHandle);
 }
 
+void UCombatUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	UpdatePlayerDamageUI();
+	UpdateEnemyDamageUI();
+}
+
+void UCombatUI::UpdatePlayerDamageUI()
+{
+	IntPlayerDamageSum = FMath::RoundToInt(PlayerDamageSum);
+	if (IntPlayerDamageSum == 0)
+	{
+		PlayerDamage = 0;
+		return;
+	}
+
+	if (PlayerDamage > IntPlayerDamageSum) return;
+	
+	PlayerDamage += (IntPlayerDamageSum - PlayerDamage) * SpeedFactor;
+	if (PlayerDamage <= IntPlayerDamageSum)
+	{
+		Text_PlayerDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+		                                         FText::AsNumber(PlayerDamage)));
+	}
+	else
+	{
+		Text_PlayerDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+												 FText::AsNumber(IntPlayerDamageSum)));
+	}
+}
+
+void UCombatUI::UpdateEnemyDamageUI()
+{
+	IntEnemyDamageSum = FMath::RoundToInt(EnemyDamageSum);
+	if (IntEnemyDamageSum == 0)
+	{
+		EnemyDamage = 0;
+		return;
+	}
+
+	if (EnemyDamage > IntEnemyDamageSum) return;
+	
+	EnemyDamage += (IntEnemyDamageSum - EnemyDamage) * SpeedFactor;
+	if (EnemyDamage <= IntEnemyDamageSum)
+	{
+		Text_EnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+		                                        FText::AsNumber(EnemyDamage)));
+	}
+	else
+	{
+		Text_EnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+												 FText::AsNumber(IntEnemyDamageSum)));
+	}
+}
+
 void UCombatUI::UpdateTimer()
 {
 	CombatTime++;
@@ -101,8 +157,8 @@ void UCombatUI::OnRecvUpdateKi(bool bIsPlayer, float CurKi, float MaxKi)
 }
 
 void UCombatUI::StartCombat(
-	const float PlayerHP, const float EnemyHP, 
-	const float PlayerKi, const float EnemyKi )
+	const float PlayerHP, const float EnemyHP,
+	const float PlayerKi, const float EnemyKi)
 {
 	PlayerMaxHP = PlayerHP;
 	PlayerCurHP = PlayerMaxHP;
@@ -115,15 +171,15 @@ void UCombatUI::StartCombat(
 
 	EnemyMaxKi = EnemyKi;
 	EnemyCurKi = EnemyMaxKi;
-	
+
 	this->HidePlayerDamageUI();
 	this->HideEnemyDamageUI();
-	
-	ProgressBar_Player->SetPercent(PlayerCurHP/PlayerMaxHP);
-	ProgressBar_Enemy->SetPercent(EnemyCurHP/EnemyMaxHP);
 
-	ProgressBar_Player_Ki->SetPercent(PlayerCurKi/PlayerMaxKi);
-	ProgressBar_Enemy_Ki->SetPercent(EnemyCurKi/EnemyMaxKi);
+	ProgressBar_Player->SetPercent(PlayerCurHP / PlayerMaxHP);
+	ProgressBar_Enemy->SetPercent(EnemyCurHP / EnemyMaxHP);
+
+	ProgressBar_Player_Ki->SetPercent(PlayerCurKi / PlayerMaxKi);
+	ProgressBar_Enemy_Ki->SetPercent(EnemyCurKi / EnemyMaxKi);
 
 	StartCombatTime();
 }
@@ -131,7 +187,7 @@ void UCombatUI::StartCombat(
 void UCombatUI::StartCombatTime()
 {
 	CombatTime = 0.0f;
-	
+
 	UpdateTimer();
 	GetWorld()->GetTimerManager().SetTimer(CombatTimerHandle, this, &UCombatUI::UpdateTimer, 1.0f, true);
 }
@@ -139,13 +195,14 @@ void UCombatUI::StartCombatTime()
 void UCombatUI::ClearCombatTime()
 {
 	CombatTime = 0.0f;
-	
+
 	GetWorld()->GetTimerManager().ClearTimer(CombatTimerHandle);
 }
 
+
 void UCombatUI::OnReceiveMessage(FString Msg)
 {
-	if ( Msg == GameEvent::PlayerWin || Msg == GameEvent::EnemyWin )
+	if (Msg == GameEvent::PlayerWin || Msg == GameEvent::EnemyWin)
 	{
 		this->ClearCombatTime();
 	}
@@ -153,10 +210,10 @@ void UCombatUI::OnReceiveMessage(FString Msg)
 
 void UCombatUI::OnDamage(bool bIsPlayer, float Damage)
 {
-	if( Damage <= 0 )
+	if (Damage <= 0)
 		return;
-	
-	if ( bIsPlayer )
+
+	if (bIsPlayer)
 	{
 		// 플레이어가 맞았으니, 적에게 점수
 		OnEnemyAttackHit(Damage);
@@ -187,8 +244,8 @@ void UCombatUI::OnPlayerAttackHit(float Damage)
 	// 플레이어 UI 텍스트 업데이트
 	if (Text_PlayerDamage && Text_PlayerCombo)
 	{
-		Text_PlayerDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")), FText::AsNumber(FMath::RoundToInt(PlayerDamageSum))));
-		Text_PlayerCombo->SetText(FText::Format(FText::FromString(TEXT("{0} Combo")), FText::AsNumber(PlayerComboCount)));
+		Text_PlayerCombo->SetText(
+			FText::Format(FText::FromString(TEXT("{0} Combo")), FText::AsNumber(PlayerComboCount)));
 		ShowPlayerDamageUI();
 	}
 
@@ -218,7 +275,8 @@ void UCombatUI::ResetPlayerCombo()
 }
 
 void UCombatUI::ShowPlayerDamageUI()
-{}
+{
+}
 
 void UCombatUI::HidePlayerDamageUI()
 {
@@ -236,7 +294,6 @@ void UCombatUI::OnEnemyAttackHit(float Damage)
 	// 적 UI 텍스트 업데이트
 	if (Text_EnemyDamage && Text_EnemyCombo)
 	{
-		Text_EnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")), FText::AsNumber(FMath::RoundToInt(EnemyDamageSum))));
 		Text_EnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0} Combo")), FText::AsNumber(EnemyComboCount)));
 		ShowEnemyDamageUI();
 	}
@@ -267,7 +324,8 @@ void UCombatUI::ResetEnemyCombo()
 }
 
 void UCombatUI::ShowEnemyDamageUI()
-{}
+{
+}
 
 void UCombatUI::HideEnemyDamageUI()
 {
