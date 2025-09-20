@@ -135,6 +135,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Kamehame")
 	FVector GetKamehameHandLocation() const;
+
+	UFUNCTION(BlueprintCallable, Category="Overlay")
+	void SetOverlayMID(const FLinearColor InColor, const float InValue);
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -224,7 +227,12 @@ public:
 		return StatSystem->GetKamehameDamage();
 	}
 
-	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void IncreaseKi(const float ChargeKiAmount)
+	{
+		StatSystem->IncreaseKi(ChargeKiAmount);
+	}
+
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void UseBlast()
 	{
@@ -386,7 +394,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Kamehameha")
 	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
+	UPROPERTY()
 	TObjectPtr<UMaterialInterface> OverlayMaterial;
+
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> OverlayMID;
 	

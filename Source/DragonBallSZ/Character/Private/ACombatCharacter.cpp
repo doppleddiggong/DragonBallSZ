@@ -13,6 +13,8 @@
 #include "UChargeKiSystem.h"
 
 #include "GameEvent.h"
+#include "GameColor.h"
+
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 #include "EAnimMontageType.h"
@@ -20,12 +22,17 @@
 #include "UDBSZVFXManager.h"
 #include "UDBSZSoundManager.h"
 
+#include "Shared/FComponentHelper.h"
+
 #include "Components/ArrowComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Features/UCommonFunctionLibrary.h"
 #include "Features/UDelayTaskManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+
+#define CHARGEKI_WHITE_PATH TEXT("/Game/VFX/InGame/ChargeKi/M_WhiteOutline_Inst.M_WhiteOutline_Inst")
 
 ACombatCharacter::ACombatCharacter()
 {
@@ -56,10 +63,14 @@ ACombatCharacter::ACombatCharacter()
 	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
 	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
 
-	if (const ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(TEXT("'/Game/VFX/InGame/ChargeKi/M_WhiteOutline_Inst.M_WhiteOutline_Inst'")); MaterialFinder.Succeeded())
-	{
-		OverlayMaterial = MaterialFinder.Object;
-	}
+	if (auto LoadedAsset = FComponentHelper::LoadAsset<UMaterialInterface>(CHARGEKI_WHITE_PATH))
+		OverlayMaterial = LoadedAsset;
+
+	
+	// if (const ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(CHARGEKI_WHITE_PATH); MaterialFinder.Succeeded())
+	// {
+	// 	OverlayMaterial = MaterialFinder.Object;
+	// }
 }
 
 void ACombatCharacter::BeginPlay()
@@ -69,8 +80,8 @@ void ACombatCharacter::BeginPlay()
 	MeshComp = this->GetMesh();
 	OverlayMID = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
 	MeshComp->SetOverlayMaterial(OverlayMID);
-	MoveComp = this->GetCharacterMovement();
 
+	MoveComp = this->GetCharacterMovement();
 	AnimInstance = MeshComp->GetAnimInstance();
 	
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
@@ -134,6 +145,15 @@ FVector ACombatCharacter::GetKamehameHandLocation() const
 	const FVector RightHandLoc = RightHandComp->GetComponentLocation();
 
 	return (LeftHandLoc + RightHandLoc) / 2.0f;
+}
+
+void ACombatCharacter::SetOverlayMID(const FLinearColor InColor, const float InValue)
+{
+	if ( IsValid(OverlayMID ))
+	{
+		OverlayMID->SetVectorParameterValue(TEXT("Color"), InColor);
+		OverlayMID->SetScalarParameterValue(TEXT("Opacity"), InValue);
+	}
 }
 
 bool ACombatCharacter::IsControlEnable_Implementation()
@@ -269,18 +289,9 @@ void ACombatCharacter::OnPowerCharge(AActor* Target, bool bState)
 	if ( this != Target )
 		return;
 
-	if ( bState )
-	{
-		// 차지 이펙트 White 켜!
-		OverlayMID->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
-	}
-	else
-	{
-		// 차지 이펙트 White 꺼!
-		OverlayMID->SetScalarParameterValue(TEXT("Opacity"), 0.0f);
-	}
+	// OverlayWhite ON / OFF
+	SetOverlayMID(GameColor::White, bState ? 1.0f : 0.0f);
 }
-
 
 void ACombatCharacter::OnLookTarget_Implementation()
 {
@@ -293,7 +304,6 @@ void ACombatCharacter::OnLookTarget_Implementation()
 
 	SetActorRotation(NewRot);
 }
-
 
 void ACombatCharacter::OnFlyEnd_Implementation()
 {

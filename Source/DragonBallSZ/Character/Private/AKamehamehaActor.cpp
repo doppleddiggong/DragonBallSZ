@@ -9,6 +9,7 @@
 #include "EAnimMontageType.h"
 
 #include "EngineUtils.h"
+#include "GameColor.h"
 #include "GameEvent.h"
 
 #include "NiagaraComponent.h"
@@ -301,6 +302,7 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		EventManager->SendSpecialAttack(Owner, 1);
 		// 발사자 애니메이션 재생
 		Shooter->PlayTypeMontage(EAnimMontageType::Kamehame);
+		Shooter->SetOverlayMID(GameColor::Blue, 1.0f);
 
 
 		// // 카메하메 애니메이션 총 프레임 딜레이
@@ -348,4 +350,5 @@ void AKamehamehaActor::EndKamehame()
 	Target->SetHold(false);
 
 	Shooter->ClearKamehame();
+	Shooter->SetOverlayMID(GameColor::Blue, 0.0f);
 }
