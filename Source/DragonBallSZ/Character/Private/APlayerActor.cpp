@@ -21,7 +21,7 @@
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
 #include "AEnergyBlastActor.h"
-#include "KamehamehaActor.h"
+#include "AKamehamehaActor.h"
 
 #include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"

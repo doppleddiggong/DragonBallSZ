@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "KamehamehaActor.generated.h"
+#include "AKamehamehaActor.generated.h"
 
 UCLASS()
 class DRAGONBALLSZ_API AKamehamehaActor : public AActor
