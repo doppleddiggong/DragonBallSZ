@@ -82,7 +82,7 @@ void APlayerActor::BeginPlay()
 	CameraShakeSystem->InitSystem(this);	
 
 	// ActorComponent 초기화
-	StatSystem->InitStat(true);
+	StatSystem->InitStat(true, ECharacterType::Songoku);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
@@ -99,8 +99,6 @@ void APlayerActor::BeginPlay()
 	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
 	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 	EventManager->OnPowerCharge.AddDynamic(this, &APlayerActor::OnPowerCharge);
-	EventManager->SendUpdateHealth(true, StatSystem->CurHP, StatSystem->MaxHP);
-	EventManager->SendUpdateKi(true, StatSystem->CurKi, StatSystem->MaxKi);
 }
 
 void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)

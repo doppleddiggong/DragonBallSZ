@@ -6,11 +6,13 @@
 
 #define HITSTOP_PATH    TEXT("/Game/CustomContents/MasterData/HitStop.HitStop")
 #define KNOCKBACK_PATH  TEXT("/Game/CustomContents/MasterData/Knockback.Knockback")
+#define CHARACTERINFO_PATH  TEXT("/Game/CustomContents/MasterData/CharacterInfo.CharacterInfo")
 
 UDBSZDataManager::UDBSZDataManager()
 {
     HitStopTable = FComponentHelper::LoadAsset<UDataTable>(HITSTOP_PATH);
     KnockbackTable  = FComponentHelper::LoadAsset<UDataTable>(KNOCKBACK_PATH);
+    CharacterInfoTable  = FComponentHelper::LoadAsset<UDataTable>(CHARACTERINFO_PATH);
 }
 
 void UDBSZDataManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -24,6 +26,7 @@ void UDBSZDataManager::Deinitialize()
 {
     Clear_HitStopTable();
     Clear_KnockbackTable();
+    Clear_CharacterInfoData();
     
     Super::Deinitialize();
 }
@@ -32,6 +35,7 @@ void UDBSZDataManager::ReloadMasterData()
 {
     LoadData_HitStopTable();
     LoadData_KnockbackTable();
+    LoadData_CharacterInfoData();
 }
 
 #pragma region HIT_STOP
@@ -109,7 +113,7 @@ void UDBSZDataManager::LoadData_KnockbackTable()
     UDataTable* TableObj = KnockbackTable.LoadSynchronous();
     if (!TableObj)
     {
-        PRINTLOG(TEXT("Load failed: %s"), *HitStopTable.ToString());
+        PRINTLOG(TEXT("Load failed: %s"), *KnockbackTable.ToString());
         return;
     }
 
@@ -140,3 +144,50 @@ bool UDBSZDataManager::GetKnockbackData(EAttackPowerType Type, FKnockbackData& O
     return false;
 }
 #pragma endregion KNOCKBACK
+
+#pragma region CHARACTER_DATA
+void UDBSZDataManager::Clear_CharacterInfoData()
+{
+    CharacterInfoCache.Reset();
+    bLoadCharacterInfo = false;   
+}
+
+void UDBSZDataManager::LoadData_CharacterInfoData()
+{
+    CharacterInfoCache.Reset();
+    bLoadCharacterInfo = false;
+
+    UDataTable* TableObj = CharacterInfoTable.LoadSynchronous();
+    if (!TableObj)
+    {
+        PRINTLOG(TEXT("Load failed: %s"), *CharacterInfoTable.ToString());
+        return;
+    }
+
+    static const FString ContextString(TEXT("CharacterInfoTable"));
+    for (const FName& RowName : TableObj->GetRowNames() )
+    {
+        if (const FCharacterInfoData* Row = TableObj->FindRow<FCharacterInfoData>(RowName, ContextString, true))
+        {
+            CharacterInfoCache.Add(Row->Type, *Row);
+        }
+    }
+
+    bLoadKnockback = true;
+}
+
+bool UDBSZDataManager::GetCharacterInfoData(ECharacterType Type, FCharacterInfoData& Out) const
+{
+    if (!bLoadCharacterInfo)
+        return false;
+
+    if (const FCharacterInfoData* Found = CharacterInfoCache.Find(Type))
+    {
+        Out = *Found;
+        return true;
+    }
+
+    PRINTLOG(TEXT("DataGetFail : %s"), *UEnum::GetValueAsString(Type) );
+    return false;
+}
+#pragma endregion CHARACTER_DATA

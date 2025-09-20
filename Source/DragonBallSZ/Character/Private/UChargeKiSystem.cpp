@@ -48,6 +48,7 @@ void UChargeKiSystem::ActivateEffect(const bool bState)
 	if (bState)
 	{
 		NiagaraComp->Activate(true);
+		Owner->SetChargeKi(true);
 		Owner->PlayTypeMontage(EAnimMontageType::ChargeKi);
 
 		GetWorld()->GetTimerManager().SetTimer(
@@ -61,6 +62,7 @@ void UChargeKiSystem::ActivateEffect(const bool bState)
 	else
 	{
 		NiagaraComp->DeactivateImmediate();
+		Owner->SetChargeKi(false);
 		Owner->StopTargetMontage(EAnimMontageType::ChargeKi, 0.15f);
 
 		if (GetWorld())

@@ -2,7 +2,7 @@
 
 #include "UStatSystem.h"
 
-#include "GameEvent.h"
+#include "UDBSZDataManager.h"
 #include "UDBSZEventManager.h"
 
 #define MIN_DMG_MUL 0.85f
@@ -23,10 +23,34 @@ void UStatSystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UStatSystem::InitStat_Implementation(bool IsPlayer)
+void UStatSystem::InitStat_Implementation(const bool InIsPlayer, const ECharacterType InCharacterType)
 {
-	this->bIsPlayer = IsPlayer;
-	this->IsDead = false;
+	this->bIsPlayer = InIsPlayer;
+	this->CharacterType = InCharacterType;
+	this->bIsDead = false;
+
+	FCharacterInfoData Params;
+	if ( UDBSZDataManager::Get(GetWorld())->GetCharacterInfoData(CharacterType, Params) )
+	{
+		this->MaxHP = Params.MaxHP;
+		this->CurHP = this->MaxHP;
+
+		this->AttackDamage = Params.AttackDamage;
+		this->AttackChargeKi = Params.AttackChargeKi;
+		
+		this->MaxKi = Params.MaxKi;
+		this->CurKi = Params.StartKi;
+
+		this->BlastNeedKi = Params.BlastNeedKi;
+		this->BlastDamage = Params.BlastDamage;
+		this->BlastShotDelay = Params.BlastShotDelay;
+		
+		this->KamehameNeedKi = Params.KamehameNeedKi;
+		this->KamehameDamage = Params.KamehameDamage;
+	
+		this->SightLength= Params.SightLength;
+		this->SightAngle = Params.SightAngle;
+	}
 }
 
 float UStatSystem::GetRandDmg(float Damage)
@@ -70,13 +94,13 @@ bool UStatSystem::DecreaseHealth_Implementation(float InDamagePoint)
 	if( CurHP < 0 )
 	{
 		CurHP = 0;
-		this->IsDead = true;
+		this->bIsDead = true;
 	}
 
 	if (auto EventManager = UDBSZEventManager::Get(GetWorld()) )
 		EventManager->SendUpdateHealth(bIsPlayer,  CurHP, MaxHP);
 
-	return IsDead;
+	return bIsDead;
 }
 
 void UStatSystem::IncreaseKi_Implementation(float InKi)

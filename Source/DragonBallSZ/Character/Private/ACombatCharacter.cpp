@@ -130,7 +130,7 @@ bool ACombatCharacter::IsControlEnable_Implementation()
 	if ( IsHit )
 		return false;
 
-	if ( StatSystem->IsDead )
+	if ( StatSystem->IsDead() )
 		return false;
 
 	return true;
@@ -144,6 +144,9 @@ bool ACombatCharacter::IsMoveEnable_Implementation()
 	if ( IsAttackIng() )
 		return false;
 
+	if ( IsChargeKi() )
+		return false;
+
 	return true;
 }
 
@@ -155,6 +158,10 @@ bool ACombatCharacter::IsAttackEnable_Implementation()
 	return true;
 }
 
+bool ACombatCharacter::IsDead_Implementation()
+{
+	return StatSystem->IsDead();
+}
 
 bool ACombatCharacter::IsHitting_Implementation()
 {
@@ -165,6 +172,7 @@ bool ACombatCharacter::IsAttackIng_Implementation()
 {
 	return RushAttackSystem->IsAttackIng();
 }
+
 
 bool ACombatCharacter::IsInSight(const AActor* Other) const
 {
@@ -214,8 +222,8 @@ void ACombatCharacter::OnRecvMessage(FString InMsg)
 {
 	if ( InMsg == GameEvent::CombatStart )
 	{
-		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->CurHP, StatSystem->MaxHP);
-		EventManager->SendUpdateKi(IsPlayer(), StatSystem->CurKi, StatSystem->MaxKi);
+		EventManager->SendUpdateHealth(IsPlayer(), StatSystem->GetCurHP(), StatSystem->GetMaxHP());
+		EventManager->SendUpdateKi(IsPlayer(), StatSystem->GetCurKi(), StatSystem->GetMaxKi());
 
 		bIsCombatStart = true;
 	}
@@ -372,7 +380,7 @@ bool ACombatCharacter::IsBlastShootEnable()
 	if (NextAvailableTime > Now )
 		return false;
 	
-	return StatSystem->CurKi > StatSystem->BlastNeedKi;
+	return StatSystem->IsBlastShotEnable();
 }
 
 
@@ -381,7 +389,7 @@ bool ACombatCharacter::IsKamehameEnable_Implementation()
 	if ( !IsControlEnable() )
 		return false;
 
-	return StatSystem->CurKi > StatSystem->KamehameNeedKi;
+	return StatSystem->IsKamehameEnable();
 }
 
 void ACombatCharacter::PlayTypeMontage(const EAnimMontageType Type)

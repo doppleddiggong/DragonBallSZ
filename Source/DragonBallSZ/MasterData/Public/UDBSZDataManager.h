@@ -6,6 +6,7 @@
 #include "Core/Macro.h"
 #include "FHitStopData.h"
 #include "FKnockbackData.h"
+#include "FCharacterInfoData.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "UDBSZDataManager.generated.h"
 
@@ -29,7 +30,6 @@ public:
 public:
 	UPROPERTY(EditAnywhere, Category="MasterData|HitStop")
 	TSoftObjectPtr<UDataTable> HitStopTable;
-
 
     UFUNCTION(BlueprintCallable, Category="MasterData|HitStop")
     bool GetHitStopData(EAttackPowerType Power, UPARAM(ref) FHitStopData& Out) const;
@@ -58,4 +58,22 @@ private:
 	bool bLoadKnockback = false;
 	TMap<EAttackPowerType, FKnockbackData> KnockbackCache;
 #pragma endregion KNOCKBACK
+
+
+	
+
+#pragma region CHARACTER_DATA
+public:
+	UPROPERTY(EditAnywhere, Category="MasterData|CharacterInfo")
+	TSoftObjectPtr<UDataTable> CharacterInfoTable;
+
+	UFUNCTION(BlueprintCallable, Category="MasterData|CharacterInfo")
+	bool GetCharacterInfoData(ECharacterType Type, FCharacterInfoData& Out) const;
+
+private:
+	void Clear_CharacterInfoData();
+	void LoadData_CharacterInfoData();
+	bool bLoadCharacterInfo = false;
+	TMap<ECharacterType, FCharacterInfoData> CharacterInfoCache;
+#pragma endregion CHARACTER_DATA
 };

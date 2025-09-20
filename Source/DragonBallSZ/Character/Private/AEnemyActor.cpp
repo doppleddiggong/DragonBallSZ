@@ -60,7 +60,7 @@ void AEnemyActor::BeginPlay()
 		TargetActor = Cast<APlayerActor>(Player);
 	
 	AIEnemy = Cast<AEnemyAIController>(GetController());
-	SightSystem->InitSightSystem(TargetActor, StatSystem->SightLength, StatSystem->SightAngle );
+	SightSystem->InitSightSystem(TargetActor, StatSystem->GetSightLength(), StatSystem->GetSightAngle() );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	
 
 	// AsyncLoad
@@ -79,7 +79,7 @@ void AEnemyActor::BeginPlay()
 	CharacterData->LoadKamehame(KamehamehaFactory);
 
 	// ActorComponent 초기화
-	StatSystem->InitStat(false);
+	StatSystem->InitStat(false, ECharacterType::Vegeta);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);

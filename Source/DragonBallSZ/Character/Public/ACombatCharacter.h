@@ -65,6 +65,30 @@ public:
 		return StatSystem->IsPlayer() == false;
 	};
 
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float CurHP(float Per = 1.0f)
+	{
+		return StatSystem->GetCurHP() * Per;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float MaxHP(float Per = 1.0f)
+	{
+		return StatSystem->GetMaxHP() * Per;
+	}
+	
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float CurKi(float Per = 1.0f)
+	{
+		return StatSystem->GetCurKi() * Per;
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE float MaxKi(float Per = 1.0f)
+	{
+		return StatSystem->GetMaxKi() * Per;
+	}
+	
 	UFUNCTION(BlueprintPure, Category="GameState")
 	FORCEINLINE bool IsWinner() const
 	{
@@ -84,10 +108,17 @@ public:
 	};
 	
 	UFUNCTION(BlueprintCallable, Category="GameState")
-	FORCEINLINE void IsChargeKi(const bool bState)
+	FORCEINLINE void SetChargeKi(const bool bState)
 	{
 		this->bIsChargeKi = bState;
 	};
+
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE bool IsChargeKi()
+	{
+		return bIsChargeKi;
+	};
+
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -98,7 +129,8 @@ public:
 	bool IsAttackEnable();
 
 
-	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
+	bool IsDead();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsHitting();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -138,16 +170,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void SetAttackChargeKi(int ComboCount)
 	{
-		StatSystem->SetAttackChargeKi(ComboCount);
+		StatSystem->IncreaseKi_ComboCount(ComboCount);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category="Command")
 	FORCEINLINE float GetBlastShootDelay()
 	{
-		return StatSystem->BlastShotDelay;
+		return StatSystem->GetBlastShotDelay();
 	}
-
-public:
 	UFUNCTION(BlueprintCallable, Category="Stat")
 	FORCEINLINE float GetAttackDamage(int ComboCount)
 	{
