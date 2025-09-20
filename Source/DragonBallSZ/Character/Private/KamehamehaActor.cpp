@@ -5,6 +5,7 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 #include "EAnimMontageType.h"
+#include "EngineUtils.h"
 #include "EVFXType.h"
 #include "GameEvent.h"
 #include "NiagaraComponent.h"
@@ -42,6 +43,17 @@ void AKamehamehaActor::BeginPlay()
 
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &AKamehamehaActor::OnRecvMessage);
+
+	
+	for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
+	{
+		auto* PPV = *It;
+		if (PPV && PPV->Tags.Contains(FName("PPVImpactFrame")))
+		{
+			PPVolume = PPV;
+			break; // 찾으면 반복 종료
+		}
+	}
 }
 
 void AKamehamehaActor::OnRecvMessage(FString InMsg)
@@ -182,25 +194,17 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 void AKamehamehaActor::FireKamehameha()
 {
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	APostProcessVolume* PPVolume = GetWorld()->SpawnActor<APostProcessVolume>(
-		APostProcessVolume::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-	UMaterialInstanceDynamic* DynamicMat = UMaterialInstanceDynamic::Create(ImpactFrameMaterial, PPVolume);
-	PPVolume->Settings.AddBlendable(DynamicMat, 1.0f);
-	PPVolume->bUnbound = true; // Infinite Extent
-
-	// 1초 뒤에 끄기 (Timer 이용)
+	PPVolume->BlendWeight = 1.f;
+	
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
-		[PPVolume]()
+		[this]()
 		{
 			PPVolume->BlendWeight = 0.f;
-			PPVolume->Destroy();
 		},
-		ImpactTime, // 1초 뒤
-		false // 반복X
+		ImpactTime,
+		false
 	);
 
 	FRotator LookRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target->GetActorLocation());
