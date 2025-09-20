@@ -119,12 +119,6 @@ public:
 		return bIsChargeKi;
 	};
 
-	UFUNCTION(BlueprintCallable, Category="GameState")
-	FORCEINLINE void SetShootKamehame(const bool bState, class AKamehamehaActor* InKamehamehaActor )
-	{
-		this->bIsShootKamehame = bState;
-		this->KamehamehaActor = InKamehamehaActor;
-	};
 	
 	UFUNCTION(BlueprintCallable, Category="GameState")
 	FORCEINLINE bool IsShootKamehame()
@@ -132,8 +126,15 @@ public:
 		return bIsShootKamehame;
 	};
 
+	UFUNCTION(BlueprintCallable, Category="Kamehame")
+	FORCEINLINE void SetShootKamehame(const bool bState, class AKamehamehaActor* InKamehamehaActor )
+	{
+		this->bIsShootKamehame = bState;
+		this->KamehamehaActor = InKamehamehaActor;
+	};
 	
-
+	UFUNCTION(BlueprintPure, Category="Kamehame")
+	FVector GetKamehameHandLocation() const;
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -235,6 +236,14 @@ public:
 	
 
 public:
+	UFUNCTION(BlueprintCallable, Category="Montage")
+	FORCEINLINE UAnimInstance* GetAnimInstance()
+	{
+		return AnimInstance;
+	}
+	
+
+	
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void PlayTypeMontage(const EAnimMontageType Type);
 

@@ -76,9 +76,6 @@ void AKamehamehaActor::ClearKamehame()
 
 	if (IsValid(FinishDust))
 		FinishDust->DeactivateImmediate();
-
-	if (IsValid(Shooter))
-		Shooter->ClearKamehame();
 }
 
 void AKamehamehaActor::Tick(float DeltaTime)
@@ -107,7 +104,7 @@ void AKamehamehaActor::Tick(float DeltaTime)
 	{
 		if ( IsValid(Shooter))
 		{
-			this->SetActorLocation( Shooter->GetBodyPart(EBodyPartType::Hand_R)->GetComponentLocation());
+			this->SetActorLocation( Shooter->GetKamehameHandLocation());
 		}
 	}
 
@@ -286,17 +283,19 @@ void AKamehamehaActor::DelayKamehameFire()
 	//일정 시간후에 발사한다
 	// 발사 !!!!
 	FireKamehameha();
-	bTrackingOwnerHand = false;
 
-	USkeletalMeshComponent* Mesh = Shooter->GetMesh();
-	UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
-	UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
-	if(MyAnimBP->Montage_IsPlaying(Shooter->KamehameMontage))
+	// USkeletalMeshComponent* Mesh = Shooter->GetMesh();
+	// UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
+	// UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);
+	if(auto MyAnimBP = Shooter->GetAnimInstance() )
 	{
-		FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(Shooter->KamehameMontage);
-		if (CurrentSection == FName("Default"))
+		if ( MyAnimBP->Montage_IsPlaying(Shooter->KamehameMontage) )
 		{
-			MyAnimBP->Montage_SetPlayRate(Shooter->KamehameMontage, 0.5);
+			FName CurrentSection = MyAnimBP->Montage_GetCurrentSection(Shooter->KamehameMontage);
+			if (CurrentSection == FName("Default"))
+			{
+				MyAnimBP->Montage_SetPlayRate(Shooter->KamehameMontage, 0.5);
+			}
 		}
 	}
 
@@ -318,5 +317,5 @@ void AKamehamehaActor::EndKamehame()
 	Shooter->SetHold(false);
 	Target->SetHold(false);
 
-	this->ClearKamehame();
+	Shooter->ClearKamehame();
 }

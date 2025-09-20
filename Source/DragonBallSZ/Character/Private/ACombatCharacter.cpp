@@ -117,6 +117,14 @@ void ACombatCharacter::OnMontageNotifyBegin(FName NotifyName, const FBranchingPo
 		EventManager->SendMessage(GameEvent::KameShoot.ToString());
 }
 
+FVector ACombatCharacter::GetKamehameHandLocation() const
+{
+	const FVector LeftHandLoc = LeftHandComp->GetComponentLocation();
+	const FVector RightHandLoc = RightHandComp->GetComponentLocation();
+
+	return (LeftHandLoc + RightHandLoc) / 2.0f;
+}
+
 bool ACombatCharacter::IsControlEnable_Implementation()
 {
 	if ( this->IsHolding() )
