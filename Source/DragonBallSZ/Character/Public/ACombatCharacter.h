@@ -119,6 +119,21 @@ public:
 		return bIsChargeKi;
 	};
 
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE void SetShootKamehame(const bool bState, class AKamehamehaActor* InKamehamehaActor )
+	{
+		this->bIsShootKamehame = bState;
+		this->KamehamehaActor = InKamehamehaActor;
+	};
+	
+	UFUNCTION(BlueprintCallable, Category="GameState")
+	FORCEINLINE bool IsShootKamehame()
+	{
+		return bIsShootKamehame;
+	};
+
+	
+
 	
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -162,6 +177,15 @@ public:
 	void RecoveryMovementMode(const EMovementMode InMovementMode);
 
 	UFUNCTION(BlueprintCallable, Category="Command")
+	void EnergyBlastShoot();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void KamehameShoot();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
+	void ClearKamehame();
+
+	UFUNCTION(BlueprintCallable, Category="Command")
 	bool IsBlastShootEnable();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -203,6 +227,13 @@ public:
 		return StatSystem->UseBlast();
 	}
 
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseKamehame()
+	{
+		return StatSystem->UseKamehame();
+	}
+	
+
 public:
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void PlayTypeMontage(const EAnimMontageType Type);
@@ -212,6 +243,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Montage")
 	void StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime);
+
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
@@ -293,6 +325,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
 	bool bIsChargeKi = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character")
+	bool bIsShootKamehame = false;
+
+
 	FTimerHandle AvoidTimer;
 	float AvoidTime = 1.0f;
 	
@@ -344,4 +380,8 @@ protected:
 	TEnumAsByte<EMovementMode>  PrevMoveMode;
 
 	bool bDelegatesBound = false;
+
+
+	UPROPERTY()
+	class AKamehamehaActor* KamehamehaActor = nullptr;
 };

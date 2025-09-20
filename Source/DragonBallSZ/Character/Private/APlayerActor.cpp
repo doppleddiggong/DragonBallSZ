@@ -20,10 +20,7 @@
 // Shared
 #include "Core/Macro.h"
 #include "DragonBallSZ.h"
-#include "AEnergyBlastActor.h"
-#include "AKamehamehaActor.h"
 
-#include "EAnimMontageType.h"
 #include "UDBSZEventManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -286,23 +283,7 @@ void APlayerActor::Cmd_EnergyBlast_Implementation()
 	if (!IsBlastShootEnable() )
 		return;
 	
-	EventManager->SendCameraShake(this, EAttackPowerType::Small );
-	
-	this->PlaySoundAttack();
-	
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.Instigator = this;
-
-	this->UseBlast();
-	this->PlayTypeMontage(EAnimMontageType::Blast);
-	LastBlastShotTime = GetWorld()->GetTimeSeconds();
-
-	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		EnergyBlastFactory,
-		this->GetActorTransform(),
-		Params
-	);
+	this->EnergyBlastShoot();
 }
 
 void APlayerActor::Cmd_Kamehameha_Implementation()
@@ -310,15 +291,5 @@ void APlayerActor::Cmd_Kamehameha_Implementation()
 	if ( !IsKamehameEnable() )
 		return;
 	
-	FActorSpawnParameters Params;
-	Params.Owner = this;
-	Params.Instigator = this;
-	
-	auto KamehameActor = GetWorld()->SpawnActor<AKamehamehaActor>(
-		KamehamehaFactory,
-		this->GetActorTransform(),
-		Params
-	);
-
-	KamehameActor->StartKamehame(this, TargetActor);
+	this->KamehameShoot();
 }

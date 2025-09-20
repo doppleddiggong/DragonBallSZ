@@ -5,14 +5,14 @@
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
 
-#include "DragonBallSZ.h"
-#include "EAnimMontageType.h"
-#include "AEnergyBlastActor.h"
 #include "UChargeKiSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "URushAttackSystem.h"
+#include "DragonBallSZ.h"
+
 #include "VectorTypes.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -420,19 +420,21 @@ void UEnemyFSM::SpawnEnergyBlast()
 		PRINT_STRING(TEXT("Enemy Is ShootBlastDisable!!!!"));
 		return;
 	}
-
-	Owner->UseBlast();
-	Owner->PlayTypeMontage(EAnimMontageType::Blast);
-
-	FActorSpawnParameters Params;
-	Params.Owner = Owner;
-	Params.Instigator = Owner;
-
-	GetWorld()->SpawnActor<AEnergyBlastActor>(
-		Owner->EnergyBlastFactory,
-		Owner->GetActorTransform(),
-		Params
-	);
+	Owner->EnergyBlastShoot();
+	
+	//
+	// Owner->UseBlast();
+	// Owner->PlayTypeMontage(EAnimMontageType::Blast);
+	//
+	// FActorSpawnParameters Params;
+	// Params.Owner = Owner;
+	// Params.Instigator = Owner;
+	//
+	// GetWorld()->SpawnActor<AEnergyBlastActor>(
+	// 	Owner->EnergyBlastFactory,
+	// 	Owner->GetBodyPart(EBodyPartType::Hand_R)->GetComponentTransform(),
+	// 	Params
+	// );
 }
 
 void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
@@ -441,7 +443,6 @@ void UEnemyFSM::SpawnEnergyBlastLoop(int32 Remaining)
 		return;
 
 	SpawnEnergyBlast();
-	Owner->PlaySoundAttack();
 
 	FTimerDelegate TimerDelegate;
 	TimerDelegate.BindLambda([this, Remaining]()

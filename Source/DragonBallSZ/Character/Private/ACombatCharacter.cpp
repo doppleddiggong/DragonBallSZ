@@ -2,6 +2,8 @@
 
 #include "ACombatCharacter.h"
 
+#include "AEnergyBlastActor.h"
+#include "AKamehamehaActor.h"
 #include "UStatSystem.h"
 #include "UHitStopSystem.h"
 #include "URushAttackSystem.h"
@@ -270,7 +272,11 @@ void ACombatCharacter::OnDamage(
 	
 	IsHit = true;
 
-	const auto AttackPowerType = Cast<const UDBSZDamageType>(DamageType)->AttackPowerType;
+	EAttackPowerType AttackPowerType = EAttackPowerType::Normal;
+	if (const UDBSZDamageType* DBSZDamageType = Cast<const UDBSZDamageType>(DamageType))
+	{
+		AttackPowerType = DBSZDamageType->AttackPowerType;
+	}
 	this->PlaySoundHit();
 
 	UDBSZVFXManager::Get(GetWorld())->ShowVFXAttackType(
@@ -285,6 +291,8 @@ void ACombatCharacter::OnDamage(
 	EventManager->SendDamage(IsPlayer(), Damage);
 
 	RushAttackSystem->ResetComboCount();
+
+	
 	
 	if ( ChargeKiSystem->IsActivateState() )
 	{
@@ -292,7 +300,12 @@ void ACombatCharacter::OnDamage(
 		ChargeKiSystem->ActivateEffect(false);
 	}
 	
-	
+	if ( IsShootKamehame() || IsValid(KamehamehaActor) )
+	{
+		// 카메하메 파 캔슬!
+		this->ClearKamehame();
+	}
+
 	if ( IsDie )
 	{
 		FName SendEventType = IsPlayer() ? GameEvent::EnemyWin : GameEvent::PlayerWin;
@@ -367,6 +380,55 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 		this->bUseControllerRotationYaw = false;
 		this->bUseControllerRotationPitch = false;
 		Movement->bOrientRotationToMovement = true;
+	}
+}
+
+void ACombatCharacter::EnergyBlastShoot()
+{
+	EventManager->SendCameraShake(this, EAttackPowerType::Small );
+	this->PlaySoundAttack();
+	
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+
+	this->UseBlast();
+	this->PlayTypeMontage(EAnimMontageType::Blast);
+	LastBlastShotTime = GetWorld()->GetTimeSeconds();
+
+	GetWorld()->SpawnActor<AEnergyBlastActor>(
+		EnergyBlastFactory,
+		this->GetBodyPart(EBodyPartType::Hand_R)->GetComponentTransform(),
+		Params
+	);
+}
+
+void ACombatCharacter::KamehameShoot()
+{
+	FActorSpawnParameters Params;
+	Params.Owner = this;
+	Params.Instigator = this;
+	
+	KamehamehaActor = GetWorld()->SpawnActor<AKamehamehaActor>(
+		KamehamehaFactory,
+		this->GetActorTransform(),
+		Params
+	);
+
+	if ( IsValid(KamehamehaActor))
+	{
+		this->SetShootKamehame(true, KamehamehaActor);
+		
+		KamehamehaActor->StartKamehame(this, TargetActor);
+	}
+}
+
+void ACombatCharacter::ClearKamehame()
+{
+	if ( IsValid(KamehamehaActor) )
+	{
+		KamehamehaActor->ClearKamehame();
+		this->SetShootKamehame(false, nullptr);
 	}
 }
 
@@ -466,7 +528,6 @@ void ACombatCharacter::StopTargetMontage(const EAnimMontageType Type, const floa
 	
 	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
 }
-
 
 void ACombatCharacter::PlaySoundAttack()
 {

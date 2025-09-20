@@ -115,6 +115,12 @@ public:
 	{
 		DecreaseKi(BlastNeedKi);
 	}
+
+	UFUNCTION(BlueprintCallable, Category="Stats")
+	FORCEINLINE void UseKamehame()
+	{
+		DecreaseKi(KamehameNeedKi);
+	}
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Stats")
 	void IncreaseHealth(float InHealPoint);	
