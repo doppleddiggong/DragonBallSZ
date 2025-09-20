@@ -32,7 +32,7 @@ public:
 	}
 private:
 	UFUNCTION()
-	void ChargeKiTick() const;
+	void ChargeKiTick();
 	
 public:
 	UPROPERTY(Transient, BlueprintReadOnly, Category="ChargeKi")
@@ -48,9 +48,12 @@ public:
 	float ChargeDelay = 0.1f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
 	float ChargeKiAmount = 1.0f;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
+	float AccelerationFactor = 0.1f;
+	
 private:
 	FTimerHandle KiChargeTimerHandle;
+	float CurrentChargeTime = 0.0f;
 
 	bool ActivateState = false;
 };

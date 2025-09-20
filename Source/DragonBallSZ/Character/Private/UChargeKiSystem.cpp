@@ -47,6 +47,7 @@ void UChargeKiSystem::ActivateEffect(const bool bState)
 
 	if (bState)
 	{
+		CurrentChargeTime = 0.0f;
 		EventManager->SendPowerCharge(Owner, true);
 
 		NiagaraComp->Activate(true);
@@ -76,7 +77,9 @@ void UChargeKiSystem::ActivateEffect(const bool bState)
 	EventManager->SendPowerCharge(Owner, bState);
 }
 
-void UChargeKiSystem::ChargeKiTick() const
+void UChargeKiSystem::ChargeKiTick()
 {
-	Owner->StatSystem->IncreaseKi(ChargeKiAmount);
+	CurrentChargeTime += ChargeDelay;
+	float DynamicChargeKiAmount = ChargeKiAmount * (1.0f + CurrentChargeTime * AccelerationFactor);
+	Owner->IncreaseKi(DynamicChargeKiAmount);
 }
