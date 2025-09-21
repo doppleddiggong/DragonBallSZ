@@ -49,7 +49,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
 	float ChargeKiAmount = 1.0f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="ChargeKi")
-	float AccelerationFactor = 0.1f;
+	float AccelerationFactor = 1.35f;
 	
 private:
 	FTimerHandle KiChargeTimerHandle;
