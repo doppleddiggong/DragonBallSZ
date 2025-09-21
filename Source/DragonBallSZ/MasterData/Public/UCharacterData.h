@@ -42,6 +42,15 @@ public:
 	bool LoadKamehame(TSubclassOf<class AKamehamehaActor>& OutActor);
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Skeletetal)
+	TSoftObjectPtr<USkeletalMesh> MeshData;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Skeletetal)
+	FVector RelativeLocation;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Skeletetal)
+	FRotator RelativeRotator;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=AnimBlueprint)
+	TSoftClassPtr<UAnimInstance> AnimBluePrint;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<FRushData> RushData;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
