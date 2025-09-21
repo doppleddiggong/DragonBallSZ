@@ -6,8 +6,10 @@
 #include "UDBSZEventManager.h"
 
 #include "TimerManager.h"
+#include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
+#include "Components/RichTextBlock.h"
 
 void UCombatUI::NativeConstruct()
 {
@@ -62,13 +64,19 @@ void UCombatUI::UpdatePlayerDamageUI()
 	PlayerDamage += (IntPlayerDamageSum - PlayerDamage) * SpeedFactor;
 	if (PlayerDamage <= IntPlayerDamageSum)
 	{
-		Text_PlayerDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
-		                                         FText::AsNumber(PlayerDamage)));
+		FString DamageStr = FString::FromInt(PlayerDamage);
+		
+		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
+		
+		TextPlayerDamage->SetText(FText::FromString(FormattedStr));
 	}
 	else
 	{
-		Text_PlayerDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
-												 FText::AsNumber(IntPlayerDamageSum)));
+		FString DamageStr = FString::FromInt(PlayerDamage);
+		
+		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
+		
+		TextPlayerDamage->SetText(FText::FromString(FormattedStr));
 	}
 }
 
@@ -86,12 +94,12 @@ void UCombatUI::UpdateEnemyDamageUI()
 	EnemyDamage += (IntEnemyDamageSum - EnemyDamage) * SpeedFactor;
 	if (EnemyDamage <= IntEnemyDamageSum)
 	{
-		Text_EnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+		TextEnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
 		                                        FText::AsNumber(EnemyDamage)));
 	}
 	else
 	{
-		Text_EnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
+		TextEnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
 												 FText::AsNumber(IntEnemyDamageSum)));
 	}
 }
@@ -99,10 +107,10 @@ void UCombatUI::UpdateEnemyDamageUI()
 void UCombatUI::UpdateTimer()
 {
 	CombatTime++;
-	if (Text_RemainTime)
+	if (TextRemainTime)
 	{
 		const int32 DisplayTime = FMath::Max(0, FMath::FloorToInt(CombatTime));
-		Text_RemainTime->SetText(FText::AsNumber(DisplayTime));
+		TextRemainTime->SetText(FText::AsNumber(DisplayTime));
 	}
 }
 
@@ -242,10 +250,10 @@ void UCombatUI::OnPlayerAttackHit(float Damage)
 	PlayerComboCount++;
 
 	// 플레이어 UI 텍스트 업데이트
-	if (Text_PlayerDamage && Text_PlayerCombo)
+	if (TextPlayerDamage && TextPlayerCombo)
 	{
-		Text_PlayerCombo->SetText(
-			FText::Format(FText::FromString(TEXT("{0} Hits")), FText::AsNumber(PlayerComboCount)));
+		TextPlayerCombo->SetText(
+			FText::Format(FText::FromString(TEXT("{0}<Small> Hits</>")), FText::AsNumber(PlayerComboCount)));
 		ShowPlayerDamageUI();
 	}
 
@@ -276,12 +284,20 @@ void UCombatUI::ResetPlayerCombo()
 
 void UCombatUI::ShowPlayerDamageUI()
 {
+	LeftComboImage->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UCombatUI::HidePlayerDamageUI()
 {
-	Text_PlayerDamage->SetText(FText::GetEmpty());
-	Text_PlayerCombo->SetText(FText::GetEmpty());
+	if (TextPlayerDamage)
+	{
+		TextPlayerDamage->SetText(FText::GetEmpty());
+	}
+	if (TextPlayerCombo)
+	{
+		TextPlayerCombo->SetText(FText::GetEmpty());
+	}
+	LeftComboImage->SetVisibility(ESlateVisibility::Hidden);
 }
 
 
@@ -292,9 +308,9 @@ void UCombatUI::OnEnemyAttackHit(float Damage)
 	EnemyComboCount++;
 
 	// 적 UI 텍스트 업데이트
-	if (Text_EnemyDamage && Text_EnemyCombo)
+	if (TextEnemyDamage && TextEnemyCombo)
 	{
-		Text_EnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0} Hits")), FText::AsNumber(EnemyComboCount)));
+		TextEnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0}<Small> Hits</>")), FText::AsNumber(EnemyComboCount)));
 		ShowEnemyDamageUI();
 	}
 
@@ -325,10 +341,18 @@ void UCombatUI::ResetEnemyCombo()
 
 void UCombatUI::ShowEnemyDamageUI()
 {
+	RightComboImage->SetVisibility(ESlateVisibility::Visible);
 }
 
 void UCombatUI::HideEnemyDamageUI()
 {
-	Text_EnemyDamage->SetText(FText::GetEmpty());
-	Text_EnemyCombo->SetText(FText::GetEmpty());
+	if (TextEnemyDamage)
+	{
+		TextEnemyDamage->SetText(FText::GetEmpty());
+	}
+	if (TextEnemyCombo)
+	{
+		TextEnemyCombo->SetText(FText::GetEmpty());
+	}
+	RightComboImage->SetVisibility(ESlateVisibility::Hidden);
 }

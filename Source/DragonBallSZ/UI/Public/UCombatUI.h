@@ -51,7 +51,7 @@ public:
 	float CombatTime = 0.0f;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> Text_RemainTime;
+	TObjectPtr<class URichTextBlock> TextRemainTime;
 
 	FTimerHandle CombatTimerHandle;
 #pragma endregion COMBAT_TIME
@@ -124,14 +124,18 @@ public:
 	
 private:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> Text_PlayerDamage;
+	TObjectPtr<class URichTextBlock> TextPlayerDamage;
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> Text_PlayerCombo;
-	
+	TObjectPtr<class URichTextBlock> TextPlayerCombo;
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> Text_EnemyDamage;
+	TObjectPtr<class UImage> LeftComboImage;
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> Text_EnemyCombo;
+	TObjectPtr<class URichTextBlock> TextEnemyDamage;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class URichTextBlock> TextEnemyCombo;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UImage> RightComboImage;
 
 	
 	FTimerHandle PlayerComboResetTimerHandle;
