@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "EBodyPartType.h"
+#include "ECharacterType.h"
 #include "UStatSystem.h"
 #include "ACombatCharacter.generated.h"
 
@@ -19,7 +20,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-
+	
 private:
 	void BindMontageDelegates(UAnimInstance* Anim);
 	void UnbindMontageDelegates(UAnimInstance* Anim);
@@ -140,6 +141,9 @@ public:
 	void SetOverlayMID(const FLinearColor InColor, const float InValue);
 	
 public:
+	UFUNCTION(BlueprintCallable, Category="Setup")
+	void SetupCharacterFromType(const ECharacterType Type);
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
@@ -363,7 +367,7 @@ protected:
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")
-	class UCharacterData* CharacterData;
+	TObjectPtr<class UCharacterData> CharacterData;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TArray<TObjectPtr<UAnimMontage>> HitMontages;
@@ -395,21 +399,23 @@ public:
 	TSubclassOf<class AKamehamehaActor> KamehamehaFactory;
 	
 	UPROPERTY()
-	TObjectPtr<UMaterialInterface> OverlayMaterial;
+	TObjectPtr<class UMaterialInterface> OverlayMaterial;
 
 	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> OverlayMID;
+	TObjectPtr<class UMaterialInstanceDynamic> OverlayMID;
 	
 protected:
-	UPROPERTY()
-	TObjectPtr<class UDBSZEventManager> EventManager;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	TEnumAsByte<EMovementMode>  PrevMoveMode;
-
 	bool bDelegatesBound = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	ECharacterType CharacterType;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TEnumAsByte<EMovementMode> PrevMoveMode;
 
 	UPROPERTY()
 	TObjectPtr<class AKamehamehaActor> KamehamehaActor;
+
+	UPROPERTY()
+	TObjectPtr<class UDBSZEventManager> EventManager;
 };

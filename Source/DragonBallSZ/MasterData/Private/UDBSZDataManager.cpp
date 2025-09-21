@@ -2,17 +2,20 @@
 
 #include "UDBSZDataManager.h"
 #include "DragonBallSZ.h"
+#include "FCharacterAssetData.h"
 #include "Shared/FComponentHelper.h"
 
 #define HITSTOP_PATH    TEXT("/Game/CustomContents/MasterData/HitStop.HitStop")
 #define KNOCKBACK_PATH  TEXT("/Game/CustomContents/MasterData/Knockback.Knockback")
 #define CHARACTERINFO_PATH  TEXT("/Game/CustomContents/MasterData/CharacterInfo.CharacterInfo")
+#define CHARACTERASSET_PATH  TEXT("/Game/CustomContents/MasterData/CharacterAsset.CharacterAsset")
 
 UDBSZDataManager::UDBSZDataManager()
 {
     HitStopTable = FComponentHelper::LoadAsset<UDataTable>(HITSTOP_PATH);
     KnockbackTable  = FComponentHelper::LoadAsset<UDataTable>(KNOCKBACK_PATH);
     CharacterInfoTable  = FComponentHelper::LoadAsset<UDataTable>(CHARACTERINFO_PATH);
+    CharacterAssetTable = FComponentHelper::LoadAsset<UDataTable>(CHARACTERASSET_PATH);
 }
 
 void UDBSZDataManager::Initialize(FSubsystemCollectionBase& Collection)
@@ -27,6 +30,7 @@ void UDBSZDataManager::Deinitialize()
     Clear_HitStopTable();
     Clear_KnockbackTable();
     Clear_CharacterInfoData();
+    Clear_CharacterAssetData();
     
     Super::Deinitialize();
 }
@@ -36,6 +40,7 @@ void UDBSZDataManager::ReloadMasterData()
     LoadData_HitStopTable();
     LoadData_KnockbackTable();
     LoadData_CharacterInfoData();
+    LoadData_CharacterAssetData();
 }
 
 #pragma region HIT_STOP
@@ -145,7 +150,7 @@ bool UDBSZDataManager::GetKnockbackData(EAttackPowerType Type, FKnockbackData& O
 }
 #pragma endregion KNOCKBACK
 
-#pragma region CHARACTER_DATA
+#pragma region CHARACTER_INFO_DATA
 void UDBSZDataManager::Clear_CharacterInfoData()
 {
     CharacterInfoCache.Reset();
@@ -173,7 +178,7 @@ void UDBSZDataManager::LoadData_CharacterInfoData()
         }
     }
 
-    bLoadKnockback = true;
+    bLoadCharacterInfo = true;
 }
 
 bool UDBSZDataManager::GetCharacterInfoData(ECharacterType Type, FCharacterInfoData& Out) const
@@ -190,4 +195,51 @@ bool UDBSZDataManager::GetCharacterInfoData(ECharacterType Type, FCharacterInfoD
     PRINTLOG(TEXT("DataGetFail : %s"), *UEnum::GetValueAsString(Type) );
     return false;
 }
-#pragma endregion CHARACTER_DATA
+#pragma endregion CHARACTER_INFO_DATA
+
+#pragma region CHARACTER_ASSET_DATA
+void UDBSZDataManager::Clear_CharacterAssetData()
+{
+    CharacterAssetCache.Reset();
+    bLoadCharacterAsset = false;   
+}
+
+void UDBSZDataManager::LoadData_CharacterAssetData()
+{
+    CharacterAssetCache.Reset();
+    bLoadCharacterAsset = false;
+
+    UDataTable* TableObj = CharacterAssetTable.LoadSynchronous();
+    if (!TableObj)
+    {
+        PRINTLOG(TEXT("Load failed: %s"), *CharacterAssetTable.ToString());
+        return;
+    }
+
+    static const FString ContextString(TEXT("CharacterAssetTable"));
+    for (const FName& RowName : TableObj->GetRowNames() )
+    {
+        if (const FCharacterAssetData* Row = TableObj->FindRow<FCharacterAssetData>(RowName, ContextString, true))
+        {
+            CharacterAssetCache.Add(Row->CharacterType, *Row);
+        }
+    }
+
+    bLoadCharacterAsset = true;
+}
+
+bool UDBSZDataManager::GetCharacterAssetData(ECharacterType Type, FCharacterAssetData& Out) const
+{
+    if (!bLoadCharacterAsset)
+        return false;
+
+    if (const FCharacterAssetData* Found = CharacterAssetCache.Find(Type))
+    {
+        Out = *Found;
+        return true;
+    }
+
+    PRINTLOG(TEXT("DataGetFail : %s"), *UEnum::GetValueAsString(Type) );
+    return false;
+}
+#pragma endregion CHARACTER_ASSET_DATA

@@ -24,34 +24,15 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category="Avoid")
 	void OnRestoreAvoid();
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnDash(AActor* Target, bool IsDashing, FVector Direction);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnTeleport(AActor* Target);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnAttack(AActor* Target, int ComboCount);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnSpecialAttack(AActor* Target, int32 SpecialIndex);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnGuard(AActor* Target, bool bState);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnAvoid(AActor* Target, bool bState);
-	// UFUNCTION(BlueprintCallable, Category="Event")
-	// void OnPowerCharge(AActor* Target, bool bState);
-
 	UFUNCTION(BlueprintCallable, Category="Enemy")
 	void OnSightDetect(bool Target);
-
 	
 public: // Enemy Component
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
-	class USightSystem* SightSystem;
+	TObjectPtr<class USightSystem> SightSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
-	class UEnemyFSM* EnemyFSM;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
-	class UEnemyAnimInstance* AnimBP;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Enemy")
-	class AEnemyAIController* AIEnemy;
+	TObjectPtr<class UEnemyFSM> EnemyFSM;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy")
 	float RotateLerpSpeed = 5.0f;
 };

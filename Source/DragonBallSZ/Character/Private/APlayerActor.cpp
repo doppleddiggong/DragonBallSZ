@@ -10,7 +10,6 @@
 #include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
-#include "UCharacterData.h"
 #include "UChargeKiSystem.h"
 
 // PlayerActor Only
@@ -25,17 +24,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-#define GOKU_DATA	TEXT("/Game/CustomContents/MasterData/Goku_Data.Goku_Data")
-
 APlayerActor::APlayerActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
 	CameraShakeSystem = CreateDefaultSubobject<UCameraShakeSystem>(TEXT("CameraShakeSystem"));
-
-	static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
-	if (CD.Succeeded())
-		CharacterData = CD.Object;
 }
 
 void APlayerActor::BeginPlay()
@@ -46,25 +39,12 @@ void APlayerActor::BeginPlay()
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
-	// AsyncLoad
-	CharacterData->LoadHitMontage(HitMontages);
-	CharacterData->LoadDeathMontage(DeathMontage);
-	CharacterData->LoadBlastMontage(BlastMontages);
-	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
-	CharacterData->LoadKamehameMontage(KamehameMontage);
-	CharacterData->LoadIntroMontage(IntroMontage);
-	CharacterData->LoadWinMontage(WinMontage);
-
-	CharacterData->LoadDashVFX(DashVFX);
-	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
-
-	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
-	CharacterData->LoadKamehame(KamehamehaFactory);
+	this->SetupCharacterFromType(ECharacterType::Songoku);
 	
 	CameraShakeSystem->InitSystem(this);	
 
 	// ActorComponent 초기화
-	StatSystem->InitStat(true, ECharacterType::Songoku);
+	StatSystem->InitStat(true, CharacterType);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
@@ -74,26 +54,14 @@ void APlayerActor::BeginPlay()
 
 	// 이벤트 매니저를 통한 이벤트 등록 및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
-	EventManager->OnDash.AddDynamic(this, &APlayerActor::OnDash);
-	EventManager->OnTeleport.AddDynamic(this, &APlayerActor::OnTeleport);
-	EventManager->OnAttack.AddDynamic(this, &APlayerActor::OnAttack);
-	EventManager->OnSpecialAttack.AddDynamic(this, &APlayerActor::OnSpecialAttack);
-	EventManager->OnGuard.AddDynamic(this, &APlayerActor::OnGuard);
-	EventManager->OnAvoid.AddDynamic(this, &APlayerActor::OnAvoid);
 }
 
 void APlayerActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	if (!EventManager) return;
-	
-	EventManager->OnDash.RemoveDynamic(this, &APlayerActor::OnDash);
-	EventManager->OnTeleport.RemoveDynamic(this, &APlayerActor::OnTeleport);
-	EventManager->OnAttack.RemoveDynamic(this, &APlayerActor::OnAttack);
-	EventManager->OnSpecialAttack.RemoveDynamic(this, &APlayerActor::OnSpecialAttack);
-	EventManager->OnGuard.RemoveDynamic(this, &APlayerActor::OnGuard);
-	EventManager->OnAvoid.RemoveDynamic(this, &APlayerActor::OnAvoid);
+	if (!EventManager)
+		return;
 }
 
 void APlayerActor::Tick(float DeltaTime)
@@ -115,42 +83,6 @@ void APlayerActor::Landed(const FHitResult& Hit)
 void APlayerActor::OnRestoreAvoid()
 {
 	EventManager->SendAvoid(this, false);
-}
-
-void APlayerActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
-{
-	if ( this != Target )
-		return;
-}
-
-void APlayerActor::OnTeleport(AActor* Target)
-{
-	if ( this != Target )
-		return;
-}
-
-void APlayerActor::OnAttack(AActor* Target, int ComboCount)
-{
-	if ( this != Target )
-		return;
-}
-
-void APlayerActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
-{
-	if ( this != Target )
-		return;
-}
-
-void APlayerActor::OnGuard(AActor* Target, bool bState)
-{
-	if ( this != Target )
-		return;
-}
-
-void APlayerActor::OnAvoid(AActor* Target, bool bState)
-{
-	if ( this != Target )
-		return;
 }
 
 void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)

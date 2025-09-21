@@ -15,10 +15,12 @@
 #include "GameEvent.h"
 #include "GameColor.h"
 
+#include "UCharacterData.h"
 #include "UDBSZEventManager.h"
 #include "DragonBallSZ.h"
 #include "EAnimMontageType.h"
 #include "UDBSZDamageType.h"
+#include "UDBSZDataManager.h"
 #include "UDBSZVFXManager.h"
 #include "UDBSZSoundManager.h"
 
@@ -30,7 +32,7 @@
 #include "Features/UDelayTaskManager.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "Materials/MaterialInstanceConstant.h"
 
 #define CHARGEKI_WHITE_PATH TEXT("/Game/VFX/InGame/ChargeKi/M_WhiteOutline_Inst.M_WhiteOutline_Inst")
 
@@ -38,8 +40,8 @@ ACombatCharacter::ACombatCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
-	GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
+	// GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
+	// GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
 
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
@@ -50,39 +52,20 @@ ACombatCharacter::ACombatCharacter()
 	ChargeKiSystem		= CreateDefaultSubobject<UChargeKiSystem>(TEXT("ChargeKiSystem"));
 	
 	LeftHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftHandComp"));
-	LeftHandComp->SetupAttachment(GetMesh(), TEXT("hand_l"));
-
 	RightHandComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightHandComp"));
-	RightHandComp->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	RightHandComp->SetRelativeRotation(FRotator(0, -180.f, 0.f));
-
 	LeftFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("LeftFootComp"));
-	LeftFootComp->SetupAttachment(GetMesh(), TEXT("foot_l"));
-	LeftFootComp->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-
 	RightFootComp = CreateDefaultSubobject<UArrowComponent>(TEXT("RightFootComp"));
-	RightFootComp->SetupAttachment(GetMesh(), TEXT("foot_r"));
 
 	if (auto LoadedAsset = FComponentHelper::LoadAsset<UMaterialInterface>(CHARGEKI_WHITE_PATH))
 		OverlayMaterial = LoadedAsset;
-
-	
-	// if (const ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(CHARGEKI_WHITE_PATH); MaterialFinder.Succeeded())
-	// {
-	// 	OverlayMaterial = MaterialFinder.Object;
-	// }
 }
 
 void ACombatCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	MeshComp = this->GetMesh();
-	OverlayMID = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
-	MeshComp->SetOverlayMaterial(OverlayMID);
-
 	MoveComp = this->GetCharacterMovement();
-	AnimInstance = MeshComp->GetAnimInstance();
+	OverlayMID = UMaterialInstanceDynamic::Create(OverlayMaterial, this);
 
 	this->SetFallingToWalk();
 	
@@ -91,8 +74,6 @@ void ACombatCharacter::BeginPlay()
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
 	EventManager->OnPowerCharge.AddDynamic(this, &ACombatCharacter::OnPowerCharge);
-
-	BindMontageDelegates(AnimInstance);
  }
 
 void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -106,10 +87,82 @@ void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		EventManager->OnMessage.RemoveDynamic(this, &ACombatCharacter::OnRecvMessage);
 		EventManager->OnPowerCharge.RemoveDynamic(this, &ACombatCharacter::OnPowerCharge);
 	}
-
 	
 	Super::EndPlay(EndPlayReason);
 }
+
+
+void ACombatCharacter::SetupCharacterFromType(const ECharacterType Type)
+{
+	this->CharacterType = Type;
+	
+	FCharacterAssetData Params;
+	UDBSZDataManager::Get(GetWorld())->GetCharacterAssetData(Type, Params);
+
+	if (Params.CharacterDataAsset.IsValid())
+		this->CharacterData = Params.CharacterDataAsset.Get();
+	else
+		this->CharacterData = Params.CharacterDataAsset.LoadSynchronous();
+
+	MeshComp = GetMesh();
+    if ( IsValid(MeshComp) )
+    {
+        if (CharacterData->MeshData.IsValid())
+			MeshComp->SetSkeletalMesh(CharacterData->MeshData.Get());
+        else
+            MeshComp->SetSkeletalMesh(CharacterData->MeshData.LoadSynchronous());
+
+    	MeshComp->EmptyOverrideMaterials();
+    	for (int32 i = 0; i < CharacterData->MaterialArray.Num(); ++i)
+    	{
+    		UMaterialInstanceConstant* MaterialInst = nullptr;
+    		if (CharacterData->MaterialArray[i].IsValid())
+    			MaterialInst = CharacterData->MaterialArray[i].Get();
+    		else
+    			MaterialInst = CharacterData->MaterialArray[i].LoadSynchronous();
+
+    		if (MaterialInst)
+    			MeshComp->SetMaterial(i, MaterialInst);
+    	}
+    	
+    	MeshComp->SetRelativeLocation( CharacterData->RelativeLocation);
+    	MeshComp->SetRelativeRotation(  CharacterData->RelativeRotator );
+    	MeshComp->SetRelativeScale3D( CharacterData->RelativeScale );
+    	
+        if (CharacterData->AnimBluePrint.IsValid())
+            MeshComp->SetAnimInstanceClass(CharacterData->AnimBluePrint.Get());
+        else
+            MeshComp->SetAnimInstanceClass(CharacterData->AnimBluePrint.LoadSynchronous());
+
+    	auto Rule = FAttachmentTransformRules::SnapToTargetNotIncludingScale;
+    	
+    	LeftHandComp->AttachToComponent(MeshComp, Rule, CharacterData->LeftHandSocketName);
+    	RightHandComp->AttachToComponent(MeshComp, Rule, CharacterData->RightHandSocketName);
+    	LeftFootComp->AttachToComponent(MeshComp, Rule, CharacterData->LeftFootSocketName);
+    	RightFootComp->AttachToComponent(MeshComp, Rule, CharacterData->RightFootSocketName);
+
+    	MeshComp->SetOverlayMaterial(OverlayMID);
+
+    	AnimInstance = MeshComp->GetAnimInstance();
+    	BindMontageDelegates(AnimInstance);
+    }
+
+	// AsyncLoad
+	CharacterData->LoadHitMontage(HitMontages);
+	CharacterData->LoadDeathMontage(DeathMontage);
+	CharacterData->LoadBlastMontage(BlastMontages);
+	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
+	CharacterData->LoadKamehameMontage(KamehameMontage);
+	CharacterData->LoadIntroMontage(IntroMontage);
+	CharacterData->LoadWinMontage(WinMontage);
+
+	CharacterData->LoadDashVFX(DashVFX);
+	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
+
+	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
+	CharacterData->LoadKamehame(KamehamehaFactory);
+}
+
 
 void ACombatCharacter::BindMontageDelegates(UAnimInstance* Anim)
 {
