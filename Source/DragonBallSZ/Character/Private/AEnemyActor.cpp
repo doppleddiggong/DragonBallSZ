@@ -10,6 +10,8 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UChargeKiSystem.h"
+#include "ACombatLevelScript.h"
+#include "ADBSZGameMode.h"
 
 // EnemyActor Only
 #include "APlayerActor.h"
@@ -37,8 +39,9 @@ void AEnemyActor::BeginPlay()
 	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
 		TargetActor = Cast<APlayerActor>(Player);
 
-	this->SetupCharacterFromType(ECharacterType::Vegeta);
-	
+	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
+	this->SetupCharacterFromType(GameMode->EnemyType);
+
 	SightSystem->InitSightSystem(TargetActor, StatSystem->GetSightLength(), StatSystem->GetSightAngle() );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	
 	

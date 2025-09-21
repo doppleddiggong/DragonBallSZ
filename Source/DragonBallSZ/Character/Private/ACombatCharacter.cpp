@@ -631,30 +631,25 @@ void ACombatCharacter::StopTargetMontage(const EAnimMontageType Type, const floa
 
 void ACombatCharacter::PlaySoundAttack()
 {
-	auto SoundType = IsPlayer() ? ESoundType::Goku_Attack : ESoundType::Vege_Attack;
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack );
 }
 
 void ACombatCharacter::PlaySoundHit()
 {
-	auto SoundType = IsPlayer() ? ESoundType::Goku_Hit : ESoundType::Vege_Hit;
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundHit );
 }
 
 void ACombatCharacter::PlaySoundJump()
 {
-	auto SoundType = IsPlayer() ? ESoundType::Goku_Jump : ESoundType::Vege_Jump;
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundJump );
 }
 
 void ACombatCharacter::PlaySoundTeleport()
 {
-	auto SoundType = IsPlayer() ? ESoundType::Goku_Teleport : ESoundType::Vege_Teleport;
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundTeleport );
 }
 
 void ACombatCharacter::PlaySoundWin()
 {	
-	auto SoundType = IsPlayer() ? ESoundType::Vege_Win : ESoundType::Goku_Win;
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( SoundType );
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundWin );
 }

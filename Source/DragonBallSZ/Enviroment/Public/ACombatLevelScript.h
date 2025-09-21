@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ECharacterType.h"
 #include "Engine/LevelScriptActor.h"
 #include "ACombatLevelScript.generated.h"
 
@@ -39,6 +40,7 @@ public:
 
 	UFUNCTION()
 	void OnRecvMessage(FString InMsg);
+	
 	UFUNCTION(BlueprintCallable, Category="NEW_STATE")
 	void CombatResultProcess(bool IsPlayerWin);
 	
@@ -49,15 +51,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="UI")
 	TSubclassOf<class UUserWidget> CombatUIFactory;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="UI" )
-	class UCombatUI* CombatUI;
+	TObjectPtr<class UCombatUI> CombatUI;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera" )
-	class ADynamicCameraActor* DynamicCameraActor;
+	TObjectPtr<ADynamicCameraActor> DynamicCameraActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character" )
-	class APlayerActor* PlayerActor;
+	TObjectPtr<APlayerActor> PlayerActor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character" )
-	class AEnemyActor* EnemyActor;
+	TObjectPtr<AEnemyActor> EnemyActor;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="State")
@@ -75,7 +77,6 @@ public:
 
 	UFUNCTION()
 	void OnSequenceFinished();
-	void PlaySoundWin();
 
 	UPROPERTY()
 	TObjectPtr<class ULevelSequence> PlayingSequence;
@@ -83,18 +84,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	float CombatStartDelay = 2.0f;
 	
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	class ULevelSequencePlayer* SequencePlayer;
+	TObjectPtr<class ULevelSequencePlayer> SequencePlayer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	class ALevelSequenceActor* SequenceActor;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	class ULevelSequence* MainSeq;
+	TObjectPtr<class ULevelSequence> MainSeq;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	class ULevelSequence* GokuWinSeq;
+	TObjectPtr<class ULevelSequence> GokuWinSeq;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	class ULevelSequence* VegeWinSeq;
+	TObjectPtr<class ULevelSequence> VegeWinSeq;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
 	TObjectPtr<class AActor> GokuWinActor;

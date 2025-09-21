@@ -11,6 +11,7 @@
 #include "UDashSystem.h"
 #include "UFlySystem.h"
 #include "UChargeKiSystem.h"
+#include "ADBSZGameMode.h"
 
 // PlayerActor Only
 #include "AEnemyActor.h"
@@ -39,7 +40,8 @@ void APlayerActor::BeginPlay()
 	if ( AActor* FoundActor = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
-	this->SetupCharacterFromType(ECharacterType::Songoku);
+	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
+	this->SetupCharacterFromType(GameMode->PlayerType);
 	
 	CameraShakeSystem->InitSystem(this);	
 

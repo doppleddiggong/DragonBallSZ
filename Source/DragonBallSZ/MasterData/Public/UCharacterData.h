@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EAttackPowerType.h"
+#include "ESoundType.h"
 #include "Engine/DataAsset.h"
 #include "UCharacterData.generated.h"
 
@@ -54,8 +55,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Skeletal)
 	TArray<TSoftObjectPtr<UMaterialInstanceConstant>> MaterialArray;
 
-
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Socket)
 	FName LeftHandSocketName = FName("hand_l");
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Socket)
@@ -64,11 +63,21 @@ public:
 	FName LeftFootSocketName = FName("foot_l");
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Socket)
 	FName RightFootSocketName = FName("foot_r");
-
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=AnimBlueprint)
 	TSoftClassPtr<class UAnimInstance> AnimBluePrint;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundAttack;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundHit;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundJump;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundTeleport;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundWin;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TArray<FRushData> RushData;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
