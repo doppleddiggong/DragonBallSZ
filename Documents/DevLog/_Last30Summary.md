@@ -1,4 +1,4 @@
-## 30-Day Briefing 2025-09-20
+## 30-Day Briefing 2025-09-21
 
 ### Overview / 개요
 - Daily files: 30 (last 30 days)
