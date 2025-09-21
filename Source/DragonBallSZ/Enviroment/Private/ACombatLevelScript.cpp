@@ -2,8 +2,6 @@
 
 #include "ACombatLevelScript.h"
 
-#include <UDBSZSoundManager.h>
-
 #include "ADynamicCameraActor.h"
 #include "AEnemyActor.h"
 #include "APlayerActor.h"
@@ -14,7 +12,9 @@
 #include "DragonBallSZ.h"
 #include "EngineUtils.h"
 #include "ESoundType.h"
+#include "UDBSZSoundManager.h"
 
+#include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 
@@ -25,9 +25,6 @@
 
 #define COMBAT_WIDGET_PATH TEXT("/Game/CustomContents/UI/WB_Combat.WB_Combat_C")
 
-// #define MAIN_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleIntro/MainSequence.MainSequence")
-// #define GOKU_SEQ_PATH	TEXT("/Game/DynamicCamera/BattleOutro/GokuWin.GokuWin")
-
 class ULevelSequencePlayer;
 
 ACombatLevelScript::ACombatLevelScript()
@@ -35,13 +32,11 @@ ACombatLevelScript::ACombatLevelScript()
 	CombatUIFactory = FComponentHelper::LoadClass<UUserWidget>(COMBAT_WIDGET_PATH);
 }
 
+
 void ACombatLevelScript::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// MainSeq = LoadObject<ULevelSequence>(nullptr, MAIN_SEQ_PATH);
-	// GokuWinSeq = LoadObject<ULevelSequence>(nullptr, GOKU_SEQ_PATH);
-	
 	if ( AActor* Camera = UGameplayStatics::GetActorOfClass(GetWorld(), ADynamicCameraActor::StaticClass()) )
 		DynamicCameraActor = Cast<ADynamicCameraActor>(Camera);
 	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )

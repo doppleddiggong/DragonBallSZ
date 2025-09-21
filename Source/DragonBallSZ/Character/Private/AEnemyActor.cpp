@@ -9,23 +9,19 @@
 #include "UKnockbackSystem.h"
 #include "UDashSystem.h"
 #include "UFlySystem.h"
-#include "UCharacterData.h"
 #include "UChargeKiSystem.h"
+#include "ACombatLevelScript.h"
+#include "ADBSZGameMode.h"
 
 // EnemyActor Only
-#include "AEnemyAIController.h"
 #include "APlayerActor.h"
 #include "UEnemyFSM.h"
 #include "USightSystem.h"
 
 // Shared
 #include "Core/Macro.h"
-#include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 #include "Kismet/GameplayStatics.h"
-
-#define VEGE_DATA	TEXT("/Game/CustomContents/MasterData/Vege_Data.Vege_Data")
-
 
 AEnemyActor::AEnemyActor()
 {
@@ -33,53 +29,24 @@ AEnemyActor::AEnemyActor()
 
 	EnemyFSM			= CreateDefaultSubobject<UEnemyFSM>(TEXT("EnemyFSM"));
 	SightSystem			= CreateDefaultSubobject<USightSystem>(TEXT("SightSystem"));
-
-	AutoPossessAI   = EAutoPossessAI::PlacedInWorldOrSpawned;
-	AIControllerClass = AEnemyAIController::StaticClass();
-
-	{
-		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( VEGE_DATA );
-		if (CD.Succeeded())
-			CharacterData = CD.Object;
-	}
 }
 
 void AEnemyActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-    if (!IsValid(CharacterData))
-    {
-        PRINTLOG(TEXT("AEnemyActor::BeginPlay: CharacterData is invalid. Cannot load character assets."));
-        // Handle gracefully, e.g., return or use default values
-        return;
-    }
-
 	// EnemyActor Only
 	if ( AActor* Player = UGameplayStatics::GetActorOfClass( GetWorld(), APlayerActor::StaticClass() ) )
 		TargetActor = Cast<APlayerActor>(Player);
-	
-	AIEnemy = Cast<AEnemyAIController>(GetController());
+
+	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
+	this->SetupCharacterFromType(GameMode->EnemyType);
+
 	SightSystem->InitSightSystem(TargetActor, StatSystem->GetSightLength(), StatSystem->GetSightAngle() );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	
-
-	// AsyncLoad
-	CharacterData->LoadHitMontage(HitMontages);
-	CharacterData->LoadDeathMontage(DeathMontage);
-	CharacterData->LoadBlastMontage(BlastMontages);
-	CharacterData->LoadChargeKiMontage(ChargeKiMontage);
-	CharacterData->LoadKamehameMontage(KamehameMontage);
-	CharacterData->LoadIntroMontage(IntroMontage);
-	CharacterData->LoadWinMontage(WinMontage);
-
-	CharacterData->LoadDashVFX(DashVFX);
-	CharacterData->LoadChargeKiVFX(ChargeKiVFX);
-
-	CharacterData->LoadEnergyBlast(EnergyBlastFactory);
-	CharacterData->LoadKamehame(KamehamehaFactory);
-
+	
 	// ActorComponent 초기화
-	StatSystem->InitStat(false, ECharacterType::Vegeta);
+	StatSystem->InitStat(false, CharacterType);
 	RushAttackSystem->InitSystem(this, CharacterData);
 	KnockbackSystem->InitSystem(this);
 	DashSystem->InitSystem(this, DashVFX);
@@ -123,7 +90,7 @@ void AEnemyActor::Landed(const FHitResult& Hit)
 
 void AEnemyActor::OnSightDetect(bool Target)
 {
-	AIEnemy->SetTarget(Target ? TargetActor : nullptr );
+	// AIEnemy->SetTarget(Target ? TargetActor : nullptr );
 }
 
 void AEnemyActor::OnRestoreAvoid()

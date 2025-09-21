@@ -7,6 +7,8 @@
 #include "FHitStopData.h"
 #include "FKnockbackData.h"
 #include "FCharacterInfoData.h"
+#include "FCharacterAssetData.h"
+
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "UDBSZDataManager.generated.h"
 
@@ -62,7 +64,7 @@ private:
 	TMap<EAttackPowerType, FKnockbackData> KnockbackCache;
 #pragma endregion KNOCKBACK
 
-#pragma region CHARACTER_DATA
+#pragma region CHARACTER_INFO_DATA
 public:
 	UPROPERTY(EditAnywhere, Category="MasterData|CharacterInfo")
 	TSoftObjectPtr<UDataTable> CharacterInfoTable;
@@ -77,5 +79,23 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<ECharacterType, FCharacterInfoData> CharacterInfoCache;
-#pragma endregion CHARACTER_DATA
+#pragma endregion CHARACTER_INFO_DATA
+
+
+#pragma region CHARACTER_ASSET_DATA
+public:
+	UPROPERTY(EditAnywhere, Category="MasterData|CharacterAsset")
+	TSoftObjectPtr<UDataTable> CharacterAssetTable;
+
+	UFUNCTION(BlueprintCallable, Category="MasterData|CharacterAsset")
+	bool GetCharacterAssetData(ECharacterType Type, FCharacterAssetData& Out) const;
+
+private:
+	void Clear_CharacterAssetData();
+	void LoadData_CharacterAssetData();
+	bool bLoadCharacterAsset = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
+	TMap<ECharacterType, FCharacterAssetData> CharacterAssetCache;
+#pragma endregion CHARACTER_ASSET_DATA
 };
