@@ -12,8 +12,10 @@
 #include "GameColor.h"
 #include "GameEvent.h"
 
-#include "NiagaraComponent.h"eee
+#include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "UDBSZSoundManager.h"
+#include "Components/AudioComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -37,6 +39,10 @@ AKamehamehaActor::AKamehamehaActor()
 	FinishDust = CreateDefaultSubobject<UNiagaraComponent>(TEXT("FinishDust"));
 	FinishDust->SetupAttachment(RootComponent);
 	FinishDust->bAutoActivate = false;
+
+	KamehamehaContinueSFX = CreateDefaultSubobject<UAudioComponent>(TEXT("KamehamehaComp"));
+	KamehamehaContinueSFX->SetupAttachment(RootComponent);
+	KamehamehaContinueSFX->bAutoActivate = false;
 }
 
 void AKamehamehaActor::BeginPlay()
@@ -84,14 +90,6 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 	ElapsedTime += DeltaTime;
 
-	// if (Shooter->IsHitting())
-	// {
-	// 	if (ChargeSphere) ChargeSphere->DeactivateImmediate();
-	// 	if (Kamehameha) ChargeSphere->DeactivateImmediate();
-	// 	if (Kamehameha) ChargeSphere->DeactivateImmediate();
-	// 	if (FinishDust) ChargeSphere->DeactivateImmediate();
-	// }
-
 	if (LoopDuration > 0.1f)
 	{
 		LoopDuration -= LoopSpeed;
@@ -127,6 +125,8 @@ void AKamehamehaActor::Tick(float DeltaTime)
 		{
 			if (!bFirstExplosion)
 			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Kamehameha_Explosion);
+		
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 					GetWorld(),
 					Explosion,
@@ -157,10 +157,6 @@ void AKamehamehaActor::Tick(float DeltaTime)
 		if (!bFirstExplosion)
 			return;
 
-		// 현재 상태 출력
-		FString StateStr = FString::Printf(TEXT("ElapsedTime: %f"), ElapsedTime);
-		GEngine->AddOnScreenDebugMessage(0, 1, FColor::Cyan, StateStr);
-
 		if (ElapsedTime > SecondExplosionTime)
 		{
 			if (BeamVector.X > 0)
@@ -179,6 +175,7 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 			if (!bSecondExplosion && BeamVector.X < 22)
 			{
+				KamehamehaContinueSFX->FadeOut(1.5f, 0.0f);
 				FinishDust->Activate();
 				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 					GetWorld(),
@@ -192,6 +189,8 @@ void AKamehamehaActor::Tick(float DeltaTime)
 					true
 				);
 
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Kamehameha_Explosion);
+				
 				UGameplayStatics::SpawnEmitterAtLocation(
 					GetWorld(),
 					ExplosionWind,
@@ -289,6 +288,7 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		bTrackingOwnerHand = true;
 		// 발사 시작
 		ChargeSphere->Activate();
+		UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Kamehameha_Charge);
 
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
@@ -314,7 +314,9 @@ void AKamehamehaActor::DelayKamehameFire()
 	//일정 시간후에 발사한다
 	// 발사 !!!!
 	FireKamehameha();
-
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Kamehameha_Fire);
+	FTimerHandle TimerHandle;
+	KamehamehaContinueSFX->Play();
 	// USkeletalMeshComponent* Mesh = Shooter->GetMesh();
 	// UAnimInstance* AnimInstance = Mesh->GetAnimInstance();
 	// UAnimInstance* MyAnimBP = Cast<UAnimInstance>(AnimInstance);

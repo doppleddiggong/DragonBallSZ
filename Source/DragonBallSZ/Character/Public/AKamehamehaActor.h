@@ -40,6 +40,9 @@ public:
 	TObjectPtr<class ACombatCharacter> Shooter;
 	UPROPERTY()
 	TObjectPtr<class ACombatCharacter> Target;
+
+	UPROPERTY(EditAnywhere, Category="SFX")
+	TObjectPtr<class UAudioComponent> KamehamehaContinueSFX;
 	
 protected:
 	virtual void BeginPlay() override;

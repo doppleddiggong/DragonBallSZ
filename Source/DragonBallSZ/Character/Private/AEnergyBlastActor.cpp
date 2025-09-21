@@ -11,6 +11,7 @@
 #include "DragonBallSZ.h"
 #include "UDBSZEventManager.h"
 #include "UDBSZFunctionLibrary.h"
+#include "UDBSZSoundManager.h"
 #include "UDBSZVFXManager.h"
 
 
@@ -45,11 +46,13 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<AEnemyActor>(OtherActor))	// Overlapping Enemy
 		{
+			UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::EnergyBlast_Explosion);
 			this->HitProcess(TargetActor, EVFXType::Explosion_Yellow);
 			this->Destroy();
 		}
 		else
 		{
+			UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::EnergyBlast_Explosion);
 			UDBSZVFXManager::Get(GetWorld())->ShowVFX(
 			EVFXType::Explosion_Yellow,
 			GetActorLocation(), GetActorRotation(),FVector(0.4f) );
@@ -60,11 +63,13 @@ void AEnergyBlastActor::OnOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	{
 		if (auto* TargetActor = Cast<APlayerActor>(OtherActor))	// Overlapping Player
 		{
+			UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::EnergyBlast_Explosion);
 			this->HitProcess(TargetActor, EVFXType::Explosion_Blue);
 			this->Destroy();
 		}
 		else
 		{
+			UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::EnergyBlast_Explosion);
 			UDBSZVFXManager::Get(GetWorld())->ShowVFX(
 			EVFXType::Explosion_Blue,
 			GetActorLocation(), GetActorRotation(),FVector(0.4f) );
@@ -96,6 +101,8 @@ void AEnergyBlastActor::BeginPlay()
 	}
 
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &AEnergyBlastActor::OnOverlap);
+
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::EnergyBlast_Fire);
 }
 
 // Called every frame
