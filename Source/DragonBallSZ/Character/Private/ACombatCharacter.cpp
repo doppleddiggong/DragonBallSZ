@@ -83,9 +83,11 @@ void ACombatCharacter::BeginPlay()
 
 	MoveComp = this->GetCharacterMovement();
 	AnimInstance = MeshComp->GetAnimInstance();
+
+	this->SetFallingToWalk();
 	
 	OnTakeAnyDamage.AddDynamic(this, &ACombatCharacter::OnDamage);
-
+	
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatCharacter::OnRecvMessage );
 	EventManager->OnPowerCharge.AddDynamic(this, &ACombatCharacter::OnPowerCharge);

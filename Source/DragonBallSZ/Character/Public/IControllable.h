@@ -19,7 +19,6 @@ class IControllable
 public:
 	virtual void Cmd_Move(const FVector2D& Axis) = 0;		// 이동
 	virtual void Cmd_Look(const FVector2D& Axis) = 0;		// 카메라 회전
-
 	virtual void Cmd_Jump() = 0;							// 점프
 	virtual void Cmd_Dash() = 0;							// 대시(부스트)
 
@@ -33,4 +32,8 @@ public:
 	virtual void Cmd_EnergyBlast() = 0;						// 기탄 발사
 
 	virtual void Cmd_Kamehameha() = 0;						// 카메하메 파
+
+	virtual void Cmd_AltitudeUp() = 0;						// 고도 상승
+	virtual void Cmd_AltitudeDown() = 0;					// 고도 하강
+	virtual void Cmd_AltitudeReleased() = 0;				// 고도 조절 해제
 };

@@ -6,9 +6,11 @@
 #include "UDBSZEventManager.h"
 #include "ACombatCharacter.h"
 
-#include "Components/CapsuleComponent.h"
 #include "Shared/FEaseHelper.h"
+#include "Components/CapsuleComponent.h"
 #include "Features/UEaseFunctionLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
 
 UFlySystem::UFlySystem()
 {
@@ -22,17 +24,53 @@ void UFlySystem::BeginPlay()
 
 void UFlySystem::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	UpstreamTick(DeltaTime);
-	DownstreamTick(DeltaTime);
+    UpstreamTick(DeltaTime);
+    DownstreamTick(DeltaTime);
+
+    if ( !bIsUpstream && !bIsDownstream &&
+    	MoveComp->MovementMode == MOVE_Flying )
+    {
+        const FVector AltInput = AltitudeTick(DeltaTime);
+        const FVector TotalInput = AltInput;
+
+        if (!TotalInput.IsNearlyZero())
+        {
+            MoveComp->AddInputVector(TotalInput);
+        }
+    }
 }
+
 void UFlySystem::InitSystem(class ACombatCharacter* InOwner, FEndCallback InCallback)
 {
 	this->Owner = InOwner;
 	this->Callback = InCallback;
 
+	this->MoveComp = Owner->GetCharacterMovement();
+
 	EventManager = UDBSZEventManager::Get(GetWorld());
+
+	// 브레이킹 기반 감속 설정(무입력시 자연 감속)
+	MoveComp->BrakingDecelerationFlying = BrakingDecelerationZ;
+	MoveComp->BrakingFriction = BrakingFriction;
+}
+
+void UFlySystem::OnAltitudePress(const bool bIsUp)
+{
+	bAltitudeInput = true;
+	bIsAltitudeUp = bIsUp;
+
+	if ( bIsUp == true &&
+		 MoveComp->MovementMode != MOVE_Flying )
+	{
+		Owner->SetFlying();
+	}
+}
+
+void UFlySystem::OnAltitudeRelease()
+{
+	bAltitudeInput = false;
 }
 
 void UFlySystem::OnJump()
@@ -53,7 +91,6 @@ void UFlySystem::OnJump()
 	case 2:
 		{
 			this->ActivateUpstream();
-
 			Owner->SetFlying();
 		}
 		break;
@@ -118,7 +155,7 @@ void UFlySystem::ActivateDownstream()
 	EventManager->SendDownstream(Owner, true);
 }
 
-void UFlySystem::UpstreamTick(float DeltaTime)
+void UFlySystem::UpstreamTick(const float DeltaTime)
 {
 	if ( !bIsUpstream )
 		return;
@@ -142,7 +179,7 @@ void UFlySystem::UpstreamTick(float DeltaTime)
 	}
 }
 
-void UFlySystem::DownstreamTick(float DeltaTime)
+void UFlySystem::DownstreamTick(const float DeltaTime)
 {
 	if ( !bIsDownstream )
 		return;
@@ -166,4 +203,50 @@ void UFlySystem::DownstreamTick(float DeltaTime)
 		
 		Callback.ExecuteIfBound();
 	}
+}
+
+FVector UFlySystem::AltitudeTick(const float DeltaTime)
+{
+    if (bIsUpstream || bIsDownstream || !bAltitudeInput)
+        return FVector::ZeroVector;
+
+    if ( MoveComp->MovementMode == MOVE_Flying)
+    {
+        CurrentFlySpeed += Acceleration * DeltaTime;
+        CurrentFlySpeed = FMath::Clamp(CurrentFlySpeed, FlySpeedMin, FlySpeedMax);
+        const FVector Direction = bIsAltitudeUp ? FVector::UpVector : FVector::DownVector;
+
+        if (bIsAltitudeUp)
+        {
+        	// 고도 제한
+            if (Owner->GetActorLocation().Z < MaxFlightHeight)
+                return Direction * CurrentFlySpeed * DeltaTime;
+        }
+        else
+        {
+        	// 하강일 경우, 지면 근처까지 오면 낙하 중단
+        	FVector Start = Owner->GetActorLocation();
+        	FVector End = Start - FVector(0.f, 0.f, 88*1.5f); // 캐릭터 크기가 88 이니깐 적당히...1.5밴
+
+        	FHitResult HitResult;
+        	FCollisionQueryParams Params;
+        	Params.AddIgnoredActor(Owner); // 본인 제외
+
+        	bool bHit = GetWorld()->LineTraceSingleByChannel(
+				HitResult,
+				Start, End, ECC_Visibility,Params
+			);
+
+        	if (bHit)
+        	{
+        		// 지면에 가까워졌으면 낙하 중단
+        		Owner->SetFallingToWalk();
+        		return FVector::ZeroVector;
+        	}
+
+        	return Direction * CurrentFlySpeed * DeltaTime;
+        }
+    }
+
+    return FVector::ZeroVector;
 }

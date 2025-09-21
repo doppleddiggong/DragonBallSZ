@@ -11,7 +11,10 @@ UCLASS()
 class DRAGONBALLSZ_API APlayerControl : public APlayerController
 {
 	GENERATED_BODY()
-	
+
+public:
+	APlayerControl();
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupInputComponent() override;
@@ -22,6 +25,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Move;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Look;
+	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_AltitudeUp;
+	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_AltitudeDown;
 
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Jump;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Dash;
@@ -34,13 +39,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_RushAttack;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_EnergyBlast;
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_ChargeKi;
-
 	UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<class UInputAction> IA_Kamehameha;
+
 	
 	// --- Handlers ---
 	void OnMove(const FInputActionValue& Value);
 	void OnLook(const FInputActionValue& Value);
-
+	void OnAltitudeUp(const FInputActionValue& Value);
+	void OnAltitudeDown(const FInputActionValue& Value);
+	void OnAltitudeReleased(const FInputActionValue& Value);
+	
 	void OnJump(const FInputActionValue& Value);
 	void OnDash(const FInputActionValue& Value);
 
@@ -54,7 +62,6 @@ protected:
 
 	void OnRushAttack(const FInputActionValue& Value);
 	void OnEnergyBlast(const FInputActionValue& Value);
-
 	void OnKamehameha(const FInputActionValue& Value);
 	
 private:

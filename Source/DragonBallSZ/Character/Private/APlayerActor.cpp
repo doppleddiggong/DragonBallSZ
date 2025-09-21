@@ -33,24 +33,9 @@ APlayerActor::APlayerActor()
 
 	CameraShakeSystem = CreateDefaultSubobject<UCameraShakeSystem>(TEXT("CameraShakeSystem"));
 
-	{
-		static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
-		if (CD.Succeeded())
-			CharacterData = CD.Object;
-	}
-
-	bUseControllerRotationYaw = true;
-	if (auto* Movecomp = GetCharacterMovement())
-	{
-		Movecomp->bOrientRotationToMovement = false;
-
-		// 플라잉 모드 미끄러짐 방지 설정
-		// 높은 값으로 설정하여 즉시 멈추도록 함
-		Movecomp->BrakingDecelerationFlying = 4096.0f; // 기본값 0.0f
-    
-		// 추가적으로 마찰력도 조정 가능
-		Movecomp->BrakingFriction = 4.0f; // 기본값 0.0f
-	}
+	static ConstructorHelpers::FObjectFinder<UCharacterData> CD( GOKU_DATA );
+	if (CD.Succeeded())
+		CharacterData = CD.Object;
 }
 
 void APlayerActor::BeginPlay()
@@ -193,7 +178,8 @@ void APlayerActor::Cmd_Move_Implementation(const FVector2D& Axis)
 		// Right : YZ
 		// Forward : YZ
 		// 공중 이동: Pitch + Yaw 기준 3D 방향
-		const FRotator FullRot(0.0f, ActorRot.Pitch, ActorRot.Yaw);  // Roll은 보통 생략
+		const FRotator FullRot(ActorRot.Pitch, ActorRot.Yaw, 0.0f );
+
 		const FVector RightDir   = FRotationMatrix(FullRot).GetUnitAxis(EAxis::Y);
 		const FVector ForwardDir = FRotationMatrix(FullRot).GetUnitAxis(EAxis::X);
 
@@ -206,6 +192,30 @@ void APlayerActor::Cmd_Look_Implementation(const FVector2D& Axis)
 {
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
+}
+
+void APlayerActor::Cmd_AltitudeUp_Implementation()
+{
+	if ( !IsMoveEnable() )
+		return;
+
+	FlySystem->OnAltitudePress(true);
+}
+
+void APlayerActor::Cmd_AltitudeDown_Implementation()
+{
+	if ( !IsMoveEnable() )
+		return;
+
+	FlySystem->OnAltitudePress(false);
+}
+
+void APlayerActor::Cmd_AltitudeReleased_Implementation()
+{
+	if ( !IsMoveEnable() )
+		return;
+
+	FlySystem->OnAltitudeRelease();
 }
 
 void APlayerActor::Cmd_Jump_Implementation()
