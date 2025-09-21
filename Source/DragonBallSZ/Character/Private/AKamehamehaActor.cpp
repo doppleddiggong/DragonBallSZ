@@ -12,7 +12,7 @@
 #include "GameColor.h"
 #include "GameEvent.h"
 
-#include "NiagaraComponent.h"
+#include "NiagaraComponent.h"eee
 #include "NiagaraFunctionLibrary.h"
 
 #include "Kismet/GameplayStatics.h"
