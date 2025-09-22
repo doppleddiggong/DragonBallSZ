@@ -430,7 +430,7 @@ void ACombatCharacter::OnDamage(
 	else
 	{
 		auto HitAnimMontage = GetRandomHitAnim();
-		float HitEndTime = HitAnimMontage->GetPlayLength() + HitEndOffset;
+		float HitEndTime = HitAnimMontage->GetPlayLength();// + HitEndOffset;
 
 
 		if ( MoveComp->MovementMode != EMovementMode::MOVE_None )
@@ -444,7 +444,7 @@ void ACombatCharacter::OnDamage(
 		if ( auto DelayManager = UDelayTaskManager::Get(this) )
 		{
 			DelayManager->CancelAll(this);
-			DelayManager->Delay(this, HitEndTime, [this](){
+			DelayManager->Delay(this, HitEndTime*0.75f, [this](){
 				IsHit = false;
 				MoveComp->SetMovementMode(PrevMoveMode);
 			});

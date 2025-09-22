@@ -15,6 +15,10 @@ class DRAGONBALLSZ_API ADBSZGameMode : public AGameModeBase
 public:
 	UFUNCTION( BlueprintCallable, Category="Character")
 	void SelectRandomPlayer();
+
+	UFUNCTION(BlueprintCallable, Category="Game")
+	void StartGameWithCharacters(const ECharacterType NewPlayerType, const bool bNewPlayerAnother,
+		const ECharacterType NewEnemyType, const bool bNewEnemyAnother);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Player")
 	ECharacterType PlayerType = ECharacterType::Songoku;

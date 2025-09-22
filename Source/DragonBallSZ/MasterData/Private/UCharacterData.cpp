@@ -9,28 +9,21 @@
 #include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"
 
-bool UCharacterData::LoadRushAttackMontage(
-	TArray<TObjectPtr<UAnimMontage>>& OutMontage,
-	TArray<EAttackPowerType>& OutPowerType) const
+bool UCharacterData::LoadRushMontage( TObjectPtr<UAnimMontage>& OutMontage) const
 {
-	OutMontage.Empty();
-	OutPowerType.Empty();
-
-	for (const FRushData& Data : RushData)
+	OutMontage = RushAsset.LoadSynchronous();
+	if (!OutMontage)
 	{
-		UAnimMontage* LoadedMontage = Data.AttackAsset.LoadSynchronous();
-		if (LoadedMontage)
-		{
-			OutMontage.Add(LoadedMontage);
-			OutPowerType.Add(Data.PowerType);
-		}
-		else
-		{
-			PRINTLOG( TEXT("Failed to LoadRushAttackMontage"));
-			return false;
-		}
+		PRINTLOG(TEXT("Failed to LoadRushMontage"));
+		return false;
 	}
 
+	return true;
+}
+
+bool UCharacterData::LoadRushPower( TArray<EAttackPowerType>& OutPowerType) const
+{
+	OutPowerType = RushPower;
 	return true;
 }
 
@@ -140,6 +133,40 @@ bool UCharacterData::LoadWinMontage(TObjectPtr<UAnimMontage>& OutMontage) const
 	}
 	return true;
 }
+
+bool UCharacterData::LoadIdleMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = IdleAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadFocusMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = FocusAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadSelectMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = SelectAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
 
 bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
 {

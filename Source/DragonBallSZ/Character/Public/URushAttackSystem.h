@@ -23,9 +23,7 @@ protected:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 						   FActorComponentTickFunction* ThisTickFunction) override;
 	
-private: // AnimNotify
-	UFUNCTION()
-	void OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload);
+private:
 	UFUNCTION()	
 	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
@@ -64,11 +62,14 @@ public:
 	void AttackTrace();
 
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void PlayMontage(int32 MontageIndex);
-    UFUNCTION(BlueprintCallable, Category="RushAttack")
-    void DashToTarget(int32 MontageIndex);
+	EAttackPowerType GetAttackPower(int InCount);
+	
 	UFUNCTION(BlueprintCallable, Category="RushAttack")
-	void TeleportToTarget(int32 MontageIndex);
+	void PlayMontage();
+    UFUNCTION(BlueprintCallable, Category="RushAttack")
+    void DashToTarget();
+	UFUNCTION(BlueprintCallable, Category="RushAttack")
+	void TeleportToTarget();
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
@@ -132,7 +133,7 @@ private:
 	TObjectPtr<class UDBSZEventManager> EventManager;
 
 	UPROPERTY()
-	TArray<TObjectPtr<UAnimMontage>> AttackMontages;
+	TObjectPtr<UAnimMontage> AttackMontages;
 	TArray<EAttackPowerType> AttackPowerType;
 	
 	UPROPERTY()
@@ -146,7 +147,6 @@ private:
 	float ComboResetTime = 0.0f;
 	int ComboCount = 0;
 
-	int32 PendingMontageIndex = 0;
 	TEnumAsByte<EMovementMode> PrevMovementMode;
 
 	FTimerHandle KnockbackTimerHandler;

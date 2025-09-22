@@ -8,25 +8,14 @@
 #include "Engine/DataAsset.h"
 #include "UCharacterData.generated.h"
 
-USTRUCT(BlueprintType)
-struct FRushData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	EAttackPowerType PowerType = EAttackPowerType::Normal;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSoftObjectPtr<UAnimMontage> AttackAsset;
-};
-
 UCLASS(BlueprintType)
 class DRAGONBALLSZ_API UCharacterData : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	bool LoadRushAttackMontage(TArray<TObjectPtr<UAnimMontage>>& OutMontage, TArray<EAttackPowerType>& OutPowerType ) const;
+	bool LoadRushMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadRushPower( TArray<EAttackPowerType>& OutPowerType) const;
 	bool LoadDashMontage( TObjectPtr<UAnimMontage>& OutDashMontage) const;
 	bool LoadHitMontage( TArray<TObjectPtr<UAnimMontage>>& OutHitMontage) const;
 	bool LoadDeathMontage( TObjectPtr<UAnimMontage>& OutDeathMontage) const;
@@ -35,7 +24,10 @@ public:
 	bool LoadKamehameMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
 	bool LoadIntroMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
 	bool LoadWinMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
-
+	bool LoadIdleMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadFocusMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadSelectMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	
 	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
 	bool LoadChargeKiVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
 
@@ -78,8 +70,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
 	ESoundType SoundWin;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
-	TArray<FRushData> RushData;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSoftObjectPtr<class UAnimMontage> RushAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<EAttackPowerType> RushPower;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<class UAnimMontage> DashAsset;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
@@ -97,6 +92,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<class UAnimMontage> WinAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> IdleAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> FocusAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> SelectAsset;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
 	TSoftObjectPtr<class UNiagaraSystem> DashVFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
