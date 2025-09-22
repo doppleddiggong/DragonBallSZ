@@ -30,6 +30,16 @@ void UEnemyFSM::BeginPlay()
 
 	Target = Cast<APlayerActor>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	ensureMsgf(Target, TEXT("UEnemyFSM: Target 캐스팅 실패! APlayerActor가 필요합니다!"));
+
+	AnimInstance = Owner->GetMesh()->GetAnimInstance();
+	if (Owner->GetCharacterType() == ECharacterType::Songoku)
+	{
+		DashMontage = GokuDashMontage;
+	}
+	else if (Owner->GetCharacterType() == ECharacterType::Vegeta)
+	{
+		DashMontage = VegetaDashMontage;
+	}
 }
 
 void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -78,8 +88,14 @@ void UEnemyFSM::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		if (TargetDistance > LongDistance)
 		{
 			// ToDo: LookAt 비활성화
-
+			
 			BeizerMove();
+
+			FVector Direction = Target->GetActorLocation() - Owner->GetActorLocation();
+			FRotator BaseRot = Direction.Rotation();
+			FRotator OffsetRot(90.f, 0.f, 0.f);
+			if (Owner->DashSystem->DashWindComp) Owner->DashSystem->DashWindComp->SetWorldRotation(BaseRot + OffsetRot);
+
 			return;
 		}
 
@@ -421,7 +437,7 @@ void UEnemyFSM::SpawnEnergyBlast()
 		return;
 	}
 	Owner->EnergyBlastShoot();
-	
+
 	//
 	// Owner->UseBlast();
 	// Owner->PlayTypeMontage(EAnimMontageType::Blast);
@@ -499,6 +515,12 @@ void UEnemyFSM::BeizerMove()
 	float t = FindT(CumulativeDistance);
 	FVector Pos = Bezier(OriginLocation, CenterControlPoint, Destination, t);
 
+	if (!bPlayingMontage)
+	{
+		AnimInstance->Montage_Play(DashMontage);
+		Owner->DashSystem->DashWindComp->Activate();
+		bPlayingMontage = true;
+	}
 	// Approach distance tolerance
 	if (ArcLength[Samples] < CumulativeDistance)
 	{
@@ -506,6 +528,9 @@ void UEnemyFSM::BeizerMove()
 		CumulativeDistance = 0;
 		ActivateDashVFX(false);
 		CheckToLand();
+		AnimInstance->Montage_Stop(0.2f, DashMontage);
+		bPlayingMontage = false;
+		Owner->DashSystem->DashWindComp->DeactivateImmediate();
 		return;
 	}
 	Owner->SetActorLocation(Pos, true);

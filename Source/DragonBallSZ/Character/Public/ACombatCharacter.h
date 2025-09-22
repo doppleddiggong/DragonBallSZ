@@ -96,6 +96,13 @@ public:
 		return bIsWinner;
 	};
 
+	UFUNCTION(BlueprintCallable, Category="CharacterType")
+	FORCEINLINE ECharacterType GetCharacterType()
+	{
+		return CharacterType;
+	}
+	
+
 	UFUNCTION(BlueprintPure, Category="GameState")
 	FORCEINLINE bool IsHolding() const
 	{

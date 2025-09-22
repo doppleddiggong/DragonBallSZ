@@ -54,6 +54,15 @@ public:
 	TObjectPtr<APlayerActor> Target;
 	UPROPERTY()
 	TObjectPtr<AEnemyActor> Owner;
+	UPROPERTY()
+	TObjectPtr<class UAnimInstance> AnimInstance;
+	UPROPERTY(EditAnywhere, Category="Dash Montage")
+	TObjectPtr<class UAnimMontage> GokuDashMontage;
+	UPROPERTY(EditAnywhere, Category="Dash Montage")
+	TObjectPtr<class UAnimMontage> VegetaDashMontage;
+	UPROPERTY()
+	TObjectPtr<class UAnimMontage> DashMontage;
+	bool bPlayingMontage = false;
 
 protected:
 	virtual void BeginPlay() override;
