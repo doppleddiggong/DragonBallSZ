@@ -141,6 +141,40 @@ bool UCharacterData::LoadWinMontage(TObjectPtr<UAnimMontage>& OutMontage) const
 	return true;
 }
 
+bool UCharacterData::LoadIdleMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = IdleAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadFocusMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = FocusAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+bool UCharacterData::LoadSelectMontage(TObjectPtr<UAnimMontage>& OutMontage) const
+{
+	OutMontage = SelectAsset.LoadSynchronous();
+	if (!OutMontage)
+	{
+		PRINTLOG(TEXT("Failed to LoadWinMontage"));
+		return false;
+	}
+	return true;
+}
+
+
 bool UCharacterData::LoadDashVFX(TObjectPtr<UNiagaraSystem>& OutVFX) const
 {
 	OutVFX = DashVFX.LoadSynchronous();

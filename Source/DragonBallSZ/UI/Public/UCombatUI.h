@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ECharacterType.h"
 #include "Blueprint/UserWidget.h"
 #include "UCombatUI.generated.h"
 
@@ -12,24 +13,21 @@ class DRAGONBALLSZ_API UCombatUI : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	void StartCombat(
-	const float PlayerHP, const float EnemyHP,
-	const float PlayerKi, const float EnemyKi);
-	
-	UFUNCTION(BlueprintImplementableEvent, Category="Character")
-	void UpdateFace(ECharacterType PlayerType, ECharacterType EnemyType);
-	
+	void StartCombat( const float PlayerHP, const float EnemyHP, const float PlayerKi, const float EnemyKi);
 	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
 	void UpdatePlayerDamageUI();
 	int32 PlayerDamage;
 	int32 IntPlayerDamageSum;
+
 	void UpdateEnemyDamageUI();
 	int32 EnemyDamage;
 	int32 IntEnemyDamageSum;
+
 	float SpeedFactor = 0.1f;
 	
 protected:
@@ -39,6 +37,23 @@ protected:
 	UFUNCTION()
 	void OnDamage(bool bIsPalyer, float Damage);
 
+#pragma region UPDATE_FACE
+public:
+	UFUNCTION(BlueprintNativeEvent, Category="Character")
+	void UpdateFace(const ECharacterType PlayerType, const ECharacterType EnemyType);
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UImage> Image_Player_Face;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UImage> Image_Enemy_Face;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Face")
+	TMap<ECharacterType, TObjectPtr<class UTexture2D>> FaceMap;
+#pragma endregion UPDATE_FACE
+
+
+	
 #pragma region COMBAT_TIME
 public:
 	UFUNCTION(BlueprintCallable, Category="Time")

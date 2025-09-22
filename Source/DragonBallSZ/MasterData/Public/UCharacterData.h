@@ -35,7 +35,12 @@ public:
 	bool LoadKamehameMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
 	bool LoadIntroMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
 	bool LoadWinMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadIdleMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadFocusMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	bool LoadSelectMontage( TObjectPtr<UAnimMontage>& OutMontage) const;
+	
 
+	
 	bool LoadDashVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
 	bool LoadChargeKiVFX( TObjectPtr<class UNiagaraSystem>& OutVFX) const;
 
@@ -97,6 +102,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
 	TSoftObjectPtr<class UAnimMontage> WinAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> IdleAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> FocusAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Montage)
+	TSoftObjectPtr<class UAnimMontage> SelectAsset;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)
 	TSoftObjectPtr<class UNiagaraSystem> DashVFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=VFX)

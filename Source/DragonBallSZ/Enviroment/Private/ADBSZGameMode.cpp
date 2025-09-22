@@ -12,3 +12,15 @@ void ADBSZGameMode::SelectRandomPlayer()
 	EnemyType = static_cast<ECharacterType>(FMath::RandRange(0, CharacterCount - 1));
 	bIsEnemyAnother = PlayerType == EnemyType;
 }
+
+void ADBSZGameMode::StartGameWithCharacters(
+	const ECharacterType NewPlayerType, const bool bNewPlayerAnother,
+	const ECharacterType NewEnemyType, const bool bNewEnemyAnother)
+{
+	PlayerType = NewPlayerType;
+	bIsPlayerAnother = bNewPlayerAnother;
+	EnemyType = NewEnemyType;
+	bIsEnemyAnother = bNewEnemyAnother;
+
+	UE_LOG(LogTemp, Warning, TEXT("ADBSZGameMode::StartGameWithCharacters Called. Player: %d, Enemy: %d"), static_cast<int32>(PlayerType), static_cast<int32>(EnemyType));
+}
