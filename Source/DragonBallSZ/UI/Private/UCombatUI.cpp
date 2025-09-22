@@ -267,9 +267,9 @@ void UCombatUI::UpdateFace_Implementation(const ECharacterType PlayerType, const
 		Image_Player_Face->SetBrushFromTexture(TexturePtr->Get());
 	}
 	
-	if ( const auto TexturePtr  = FaceMap.Find(EnemyType))
+	if ( const auto TexturePtr = FaceMap.Find(EnemyType))
 	{
-		Image_Player_Face->SetBrushFromTexture(TexturePtr->Get());
+		Image_Enemy_Face->SetBrushFromTexture(TexturePtr->Get());
 	}
 }
 
