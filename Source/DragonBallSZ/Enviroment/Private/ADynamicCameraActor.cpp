@@ -101,6 +101,7 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 		return;
 	}
 
+	UpdateSpringArmOffset(DeltaTime);
 	CurrentDistance = FVector::Dist(PlayerRef->GetActorLocation(), TargetRef->GetActorLocation());
 	PlayerRotationLock();
 	// 근접 상태일 때는 이전과 동일하게 플레이어 등 뒤를 따라갑니다.
@@ -133,9 +134,13 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 		const FVector DirToPlayer = (PlayerRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 		const FVector DirToTarget = (TargetRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 		const bool bIsObstructing = FVector::DotProduct(DirToPlayer, DirToTarget) > ObstructionDotThreshold;
-	
+
+		// 조건 4: 플레이어가 카메라 밖으로 나갔는가?
+		FVector2D MinBounds, MaxBounds;
+		bool bIsPlayerInSafeFrame = IsPlayerInSafeFrame(MinBounds, MaxBounds);
+		
 		// --- 위 조건 중 하나라도 true이면 카메라를 움직입니다 ---
-		if (bShouldResetByAlignment || bIsMovingFwdBack || bIsObstructing)
+		if (bShouldResetByAlignment || bIsMovingFwdBack || bIsObstructing || bIsPlayerInSafeFrame)
 		{
 			// ResetCameraLocation 함수에 타겟 가림 회피 기능이 이미 포함되어 있습니다.
 			ResetCameraLocation(DeltaTime);
@@ -211,7 +216,7 @@ FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
 {
 	FVector PlayerLocation = PlayerRef->GetActorLocation();
 	FVector TargetLocation = TargetRef->GetActorLocation();
-	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * CameraDistance) + FVector(0, 0, 100);
+	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * CameraDistance);
 	
 
 	FVector DirToPlayer = (PlayerLocation - BaseCameraLocation).GetSafeNormal();
@@ -244,7 +249,83 @@ FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
 }
 
 
+bool ADynamicCameraActor::IsPlayerInSafeFrame(FVector2D& OutMin, FVector2D& OutMax) const
+{
+    if (!PlayerRef || !GetWorld()) return true;
 
+    APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    if (!PC) return true;
+
+    // 뷰포트 사이즈와 안전 영역(예: 10% 마진)을 정의합니다.
+    int32 ViewportSizeX, ViewportSizeY;
+    PC->GetViewportSize(ViewportSizeX, ViewportSizeY);
+
+    const float SafeMargin = 0.1f; // 10%
+    const FVector2D ViewportMin(ViewportSizeX * SafeMargin, ViewportSizeY * SafeMargin);
+    const FVector2D ViewportMax(ViewportSizeX * (1.0f - SafeMargin), ViewportSizeY * (1.0f - SafeMargin));
+
+    // 1. 플레이어의 월드 공간 바운딩 박스를 가져옵니다.
+    FVector Origin, BoxExtent;
+    PlayerRef->GetActorBounds(true, Origin, BoxExtent);
+
+    // 2. 바운딩 박스의 8개 꼭짓점 월드 좌표를 계산합니다.
+    FVector Corners[8];
+    Corners[0] = Origin + FVector(BoxExtent.X, BoxExtent.Y, BoxExtent.Z);
+    Corners[1] = Origin + FVector(-BoxExtent.X, BoxExtent.Y, BoxExtent.Z);
+    Corners[2] = Origin + FVector(BoxExtent.X, -BoxExtent.Y, BoxExtent.Z);
+    Corners[3] = Origin + FVector(-BoxExtent.X, -BoxExtent.Y, BoxExtent.Z);
+    Corners[4] = Origin + FVector(BoxExtent.X, BoxExtent.Y, -BoxExtent.Z);
+    Corners[5] = Origin + FVector(-BoxExtent.X, BoxExtent.Y, -BoxExtent.Z);
+    Corners[6] = Origin + FVector(BoxExtent.X, -BoxExtent.Y, -BoxExtent.Z);
+    Corners[7] = Origin + FVector(-BoxExtent.X, -BoxExtent.Y, -BoxExtent.Z);
+
+    // 3. 8개 꼭짓점을 화면 공간으로 투영하고, 최소/최대 좌표를 찾습니다.
+    FVector2D ScreenLocation;
+    OutMin = FVector2D(ViewportSizeX, ViewportSizeY); // 최대값으로 초기화
+    OutMax = FVector2D(0, 0); // 최소값으로 초기화
+
+    for (int32 i = 0; i < 8; ++i)
+    {
+        if (PC->ProjectWorldLocationToScreen(Corners[i], ScreenLocation))
+        {
+            OutMin.X = FMath::Min(OutMin.X, ScreenLocation.X);
+            OutMin.Y = FMath::Min(OutMin.Y, ScreenLocation.Y);
+            OutMax.X = FMath::Max(OutMax.X, ScreenLocation.X);
+            OutMax.Y = FMath::Max(OutMax.Y, ScreenLocation.Y);
+        }
+    }
+
+    // 4. 캐릭터의 화면 사각형이 안전 영역 안에 있는지 확인합니다.
+    if (OutMin.X < ViewportMin.X || OutMax.X > ViewportMax.X ||
+        OutMin.Y < ViewportMin.Y || OutMax.Y > ViewportMax.Y)
+    {
+        return false; // 안전 영역을 벗어남
+    }
+
+    return true; // 안전 영역 안에 있음
+}
+
+void ADynamicCameraActor::UpdateSpringArmOffset(float DeltaTime)
+{
+	// 1. 타겟과 플레이어의 Z축 높이 차이를 계산합니다. (양수: 타겟이 더 높음, 음수: 플레이어가 더 높음)
+	const float HeightDifference = TargetRef->GetActorLocation().Z - PlayerRef->GetActorLocation().Z;
+
+	// 2. 높이 차이를 Z 오프셋 범위로 매핑합니다.
+	// FMath::GetMappedRangeValueClamped 함수를 사용하여 한 범위를 다른 범위로 변환합니다.
+	// 입력 범위: [-MaxHeightDifference, MaxHeightDifference]
+	// 출력 범위: [Base + Range, Base - Range] -> 높이 차이가 양수(타겟이 높음)일수록 오프셋은 감소해야 하므로 출력 범위를 거꾸로 설정합니다.
+	const FVector2D InputRange(-MaxHeightDifference, MaxHeightDifference);
+	const FVector2D OutputRange(BaseSpringArmZOffset + ZOffsetRange, BaseSpringArmZOffset - ZOffsetRange);
+	const float TargetZOffset = FMath::GetMappedRangeValueClamped(InputRange, OutputRange, HeightDifference);
+
+	// 3. 현재 Z 오프셋에서 목표 Z 오프셋으로 부드럽게 보간합니다.
+	const float CurrentZOffset = SpringArmComp->TargetOffset.Z;
+	const float NewZOffset = FMath::FInterpTo(CurrentZOffset, TargetZOffset, DeltaTime, ZOffsetInterpSpeed);
+
+	// 4. 스프링암 컴포넌트의 TargetOffset.Z 값을 업데이트합니다.
+	// X, Y는 그대로 두고 Z 값만 변경합니다.
+	SpringArmComp->TargetOffset.Z = NewZOffset;
+}
 
 
 void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)

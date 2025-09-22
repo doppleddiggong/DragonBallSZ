@@ -116,4 +116,27 @@ protected:
 	/** 화면 가장자리에서 카메라를 밀어내는 속도입니다. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera | Screen Edge")
 	float ScreenEdgeCorrectionSpeed = 500.f;
+
+	/* 캐릭터가 화면의 안전 영역 내에 있는지 확인하는 함수 */
+	bool IsPlayerInSafeFrame(FVector2D& OutMin, FVector2D& OutMax) const;
+
+	/** 높이에 따른 Z-Offset 조절을 위한 설정 값들입니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Vertical Offset")
+	float BaseSpringArmZOffset = 50.0f;
+
+	/** 이 높이 차이(절대값)를 넘어서면 Z-Offset이 최대/최소치에 도달합니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Vertical Offset")
+	float MaxHeightDifference = 1000.0f;
+
+	/** Base Z-Offset에서 위/아래로 움직일 수 있는 최대 범위입니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Vertical Offset")
+	float ZOffsetRange = 100.0f;
+
+	/** Z-Offset 값이 변경될 때의 보간 속도입니다. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings|Vertical Offset")
+	float ZOffsetInterpSpeed = 3.0f;
+
+private:
+	/** 매 프레임 스프링암의 Z 오프셋을 업데이트하는 함수입니다. */
+	void UpdateSpringArmOffset(float DeltaTime);
 };
