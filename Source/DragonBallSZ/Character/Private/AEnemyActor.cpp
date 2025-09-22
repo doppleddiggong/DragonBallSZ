@@ -40,7 +40,7 @@ void AEnemyActor::BeginPlay()
 		TargetActor = Cast<APlayerActor>(Player);
 
 	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
-	this->SetupCharacterFromType(GameMode->EnemyType);
+	this->SetupCharacterFromType(GameMode->EnemyType, GameMode->bIsEnemyAnother);
 
 	SightSystem->InitSightSystem(TargetActor, StatSystem->GetSightLength(), StatSystem->GetSightAngle() );
 	SightSystem->OnSightDetect.AddDynamic(this, &AEnemyActor::OnSightDetect);	

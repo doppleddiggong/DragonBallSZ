@@ -16,9 +16,14 @@ public:
 	UFUNCTION( BlueprintCallable, Category="Character")
 	void SelectRandomPlayer();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Player")
 	ECharacterType PlayerType = ECharacterType::Songoku;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Player")
+	bool bIsPlayerAnother = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Enemy")
 	ECharacterType EnemyType = ECharacterType::Vegeta;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Enemy")
+	bool bIsEnemyAnother = false;
 };
 

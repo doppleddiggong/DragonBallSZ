@@ -40,9 +40,6 @@ ACombatCharacter::ACombatCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -88.0f));
-	// GetMesh()->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
-
 	StatSystem			= CreateDefaultSubobject<UStatSystem>(TEXT("StatSystem"));
 	HitStopSystem		= CreateDefaultSubobject<UHitStopSystem>(TEXT("HitStopSystem"));
 	KnockbackSystem		= CreateDefaultSubobject<UKnockbackSystem>(TEXT("KnockbackSystem"));
@@ -92,7 +89,7 @@ void ACombatCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 
 
-void ACombatCharacter::SetupCharacterFromType(const ECharacterType Type)
+void ACombatCharacter::SetupCharacterFromType(const ECharacterType Type, const bool bIsAnother)
 {
 	this->CharacterType = Type;
 	
@@ -122,7 +119,16 @@ void ACombatCharacter::SetupCharacterFromType(const ECharacterType Type)
     			MaterialInst = CharacterData->MaterialArray[i].LoadSynchronous();
 
     		if (MaterialInst)
-    			MeshComp->SetMaterial(i, MaterialInst);
+    		{
+    			auto DynamicMat = UMaterialInstanceDynamic::Create(MaterialInst, MeshComp);
+    			if (DynamicMat)
+    			{
+    				// 1번이 Cloth
+    				if (i == 1)
+    					DynamicMat->SetScalarParameterValue(FName("AnotherSide"), bIsAnother ? 1.0f : 0.0f);
+    				MeshComp->SetMaterial(i, DynamicMat);
+    			}
+    		}
     	}
     	
     	MeshComp->SetRelativeLocation( CharacterData->RelativeLocation);
@@ -369,6 +375,12 @@ void ACombatCharacter::OnDamage(
 	AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatedBy, AActor* DamageCauser )
 {
+	if ( IsShootKamehame() )
+	{
+		// 카메하메파 준비 동작중이므로, 무적 상태
+		return;
+	}
+	
 	if ( DamagedActor != this)
 		return;
 	

@@ -142,7 +142,7 @@ public:
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="Setup")
-	void SetupCharacterFromType(const ECharacterType Type);
+	void SetupCharacterFromType(const ECharacterType Type, const bool bIsAnother);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, BlueprintPure, Category="Command")
 	bool IsControlEnable();
