@@ -13,7 +13,7 @@
 
 UChargeKiSystem::UChargeKiSystem()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UChargeKiSystem::BeginPlay()

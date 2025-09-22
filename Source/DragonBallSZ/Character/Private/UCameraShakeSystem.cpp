@@ -12,7 +12,7 @@
 
 UCameraShakeSystem::UCameraShakeSystem()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	{
 		static ConstructorHelpers::FClassFinder<UCameraShakeBase> TempCameraShake(SMALL_CAMERASHAKE_PATH);

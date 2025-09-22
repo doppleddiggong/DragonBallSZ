@@ -10,7 +10,7 @@
 
 UStatSystem::UStatSystem()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UStatSystem::BeginPlay()
