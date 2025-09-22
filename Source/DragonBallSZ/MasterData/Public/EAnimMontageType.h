@@ -10,4 +10,8 @@ enum class EAnimMontageType : uint8
 	Win,
 
 	ChargeKi,
+
+	Idle,
+	Focus,
+	Select
 };

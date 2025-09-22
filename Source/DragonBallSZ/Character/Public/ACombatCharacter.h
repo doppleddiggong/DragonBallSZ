@@ -283,41 +283,41 @@ public:
 
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UStatSystem* StatSystem;
+	TObjectPtr<class UStatSystem> StatSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UHitStopSystem* HitStopSystem;
+	TObjectPtr<class UHitStopSystem> HitStopSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UKnockbackSystem* KnockbackSystem;
+	TObjectPtr<class UKnockbackSystem> KnockbackSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class URushAttackSystem* RushAttackSystem;
+	TObjectPtr<class URushAttackSystem> RushAttackSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UDashSystem* DashSystem;
+	TObjectPtr<class UDashSystem> DashSystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UFlySystem* FlySystem;
+	TObjectPtr<class UFlySystem> FlySystem;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
-	class UChargeKiSystem* ChargeKiSystem;
+	TObjectPtr<class UChargeKiSystem> ChargeKiSystem;
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character")
-	class ACombatCharacter* TargetActor;
+	TObjectPtr<class ACombatCharacter> TargetActor;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class USkeletalMeshComponent* MeshComp;
+	TObjectPtr<class USkeletalMeshComponent> MeshComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class UCharacterMovementComponent* MoveComp;
+	TObjectPtr<class UCharacterMovementComponent> MoveComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="RushAttack|Owner")
-	class UAnimInstance* AnimInstance;
+	TObjectPtr<class UAnimInstance> AnimInstance;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
-	class UArrowComponent* LeftHandComp;
+	TObjectPtr<class UArrowComponent> LeftHandComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
-	class UArrowComponent* RightHandComp;
+	TObjectPtr<class UArrowComponent> RightHandComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
-	class UArrowComponent* LeftFootComp;
+	TObjectPtr<class UArrowComponent> LeftFootComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|Arrow")
-	class UArrowComponent* RightFootComp;
+	TObjectPtr<class UArrowComponent> RightFootComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Character|Sight", meta=(ClampMin="0"))
 	float SightRange = 1200.0f;
@@ -372,17 +372,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TArray<TObjectPtr<UAnimMontage>> HitMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TObjectPtr<UAnimMontage> DeathMontage;
+	TObjectPtr<class UAnimMontage> DeathMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TArray<TObjectPtr<UAnimMontage>> BlastMontages;
+	TArray<TObjectPtr<class UAnimMontage>> BlastMontages;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TObjectPtr<UAnimMontage> ChargeKiMontage;
+	TObjectPtr<class UAnimMontage> ChargeKiMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TObjectPtr<UAnimMontage> KamehameMontage;
+	TObjectPtr<class UAnimMontage> KamehameMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TObjectPtr<UAnimMontage> IntroMontage;
+	TObjectPtr<class UAnimMontage> IntroMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
-	TObjectPtr<UAnimMontage> WinMontage;
+	TObjectPtr<class UAnimMontage> WinMontage;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
@@ -390,7 +390,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
 	TObjectPtr<class UNiagaraSystem> ChargeKiVFX;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|DashVFX")
-	TObjectPtr<UNiagaraSystem> DashWindVFX;
+	TObjectPtr<class UNiagaraSystem> DashWindVFX;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|EnergyBlast")
 	TSubclassOf<class AEnergyBlastActor> EnergyBlastFactory;
