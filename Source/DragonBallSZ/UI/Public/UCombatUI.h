@@ -134,6 +134,9 @@ public:
 
 	
 private:
+	bool bIsPlayerDamageUIVisible = false;
+	bool bIsEnemyDamageUIVisible = false;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class URichTextBlock> TextPlayerDamage;
 	UPROPERTY(meta = (BindWidget))
@@ -147,7 +150,11 @@ private:
 	TObjectPtr<class URichTextBlock> TextEnemyCombo;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> RightComboImage;
-	
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* LeftShowAnimation;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* RightShowAnimation;
 	UPROPERTY(meta = (BindWidgetAnim), Transient)
 	UWidgetAnimation* LeftHideAnimation;
 	UPROPERTY(meta = (BindWidgetAnim), Transient)

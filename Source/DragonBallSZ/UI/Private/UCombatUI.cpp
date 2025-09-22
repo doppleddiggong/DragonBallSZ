@@ -303,13 +303,36 @@ void UCombatUI::ResetPlayerCombo()
 
 void UCombatUI::ShowPlayerDamageUI()
 {
-	LeftComboImage->SetVisibility(ESlateVisibility::Visible);
-	StopAnimation(LeftHideAnimation);
+	if (bIsPlayerDamageUIVisible || !LeftShowAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(LeftHideAnimation))
+	{
+		StopAnimation(LeftHideAnimation);
+	}
+	
+	PlayAnimation(LeftShowAnimation);
+	bIsPlayerDamageUIVisible = true;
 }
 
 void UCombatUI::HidePlayerDamageUI()
 {
-	if (!IsAnimationPlaying(LeftHideAnimation)) PlayAnimation(LeftHideAnimation);
+	if (!bIsPlayerDamageUIVisible || !LeftHideAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(LeftShowAnimation))
+	{
+		StopAnimation(LeftShowAnimation);
+	}
+
+	if (!IsAnimationPlaying(LeftHideAnimation))
+	{
+		PlayAnimation(LeftHideAnimation);
+	}
 }
 
 
@@ -355,13 +378,36 @@ void UCombatUI::ResetEnemyCombo()
 
 void UCombatUI::ShowEnemyDamageUI()
 {
-	RightComboImage->SetVisibility(ESlateVisibility::Visible);
-	StopAnimation(RightHideAnimation);
+	if (bIsEnemyDamageUIVisible || !RightShowAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(RightHideAnimation))
+	{
+		StopAnimation(RightHideAnimation);
+	}
+	
+	PlayAnimation(RightShowAnimation);
+	bIsEnemyDamageUIVisible = true;
 }
 
 void UCombatUI::HideEnemyDamageUI()
 {
-	if (!IsAnimationPlaying(RightHideAnimation)) PlayAnimation(RightHideAnimation);
+	if (!bIsEnemyDamageUIVisible || !RightHideAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(RightShowAnimation))
+	{
+		StopAnimation(RightShowAnimation);
+	}
+
+	if (!IsAnimationPlaying(RightHideAnimation))
+	{
+		PlayAnimation(RightHideAnimation);
+	}
 }
 
 void UCombatUI::OnLeftHideAnimFinished()
@@ -369,6 +415,7 @@ void UCombatUI::OnLeftHideAnimFinished()
 	TextPlayerDamage->SetText(FText::GetEmpty());
 	TextPlayerCombo->SetText(FText::GetEmpty());
 	LeftComboImage->SetVisibility(ESlateVisibility::Hidden);
+	bIsPlayerDamageUIVisible = false;
 }
 
 void UCombatUI::OnRightHideAnimFinished()
@@ -376,4 +423,5 @@ void UCombatUI::OnRightHideAnimFinished()
 	TextEnemyDamage->SetText(FText::GetEmpty());
 	TextEnemyCombo->SetText(FText::GetEmpty());
 	RightComboImage->SetVisibility(ESlateVisibility::Hidden);
+	bIsEnemyDamageUIVisible = false;
 }
