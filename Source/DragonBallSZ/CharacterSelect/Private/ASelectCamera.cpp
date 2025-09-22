@@ -2,7 +2,8 @@
 
 #include "ASelectCamera.h"
 #include "ASelectPawn.h"
-#include "EAnimMontageType.h"
+#include "ADBSZGameMode.h"
+
 #include "Camera/CameraComponent.h"
 #include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,6 +15,47 @@ ASelectCamera::ASelectCamera()
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	SetRootComponent(CameraComponent);
+}
+
+void ASelectCamera::BeginPlay()
+{
+	Super::BeginPlay();
+
+	TArray<AActor*> AllActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
+	for (AActor* Actor : AllActors)
+	{
+		if (Actor && Actor->GetActorLabel().Contains(TEXT("SelectTransform")))
+			SelectTransforms.Add(Actor);
+	}
+
+	// SelectTransforms.Sort([](const TObjectPtr<AActor>& A, const TObjectPtr<AActor>& B) {
+	// 	return A->GetActorLabel() < B->GetActorLabel();
+	// });
+
+	// Spawn pawns
+	SelectPawns.Empty();
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	for (int32 i = 0; i < SelectData.Num(); ++i)
+	{
+		if (SelectTransforms.IsValidIndex(i) && SelectTransforms[i])
+		{
+			const FTransform SpawnTransform = SelectTransforms[i]->GetActorTransform();
+			ASelectPawn* NewPawn = GetWorld()->SpawnActor<ASelectPawn>(PawnFactory, SpawnTransform, SpawnParams);
+			if (NewPawn)
+			{
+				NewPawn->SetupCharacterFromType(SelectData[i].PowerType, SelectData[i].bIsAnother);
+				SelectPawns.Add(NewPawn);
+			}
+		}
+	}
+
+	PawnSelectionStates.Init(ESelectionState::None, SelectPawns.Num());
+	if (SelectPawns.Num() > 0)
+		FocusCharacter(CurrentFocusIndex);
 }
 
 void ASelectCamera::Tick(float DeltaTime)
@@ -35,69 +77,6 @@ void ASelectCamera::Tick(float DeltaTime)
 	}
 }
 
-void ASelectCamera::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// "SelectTransform"을 이름에 포함하는 액터를 찾아 배열에 등록합니다.
-	SelectTransforms.Empty();
-	TArray<AActor*> AllActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
-
-	for (AActor* Actor : AllActors)
-	{
-		if (Actor && Actor->GetActorLabel().Contains(TEXT("SelectTransform")))
-		{
-			SelectTransforms.Add(Actor);
-		}
-	}
-
-	// 찾은 액터를 이름순으로 정렬하여 순서를 보장합니다.
-	SelectTransforms.Sort([](const TObjectPtr<AActor>& A, const TObjectPtr<AActor>& B)
-	{
-		return A->GetActorLabel() < B->GetActorLabel();
-	});
-
-	// 기존 Pawn 배열을 비웁니다.
-	SelectPawns.Empty();
-
-	// 데이터와 트랜스폼 배열의 크기가 같은지 확인합니다.
-	if (SelectData.Num() != SelectTransforms.Num())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ASelectCamera: SelectData count (%d) and found SelectTransforms count (%d) do not match!"), SelectData.Num(), SelectTransforms.Num());
-	}
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-	for (int32 i = 0; i < SelectData.Num(); ++i)
-	{
-		if (!SelectTransforms.IsValidIndex(i) || !SelectTransforms[i])
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ASelectCamera: TransformActor at index %d is invalid."), i);
-			continue;
-		}
-		
-		const FSelectCharacterData& Data = SelectData[i];
-		const AActor* TransformActor = SelectTransforms[i];
-
-		const FTransform SpawnTransform = TransformActor->GetActorTransform();
-		ASelectPawn* NewPawn = GetWorld()->SpawnActor<ASelectPawn>(ASelectPawn::StaticClass(), SpawnTransform, SpawnParams);
-
-		if (NewPawn)
-		{
-			NewPawn->SetupCharacterFromType(Data.PowerType, Data.bIsAnother);
-			SelectPawns.Add(NewPawn);
-		}
-	}
-
-	if (SelectPawns.Num() > 0)
-	{
-		FocusCharacter(CurrentFocusIndex);
-	}
-}
-
 void ASelectCamera::MoveCharacter(int32 Direction)
 {
 	if (SelectPawns.Num() == 0)
@@ -105,16 +84,16 @@ void ASelectCamera::MoveCharacter(int32 Direction)
 		return;
 	}
 
-	CurrentFocusIndex += Direction;
+	const int32 OldFocusIndex = CurrentFocusIndex;
 
+	CurrentFocusIndex += Direction;
 	if (CurrentFocusIndex < 0)
-	{
 		CurrentFocusIndex = SelectPawns.Num() - 1;
-	}
 	else if (CurrentFocusIndex >= SelectPawns.Num())
-	{
 		CurrentFocusIndex = 0;
-	}
+
+	if (SelectPawns.IsValidIndex(OldFocusIndex) && SelectPawns[OldFocusIndex])
+		SelectPawns[OldFocusIndex]->SetSelectionState(PawnSelectionStates[OldFocusIndex]);
 
 	FocusCharacter(CurrentFocusIndex);
 }
@@ -127,11 +106,81 @@ void ASelectCamera::FocusCharacter(int32 FocusIndex)
 		return;
 	}
 
-	if ( TargetPawn != nullptr)
+	TargetPawn = SelectPawns[FocusIndex];
+	if (TargetPawn.IsValid())
+		TargetPawn->PlayFocusAnimation();
+}
+
+ESelectionState ASelectCamera::GetCurrentFocusSelectionState() const
+{
+	if (PawnSelectionStates.IsValidIndex(CurrentFocusIndex))
+		return PawnSelectionStates[CurrentFocusIndex];
+	return ESelectionState::None;
+}
+
+void ASelectCamera::SelectCurrentCharacter()
+{
+	if (!SelectPawns.IsValidIndex(CurrentFocusIndex))
+		return;
+
+	if (PawnSelectionStates[CurrentFocusIndex] != ESelectionState::None)
+		return;
+
+	if (CurrentTurn == ESelectionState::PlayerSelected && PlayerSelectedIndex == -1)
 	{
-		TargetPawn->PlayTypeMontage(EAnimMontageType::Idle);
+		PlayerSelectedIndex = CurrentFocusIndex;
+		PawnSelectionStates[CurrentFocusIndex] = ESelectionState::PlayerSelected;
+		SelectPawns[CurrentFocusIndex]->SetSelectionState(ESelectionState::PlayerSelected);
+		CurrentTurn = ESelectionState::EnemySelected;
+	}
+	else if (CurrentTurn == ESelectionState::EnemySelected && EnemySelectedIndex == -1)
+	{
+		if (CurrentFocusIndex == PlayerSelectedIndex)
+		{
+			return;
+		}
+		EnemySelectedIndex = CurrentFocusIndex;
+		PawnSelectionStates[CurrentFocusIndex] = ESelectionState::EnemySelected;
+		SelectPawns[CurrentFocusIndex]->SetSelectionState(ESelectionState::EnemySelected);
+		CurrentTurn = ESelectionState::PlayerSelected;
+	}
+}
+
+void ASelectCamera::DeselectCharacter()
+{
+	if (!SelectPawns.IsValidIndex(CurrentFocusIndex))
+		return;
+
+	const ESelectionState StateToDeselect = PawnSelectionStates[CurrentFocusIndex];
+
+	if (StateToDeselect == ESelectionState::PlayerSelected)
+	{
+		PlayerSelectedIndex = -1;
+		PawnSelectionStates[CurrentFocusIndex] = ESelectionState::None;
+		SelectPawns[CurrentFocusIndex]->SetSelectionState(ESelectionState::None);
+		CurrentTurn = ESelectionState::PlayerSelected;
+	}
+	else if (StateToDeselect == ESelectionState::EnemySelected)
+	{
+		EnemySelectedIndex = -1;
+		PawnSelectionStates[CurrentFocusIndex] = ESelectionState::None;
+		SelectPawns[CurrentFocusIndex]->SetSelectionState(ESelectionState::None);
+		CurrentTurn = ESelectionState::EnemySelected;
+	}
+}
+
+void ASelectCamera::PassSelectionDataToGameMode()
+{
+	if (!IsPlayerSelected() || !IsEnemySelected())
+	{
+		return;
 	}
 
-	TargetPawn = SelectPawns[FocusIndex];
-	TargetPawn->PlayTypeMontage(EAnimMontageType::Focus);
+	ADBSZGameMode* GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode)
+	{
+		const FSelectCharacterData& PlayerData = SelectData[PlayerSelectedIndex];
+		const FSelectCharacterData& EnemyData = SelectData[EnemySelectedIndex];
+		GameMode->StartGameWithCharacters(PlayerData.PowerType, PlayerData.bIsAnother, EnemyData.PowerType, EnemyData.bIsAnother);
+	}
 }

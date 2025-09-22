@@ -3,7 +3,6 @@
 
 #include "ASelectPawn.h"
 
-#include "EAnimMontageType.h"
 #include "Components/CapsuleComponent.h"
 #include "FCharacterAssetData.h"
 #include "UCharacterData.h"
@@ -89,7 +88,7 @@ void ASelectPawn::SetupCharacterFromType(const ECharacterType Type, const bool A
 	CharacterData->LoadFocusMontage(FocusMontage);
 	CharacterData->LoadSelectMontage(SelectMontage);
 
-	this->PlayTypeMontage(EAnimMontageType::Idle);
+	PlayIdleAnimation();
 }
 
 void ASelectPawn::Tick(float DeltaTime)
@@ -97,50 +96,55 @@ void ASelectPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void ASelectPawn::PlayTypeMontage(const EAnimMontageType Type)
+void ASelectPawn::SetSelectionState(ESelectionState NewState)
 {
-	UAnimMontage* AnimMontage = nullptr;
-
-	switch (Type)
+	CurrentSelectionState = NewState;
+	if (CurrentSelectionState == ESelectionState::None)
 	{
-	case EAnimMontageType::Idle:
-		AnimMontage = IdleMontage;
-		break;
-	case EAnimMontageType::Focus:
-		AnimMontage = FocusMontage;
-		break;
-	case EAnimMontageType::Select:
-		AnimMontage = SelectMontage;
-		break;
+		PlayIdleAnimation();
 	}
-
-	this->PlayTargetMontage(AnimMontage);
-}
-
-void ASelectPawn::PlayTargetMontage(UAnimMontage* AnimMontage)
-{
-	if ( IsValid(AnimInstance) && IsValid(AnimMontage) )
+	else
 	{
-		AnimInstance->Montage_Play( AnimMontage, 1.0f );
+		PlaySelectAnimation();
 	}
 }
 
-void ASelectPawn::StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime)
+void ASelectPawn::PlayFocusAnimation()
 {
-	UAnimMontage* AnimMontage = nullptr;
-
-	switch (Type)
+	if (IsValid(AnimInstance) && IsValid(FocusMontage))
 	{
-	case EAnimMontageType::Idle:
-		AnimMontage = IdleMontage;
-		break;
-	case EAnimMontageType::Focus:
-		AnimMontage = FocusMontage;
-		break;
-	case EAnimMontageType::Select:
-		AnimMontage = SelectMontage;
-		break;
+		AnimInstance->Montage_Play(FocusMontage, 1.0f);
+		FOnMontageEnded MontageEndedDelegate;
+		MontageEndedDelegate.BindUObject(this, &ASelectPawn::OnFocusAnimationEnded);
+		AnimInstance->Montage_SetEndDelegate(MontageEndedDelegate, FocusMontage);
 	}
-	
-	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
+}
+
+void ASelectPawn::PlayIdleAnimation()
+{
+	if (IsValid(AnimInstance) && IsValid(IdleMontage))
+	{
+		AnimInstance->Montage_Play(IdleMontage, 1.0f);
+	}
+}
+
+void ASelectPawn::PlaySelectAnimation()
+{
+	if (IsValid(AnimInstance) && IsValid(SelectMontage))
+	{
+		AnimInstance->Montage_Play(SelectMontage, 1.0f);
+	}
+}
+
+void ASelectPawn::OnFocusAnimationEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (bInterrupted)
+	{
+		return;
+	}
+
+	if (CurrentSelectionState == ESelectionState::None)
+		PlayIdleAnimation();
+	else
+		PlaySelectAnimation();
 }

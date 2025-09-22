@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ECharacterType.h"
-#include "EAnimMontageType.h"
+#include "ESelectionState.h"
 #include "GameFramework/Pawn.h"
 #include "ASelectPawn.generated.h"
 
@@ -26,9 +26,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="SelectPawn")
 	void SetupCharacterFromType(const ECharacterType Type, const bool Another);
 
-	void PlayTypeMontage(const EAnimMontageType Type);
-	void PlayTargetMontage(UAnimMontage* AnimMontage);
-	void StopTargetMontage(const EAnimMontageType Type, const float BlendInOutTime);
+	void SetSelectionState(ESelectionState NewState);
+
+	void PlayFocusAnimation();
+	void PlayIdleAnimation();
+	void PlaySelectAnimation();
+
+	UFUNCTION()
+	void OnFocusAnimationEnded(UAnimMontage* Montage, bool bInterrupted);
 	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -50,6 +55,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	bool bIsAnother = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character")
+	ESelectionState CurrentSelectionState = ESelectionState::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Character|Montage")
 	TObjectPtr<class UAnimMontage> IdleMontage;

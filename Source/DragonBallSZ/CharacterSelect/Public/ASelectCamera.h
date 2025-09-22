@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "ECharacterType.h"
+#include "ESelectionState.h"
 #include "GameFramework/Pawn.h"
 #include "ASelectCamera.generated.h"
 
@@ -27,15 +28,33 @@ class DRAGONBALLSZ_API ASelectCamera : public APawn
 public:
 	ASelectCamera();
 
+	// Called from UI
 	UFUNCTION(BlueprintCallable, Category = "SelectCamera")
 	void MoveCharacter(int32 Direction);
+	
+	UFUNCTION(BlueprintCallable, Category = "SelectCamera")
+	void SelectCurrentCharacter();
 
 	UFUNCTION(BlueprintCallable, Category = "SelectCamera")
-	void FocusCharacter(int32 FocusIndex);
+	void DeselectCharacter();
+
+	UFUNCTION(BlueprintPure, Category = "SelectCamera")
+	bool IsPlayerSelected() const { return PlayerSelectedIndex != -1; }
+
+	UFUNCTION(BlueprintPure, Category = "SelectCamera")
+	bool IsEnemySelected() const { return EnemySelectedIndex != -1; }
+
+	UFUNCTION(BlueprintPure, Category = "SelectCamera")
+	ESelectionState GetCurrentFocusSelectionState() const;
+
+	UFUNCTION(BlueprintCallable, Category = "SelectCamera")
+	void PassSelectionDataToGameMode();
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
+	void FocusCharacter(int32 FocusIndex);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Select")
@@ -69,4 +88,18 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SelectCamera", meta = (AllowPrivateAccess = "true"))
 	float CameraInterpSpeed = 5.0f;
+
+	// Selection State
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SelectCamera", meta = (AllowPrivateAccess = "true"))
+	int32 PlayerSelectedIndex = -1;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SelectCamera", meta = (AllowPrivateAccess = "true"))
+	int32 EnemySelectedIndex = -1;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SelectCamera", meta = (AllowPrivateAccess = "true"))
+	ESelectionState CurrentTurn = ESelectionState::PlayerSelected;
+
+	UPROPERTY()
+	TArray<ESelectionState> PawnSelectionStates;
 };
+
