@@ -20,8 +20,6 @@ struct FCharacterInfoData : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Attack", meta=(ToolTip="콤보 공격의 각 단계별 대미지 값입니다. 배열의 인덱스가 콤보 순서에 해당합니다."))
 	TArray<float> AttackDamage { 30, 45, 50, 70, 100 };
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Attack", meta=(ToolTip="콤보 공격 시 각 단계별로 회복되는 기(Ki)의 양입니다."))
-	TArray<float> AttackChargeKi  { 3, 4, 5, 7, 10, 10, 10, 10, 10 };
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats|Ki", meta=(ToolTip="캐릭터가 전투 시작 시 보유하는 기(Ki)의 양입니다."))
 	float StartKi = 300;

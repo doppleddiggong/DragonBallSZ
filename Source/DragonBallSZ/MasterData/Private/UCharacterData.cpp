@@ -9,28 +9,21 @@
 #include "NiagaraSystem.h"
 #include "Animation/AnimMontage.h"
 
-bool UCharacterData::LoadRushAttackMontage(
-	TArray<TObjectPtr<UAnimMontage>>& OutMontage,
-	TArray<EAttackPowerType>& OutPowerType) const
+bool UCharacterData::LoadRushMontage( TObjectPtr<UAnimMontage>& OutMontage) const
 {
-	OutMontage.Empty();
-	OutPowerType.Empty();
-
-	for (const FRushData& Data : RushData)
+	OutMontage = RushAsset.LoadSynchronous();
+	if (!OutMontage)
 	{
-		UAnimMontage* LoadedMontage = Data.AttackAsset.LoadSynchronous();
-		if (LoadedMontage)
-		{
-			OutMontage.Add(LoadedMontage);
-			OutPowerType.Add(Data.PowerType);
-		}
-		else
-		{
-			PRINTLOG( TEXT("Failed to LoadRushAttackMontage"));
-			return false;
-		}
+		PRINTLOG(TEXT("Failed to LoadRushMontage"));
+		return false;
 	}
 
+	return true;
+}
+
+bool UCharacterData::LoadRushPower( TArray<EAttackPowerType>& OutPowerType) const
+{
+	OutPowerType = RushPower;
 	return true;
 }
 

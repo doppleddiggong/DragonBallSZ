@@ -36,7 +36,6 @@ void UStatSystem::InitStat_Implementation(const bool InIsPlayer, const ECharacte
 		this->CurHP = this->MaxHP;
 
 		this->AttackDamage = Params.AttackDamage;
-		this->AttackChargeKi = Params.AttackChargeKi;
 		
 		this->MaxKi = Params.MaxKi;
 		this->CurKi = Params.StartKi;
