@@ -368,9 +368,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
 	float LastBlastShotTime = 0;
 
-	// 경직 시간. HitEnd후 시간 보정
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
-	float HitEndOffset = 0.15f;
+	// // 경직 시간. HitEnd후 시간 보정
+	// UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="EnergyBlastFactory")
+	// float HitEndOffset = 0.15f;
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Character|Data")

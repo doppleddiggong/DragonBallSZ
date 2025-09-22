@@ -26,8 +26,16 @@ void UCombatUI::NativeConstruct()
 		EventManager->OnMessage.AddDynamic(this, &UCombatUI::OnReceiveMessage);
 	}
 
-	this->HidePlayerDamageUI();
-	this->HideEnemyDamageUI();
+	TextPlayerDamage->SetText(FText::GetEmpty());
+	TextPlayerCombo->SetText(FText::GetEmpty());
+	TextEnemyDamage->SetText(FText::GetEmpty());
+	TextEnemyCombo->SetText(FText::GetEmpty());
+
+	LeftHideDelegate.BindDynamic(this, &UCombatUI::OnLeftHideAnimFinished);
+	RightHideDelegate.BindDynamic(this, &UCombatUI::OnRightHideAnimFinished);
+
+	BindToAnimationFinished(LeftHideAnimation, LeftHideDelegate);
+	BindToAnimationFinished(RightHideAnimation, RightHideDelegate);
 }
 
 void UCombatUI::NativeDestruct()
@@ -63,23 +71,20 @@ void UCombatUI::UpdatePlayerDamageUI()
 	}
 
 	if (PlayerDamage > IntPlayerDamageSum) return;
-	
+
 	PlayerDamage += (IntPlayerDamageSum - PlayerDamage) * SpeedFactor;
 	if (PlayerDamage <= IntPlayerDamageSum)
 	{
 		FString DamageStr = FString::FromInt(PlayerDamage);
-		
 		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
-		
 		TextPlayerDamage->SetText(FText::FromString(FormattedStr));
 	}
 	else
 	{
 		FString DamageStr = FString::FromInt(PlayerDamage);
-		
 		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
-		
 		TextPlayerDamage->SetText(FText::FromString(FormattedStr));
+		
 	}
 }
 
@@ -93,17 +98,21 @@ void UCombatUI::UpdateEnemyDamageUI()
 	}
 
 	if (EnemyDamage > IntEnemyDamageSum) return;
-	
+
 	EnemyDamage += (IntEnemyDamageSum - EnemyDamage) * SpeedFactor;
 	if (EnemyDamage <= IntEnemyDamageSum)
 	{
-		TextEnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
-		                                        FText::AsNumber(EnemyDamage)));
+		FString DamageStr = FString::FromInt(EnemyDamage);
+		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
+		TextEnemyDamage->SetText(FText::FromString(FormattedStr));
+		
 	}
 	else
 	{
-		TextEnemyDamage->SetText(FText::Format(FText::FromString(TEXT("{0} Damage")),
-												 FText::AsNumber(IntEnemyDamageSum)));
+		FString DamageStr = FString::FromInt(EnemyDamage);
+		FString FormattedStr = DamageStr.Left(1) + "<Small>" + DamageStr.RightChop(1) + "</>";
+		TextEnemyDamage->SetText(FText::FromString(FormattedStr));
+		
 	}
 }
 
@@ -183,8 +192,10 @@ void UCombatUI::StartCombat(
 	EnemyMaxKi = EnemyKi;
 	EnemyCurKi = EnemyMaxKi;
 
-	this->HidePlayerDamageUI();
-	this->HideEnemyDamageUI();
+	TextPlayerDamage->SetText(FText::GetEmpty());
+	TextPlayerCombo->SetText(FText::GetEmpty());
+	TextEnemyDamage->SetText(FText::GetEmpty());
+	TextEnemyCombo->SetText(FText::GetEmpty());
 
 	ProgressBar_Player->SetPercent(PlayerCurHP / PlayerMaxHP);
 	ProgressBar_Enemy->SetPercent(EnemyCurHP / EnemyMaxHP);
@@ -193,9 +204,9 @@ void UCombatUI::StartCombat(
 	ProgressBar_Enemy_Ki->SetPercent(EnemyCurKi / EnemyMaxKi);
 
 	StartCombatTime();
-	
+
 	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
-	this->UpdateFace( GameMode->PlayerType,	GameMode->EnemyType);
+	this->UpdateFace(GameMode->PlayerType, GameMode->EnemyType);
 }
 
 void UCombatUI::StartCombatTime()
@@ -273,7 +284,9 @@ void UCombatUI::OnPlayerAttackHit(float Damage)
 	{
 		TextPlayerCombo->SetText(
 			FText::Format(FText::FromString(TEXT("{0}<Small> Hits</>")), FText::AsNumber(PlayerComboCount)));
-		ShowPlayerDamageUI();
+
+			ShowPlayerDamageUI();
+		
 	}
 
 	// 플레이어 콤보 리셋 타이머 시작/리셋
@@ -303,20 +316,36 @@ void UCombatUI::ResetPlayerCombo()
 
 void UCombatUI::ShowPlayerDamageUI()
 {
-	LeftComboImage->SetVisibility(ESlateVisibility::Visible);
+	if (bIsPlayerDamageUIVisible || !LeftShowAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(LeftHideAnimation))
+	{
+		StopAnimation(LeftHideAnimation);
+	}
+	
+	PlayAnimation(LeftShowAnimation);
+	bIsPlayerDamageUIVisible = true;
 }
 
 void UCombatUI::HidePlayerDamageUI()
 {
-	if (TextPlayerDamage)
+	if (!bIsPlayerDamageUIVisible || !LeftHideAnimation)
 	{
-		TextPlayerDamage->SetText(FText::GetEmpty());
+		return;
 	}
-	if (TextPlayerCombo)
+
+	if (IsAnimationPlaying(LeftShowAnimation))
 	{
-		TextPlayerCombo->SetText(FText::GetEmpty());
+		StopAnimation(LeftShowAnimation);
 	}
-	LeftComboImage->SetVisibility(ESlateVisibility::Hidden);
+
+	if (!IsAnimationPlaying(LeftHideAnimation))
+	{
+		PlayAnimation(LeftHideAnimation);
+	}
 }
 
 
@@ -329,8 +358,10 @@ void UCombatUI::OnEnemyAttackHit(float Damage)
 	// 적 UI 텍스트 업데이트
 	if (TextEnemyDamage && TextEnemyCombo)
 	{
-		TextEnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0}<Small> Hits</>")), FText::AsNumber(EnemyComboCount)));
-		ShowEnemyDamageUI();
+		TextEnemyCombo->SetText(FText::Format(FText::FromString(TEXT("{0}<Small> Hits</>")),
+		                                      FText::AsNumber(EnemyComboCount)));
+			ShowEnemyDamageUI();
+		
 	}
 
 	// 적 콤보 리셋 타이머 시작/리셋
@@ -360,18 +391,50 @@ void UCombatUI::ResetEnemyCombo()
 
 void UCombatUI::ShowEnemyDamageUI()
 {
-	RightComboImage->SetVisibility(ESlateVisibility::Visible);
+	if (bIsEnemyDamageUIVisible || !RightShowAnimation)
+	{
+		return;
+	}
+
+	if (IsAnimationPlaying(RightHideAnimation))
+	{
+		StopAnimation(RightHideAnimation);
+	}
+	
+	PlayAnimation(RightShowAnimation);
+	bIsEnemyDamageUIVisible = true;
 }
 
 void UCombatUI::HideEnemyDamageUI()
 {
-	if (TextEnemyDamage)
+	if (!bIsEnemyDamageUIVisible || !RightHideAnimation)
 	{
-		TextEnemyDamage->SetText(FText::GetEmpty());
+		return;
 	}
-	if (TextEnemyCombo)
+
+	if (IsAnimationPlaying(RightShowAnimation))
 	{
-		TextEnemyCombo->SetText(FText::GetEmpty());
+		StopAnimation(RightShowAnimation);
 	}
+
+	if (!IsAnimationPlaying(RightHideAnimation))
+	{
+		PlayAnimation(RightHideAnimation);
+	}
+}
+
+void UCombatUI::OnLeftHideAnimFinished()
+{
+	TextPlayerDamage->SetText(FText::GetEmpty());
+	TextPlayerCombo->SetText(FText::GetEmpty());
+	LeftComboImage->SetVisibility(ESlateVisibility::Hidden);
+	bIsPlayerDamageUIVisible = false;
+}
+
+void UCombatUI::OnRightHideAnimFinished()
+{
+	TextEnemyDamage->SetText(FText::GetEmpty());
+	TextEnemyCombo->SetText(FText::GetEmpty());
 	RightComboImage->SetVisibility(ESlateVisibility::Hidden);
+	bIsEnemyDamageUIVisible = false;
 }

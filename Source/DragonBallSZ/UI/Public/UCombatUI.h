@@ -30,6 +30,13 @@ protected:
 
 	float SpeedFactor = 0.1f;
 	
+	FWidgetAnimationDynamicEvent LeftHideDelegate;
+	FWidgetAnimationDynamicEvent RightHideDelegate;
+	UFUNCTION()
+	void OnLeftHideAnimFinished();
+	UFUNCTION()
+	void OnRightHideAnimFinished();
+	
 protected:
 	UFUNCTION()
 	void OnReceiveMessage(FString Msg);
@@ -142,6 +149,9 @@ public:
 
 	
 private:
+	bool bIsPlayerDamageUIVisible = false;
+	bool bIsEnemyDamageUIVisible = false;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class URichTextBlock> TextPlayerDamage;
 	UPROPERTY(meta = (BindWidget))
@@ -155,6 +165,15 @@ private:
 	TObjectPtr<class URichTextBlock> TextEnemyCombo;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> RightComboImage;
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* LeftShowAnimation;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* RightShowAnimation;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* LeftHideAnimation;
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* RightHideAnimation;
 
 	
 	FTimerHandle PlayerComboResetTimerHandle;

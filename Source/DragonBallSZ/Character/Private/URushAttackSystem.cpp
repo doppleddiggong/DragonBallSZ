@@ -119,10 +119,7 @@ void URushAttackSystem::BindMontageDelegates(UAnimInstance* Anim)
 		return;
 
 	// 중복 방지용으로 먼저 제거
-	Anim->OnPlayMontageNotifyBegin.RemoveDynamic(this, &URushAttackSystem::OnMontageNotifyBegin);
 	Anim->OnMontageEnded          .RemoveDynamic(this, &URushAttackSystem::OnMontageEnded);
-
-	Anim->OnPlayMontageNotifyBegin.AddDynamic(this, &URushAttackSystem::OnMontageNotifyBegin);
 	Anim->OnMontageEnded          .AddDynamic(this, &URushAttackSystem::OnMontageEnded);
 
 	bDelegatesBound = true;
@@ -133,21 +130,9 @@ void URushAttackSystem::UnbindMontageDelegates(UAnimInstance* Anim)
 	if (!Anim || !bDelegatesBound)
 		return;
 
-	Anim->OnPlayMontageNotifyBegin.RemoveDynamic(this, &URushAttackSystem::OnMontageNotifyBegin);
 	Anim->OnMontageEnded          .RemoveDynamic(this, &URushAttackSystem::OnMontageEnded);
 
 	bDelegatesBound = false;
-}
-
-void URushAttackSystem::OnMontageNotifyBegin(FName NotifyName, const FBranchingPointNotifyPayload& Payload)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Notify Fired: %s"), *NotifyName.ToString());
-	
-	bIsAttacking = false;
-	
-	ComboCount++;
-	if ( ComboCount > AttackMontages.Num()-1 )
-		ComboCount = 0;
 }
 
 void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -157,6 +142,7 @@ void URushAttackSystem::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 		bIsAttacking = false;
 		ComboCount = 0;
 	}
+
     // 몽타주가 정상적으로 끝났을 때 (중단되지 않았을 때)
     if (!bInterrupted)
     {
@@ -192,7 +178,8 @@ void URushAttackSystem::InitSystem(ACombatCharacter* InOwner, UCharacterData* In
 
 	if (IsValid(InData))
 	{
-		InData->LoadRushAttackMontage(AttackMontages, AttackPowerType);
+		InData->LoadRushMontage(AttackMontages);
+		InData->LoadRushPower(AttackPowerType);
 		InData->LoadDashMontage(DashMontage);
 		if (!IsValid(DashMontage))
 		{
@@ -216,7 +203,7 @@ void URushAttackSystem::OnDashCompleted()
     }
 
 	if (!Owner->IsHitting())
-		PlayMontage(PendingMontageIndex);
+		PlayMontage();
 
 	Owner->RecoveryMovementMode(PrevMovementMode);
 	EventManager->SendDash(Owner, false, FVector::ZeroVector );
@@ -242,20 +229,26 @@ void URushAttackSystem::OnAttack()
 
 	if (Dist >= TeleportRange)
 	{
-		TeleportToTarget(ComboCount);
+		TeleportToTarget();
 	}
 	else if (!bIsDashing)
 	{
-		DashToTarget(ComboCount);
+		DashToTarget();
 	}
 	else
 	{
-		PlayMontage(ComboCount);
+		PlayMontage();
 	}
 }
 
 void URushAttackSystem::StartAttackTrace()
 {
+	ComboCount++;
+	if ( ComboCount > AttackPowerType.Num()-1 )
+		ComboCount = 0;
+
+	PRINT_STRING(TEXT("ComboCount : %d"), ComboCount);
+	
     GetWorld()->GetTimerManager().SetTimer(
         TraceTimeHandler,
         this,
@@ -270,19 +263,21 @@ void URushAttackSystem::StopAttackTrace()
     UKismetSystemLibrary::K2_ClearAndInvalidateTimerHandle(this, TraceTimeHandler);
 }
 
+
+EAttackPowerType URushAttackSystem::GetAttackPower(int InCount)
+{
+	if (AttackPowerType.IsValidIndex(InCount))
+		return AttackPowerType[InCount];
+
+	return EAttackPowerType::Small;
+}
+
 void URushAttackSystem::AttackTrace()
 {
 	if ( !Owner->IsInSight( Target ))
 		return;
 
-    // Add check for AttackPowerType
-    if (!AttackPowerType.IsValidIndex(ComboCount))
-    {
-        PRINTLOG(TEXT("AttackTrace: ComboCount (%d) is out of bounds for AttackPowerType. Skipping attack trace."), ComboCount);
-        return;
-    }
-
-	const EAttackPowerType Type = AttackPowerType[ComboCount];
+	const EAttackPowerType Type = GetAttackPower(ComboCount);
 	float DelayKnockback = 0.f;
 	if (auto DataManager = UDBSZDataManager::Get(GetWorld()))
 		DelayKnockback = DataManager->GetHitStopDelayTime(Type);
@@ -295,6 +290,7 @@ void URushAttackSystem::AttackTrace()
 	});
 
 	Owner->SetAttackChargeKi(ComboCount);
+	Owner->PlaySoundAttack();
 	
 	GetWorld()->GetTimerManager().SetTimer(KnockbackTimerHandler, TimerDelegate, DelayKnockback, false);
 	UGameplayStatics::ApplyDamage(
@@ -306,7 +302,7 @@ void URushAttackSystem::AttackTrace()
 	);
 }
 
-void URushAttackSystem::PlayMontage(int32 MontageIndex)
+void URushAttackSystem::PlayMontage()
 {
 	// 시스템이 준비되지 않았거나 월드가 유효하지 않으면 즉시 중단
     if (!Owner || !GetWorld() || !EventManager || !AnimInstance)
@@ -315,19 +311,13 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
         return;
     }
 
-	if (!AttackMontages.IsValidIndex(MontageIndex))
-		return;
-
 	bIsAttacking = true;
 
 	LastAttackTime = GetWorld()->GetTimeSeconds();
-	EventManager->SendAttack(Owner, MontageIndex);
 	
-	if (IsValid(AnimInstance) && IsValid(AttackMontages[MontageIndex]) )
+	if (IsValid(AnimInstance) && IsValid(AttackMontages) )
     {
-		Owner->PlaySoundAttack();
-
-		float AttackEndTime = AttackMontages[MontageIndex]->GetPlayLength();
+		float AttackEndTime = AttackMontages->GetPlayLength();
 		ComboResetTime = GetWorld()->GetTimeSeconds() + AttackEndTime + ComboResetTime_Offset;
 
 		const FVector TargetLoc = Target->GetActorLocation();
@@ -337,7 +327,7 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
 			Owner->SetFlying();
 	
 	    AnimInstance->Montage_Play(
-		    AttackMontages[MontageIndex],
+		    AttackMontages,
 		    1.0f,
 		    EMontagePlayReturnType::MontageLength,
 		    0.f,
@@ -345,12 +335,12 @@ void URushAttackSystem::PlayMontage(int32 MontageIndex)
     }
 }
 
-void URushAttackSystem::DashToTarget(int32 MontageIndex)
+void URushAttackSystem::DashToTarget()
 {
     if (!IsValid(Target))
     {
         PRINTLOG(TEXT("DashToTarget: Target is invalid. Skipping dash."));
-        PlayMontage(MontageIndex);
+        PlayMontage();
         return;
     }
 	
@@ -364,7 +354,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
 	if ( DistanceXY < KINDA_SMALL_NUMBER )
 	{
 		PRINTLOG(TEXT("DashToTarget: DistanceXY is too small, skipping dash. Owner: %s, Target: %s"), *Owner->GetName(), *Target->GetName());
-		PlayMontage(MontageIndex);
+		PlayMontage();
 		return;
 	}
 
@@ -395,7 +385,6 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
     bIsDashing = true;
 	
 	ElapsedTime = 0.0f;
-    PendingMontageIndex = MontageIndex;
 
 	PrevMovementMode = MoveComp->MovementMode;
 	MoveComp->DisableMovement();
@@ -412,7 +401,7 @@ void URushAttackSystem::DashToTarget(int32 MontageIndex)
     }
 }
 
-void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
+void URushAttackSystem::TeleportToTarget()
 {
     const FVector TargetLoc = Target->GetActorLocation();
 
@@ -501,5 +490,5 @@ void URushAttackSystem::TeleportToTarget(int32 MontageIndex)
     // }
 
 	PrevMovementMode = MoveComp->MovementMode;
-	PlayMontage(MontageIndex);
+	PlayMontage();
 }

@@ -106,8 +106,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Stats")
 	FORCEINLINE void IncreaseKi_ComboCount(int ComboCount)
 	{
-		if ( AttackChargeKi.IsValidIndex(ComboCount) )
-			IncreaseKi(AttackChargeKi[ComboCount]);
+		if ( AttackDamage.IsValidIndex(ComboCount) )
+			IncreaseKi(AttackDamage[ComboCount]*0.1f);
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Stats")
@@ -145,9 +145,6 @@ protected:
 	// Attack
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
 	TArray<float> AttackDamage { 30, 45, 50, 70, 100 };
-	// 공격시 회복기
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
-	TArray<float> AttackChargeKi  { 3, 4, 5, 7, 10, 10, 10, 10, 10 };
 
 	// Ki
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats|Ki")
