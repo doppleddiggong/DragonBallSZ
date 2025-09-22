@@ -287,6 +287,10 @@ public:
 	void PlaySoundTeleport();
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlaySoundWin();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlayKamehame();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlayKamehamePa();
 
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")

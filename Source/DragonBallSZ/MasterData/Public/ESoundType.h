@@ -15,11 +15,17 @@ enum class ESoundType : uint8
 	Vege_Teleport	UMETA(DisplayName = "베지터 텔레포트"),
 	Vege_Win		UMETA(DisplayName = "베지터 승리"),
 
-	EnergyBlast_Fire UMETA(DisplayName = "조기탄 발사"),
-	EnergyBlast_Explosion UMETA(DisplayName = "조기탄 폭발"),
+	EnergyBlast_Fire		UMETA(DisplayName = "조기탄 발사"),
+	EnergyBlast_Explosion	UMETA(DisplayName = "조기탄 폭발"),
 
-	Kamehameha_Charge UMETA(DisplayName = "에네르기파 차지"),
-	Kamehameha_Fire UMETA(DisplayName = "에네르기파 발사"),
-	Kamehameha_Continue UMETA(DisplayName = "에네르기파 지속"),
-	Kamehameha_Explosion UMETA(DisplayName = "에네르기파 폭발"),
+	Kamehameha_Charge		UMETA(DisplayName = "에네르기파 차지"),
+	Kamehameha_Fire			UMETA(DisplayName = "에네르기파 발사"),
+	Kamehameha_Continue		UMETA(DisplayName = "에네르기파 지속"),
+	Kamehameha_Explosion	UMETA(DisplayName = "에네르기파 폭발"),
+
+	Goku_Kamehameha			UMETA(DisplayName = "오공 카메하메"),
+	Goku_Kamehameha_Pa		UMETA(DisplayName = "오공 카메하메 파"),
+
+	Vege_Kamehameha			UMETA(DisplayName = "베지터 카메하메"),
+	Vege_Kamehameha_Pa		UMETA(DisplayName = "베지터 카메하메 파"),
 };

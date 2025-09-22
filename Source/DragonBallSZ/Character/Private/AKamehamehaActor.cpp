@@ -290,6 +290,8 @@ void AKamehamehaActor::StartKamehame(ACombatCharacter* InKamehameOwner, ACombatC
 		ChargeSphere->Activate();
 		UDBSZSoundManager::Get(GetWorld())->PlaySound2D(ESoundType::Kamehameha_Charge);
 
+		Shooter->PlayKamehame();
+
 		// 발사자 발사하는 애니메이션 나온다
 		// 나도 멈추고, 쟤도 멈춘다
 		Shooter->SetHold(true);
@@ -332,6 +334,7 @@ void AKamehamehaActor::DelayKamehameFire()
 		}
 	}
 
+	Shooter->PlayKamehamePa();
 	// 발사 시작할때 카메하페마 Shoot이벤트 송신
 	//EventManager->SendSpecialAttack(Owner, 2);
 }

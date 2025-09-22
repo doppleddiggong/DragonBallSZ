@@ -248,7 +248,9 @@ void URushAttackSystem::StartAttackTrace()
 		ComboCount = 0;
 
 	PRINT_STRING(TEXT("ComboCount : %d"), ComboCount);
-	
+
+	Owner->PlaySoundAttack();
+
     GetWorld()->GetTimerManager().SetTimer(
         TraceTimeHandler,
         this,
@@ -290,7 +292,6 @@ void URushAttackSystem::AttackTrace()
 	});
 
 	Owner->SetAttackChargeKi(ComboCount);
-	Owner->PlaySoundAttack();
 	
 	GetWorld()->GetTimerManager().SetTimer(KnockbackTimerHandler, TimerDelegate, DelayKnockback, false);
 	UGameplayStatics::ApplyDamage(

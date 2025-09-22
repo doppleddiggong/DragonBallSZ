@@ -401,7 +401,7 @@ void ACombatCharacter::OnDamage(
 	
 	const bool IsDie = StatSystem->DecreaseHealth(Damage);
 
-	EventManager->SendCameraShake(this, AttackPowerType );
+	EventManager->SendForceCameraShake(AttackPowerType);
 	EventManager->SendDamage(IsPlayer(), Damage);
 
 	RushAttackSystem->ResetComboCount();
@@ -665,3 +665,14 @@ void ACombatCharacter::PlaySoundWin()
 {	
 	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundWin );
 }
+
+void ACombatCharacter::PlayKamehame()
+{	
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundKamehame  );
+}
+
+void ACombatCharacter::PlayKamehamePa()
+{	
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundKamehamePa );
+}
+
