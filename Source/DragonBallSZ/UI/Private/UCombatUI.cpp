@@ -249,6 +249,19 @@ void UCombatUI::OnDamage(bool bIsPlayer, float Damage)
 	}
 }
 
+void UCombatUI::UpdateFace_Implementation(const ECharacterType PlayerType, const ECharacterType EnemyType)
+{
+	if (const auto TexturePtr = FaceMap.Find(PlayerType))
+	{
+		Image_Player_Face->SetBrushFromTexture(TexturePtr->Get());
+	}
+	
+	if ( const auto TexturePtr  = FaceMap.Find(EnemyType))
+	{
+		Image_Player_Face->SetBrushFromTexture(TexturePtr->Get());
+	}
+}
+
 void UCombatUI::OnPlayerAttackHit(float Damage)
 {
 	// 플레이어 콤보 및 데미지 합산
