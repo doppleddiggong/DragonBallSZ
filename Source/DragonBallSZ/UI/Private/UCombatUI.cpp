@@ -3,9 +3,12 @@
 #include "UCombatUI.h"
 
 #include "GameEvent.h"
+#include "ADBSZGameMode.h"
 #include "UDBSZEventManager.h"
 
 #include "TimerManager.h"
+
+#include "Kismet/GameplayStatics.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
@@ -190,6 +193,9 @@ void UCombatUI::StartCombat(
 	ProgressBar_Enemy_Ki->SetPercent(EnemyCurKi / EnemyMaxKi);
 
 	StartCombatTime();
+	
+	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
+	this->UpdateFace( GameMode->PlayerType,	GameMode->EnemyType);
 }
 
 void UCombatUI::StartCombatTime()

@@ -16,6 +16,10 @@ public:
 	const float PlayerHP, const float EnemyHP,
 	const float PlayerKi, const float EnemyKi);
 	
+	UFUNCTION(BlueprintImplementableEvent, Category="Character")
+	void UpdateFace(ECharacterType PlayerType, ECharacterType EnemyType);
+	
+	
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
