@@ -41,7 +41,7 @@ void APlayerActor::BeginPlay()
 		TargetActor = Cast<AEnemyActor>(FoundActor);
 
 	auto GameMode = Cast<ADBSZGameMode>(UGameplayStatics::GetGameMode(this));
-	this->SetupCharacterFromType(GameMode->PlayerType);
+	this->SetupCharacterFromType(GameMode->PlayerType, GameMode->bIsPlayerAnother);
 	
 	CameraShakeSystem->InitSystem(this);	
 
