@@ -247,7 +247,7 @@ void URushAttackSystem::StartAttackTrace()
 	if ( ComboCount > AttackPowerType.Num()-1 )
 		ComboCount = 0;
 
-	PRINT_STRING(TEXT("ComboCount : %d"), ComboCount);
+	// PRINT_STRING(TEXT("ComboCount : %d"), ComboCount);
 
 	Owner->PlaySoundAttack( AttackPowerType[ComboCount] );
 
