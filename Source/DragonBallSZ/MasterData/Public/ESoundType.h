@@ -42,4 +42,10 @@ enum class ESoundType : uint8
 	Vege_Attack02			UMETA(DisplayName = "베지터 공격 Normal"),
 	Vege_Attack03			UMETA(DisplayName = "베지터 공격 Large"),
 	Vege_Attack04			UMETA(DisplayName = "베지터 공격 Huge"),
+
+	Goku_ChargeKi			UMETA(DisplayName = "오공 기차지 음성"),
+	Goku_VFX_ChargeKi		UMETA(DisplayName = "오공 기차지 효과음"),
+
+	Vege_ChargeKi			UMETA(DisplayName = "베지터 기차지 음성"),
+	Vege_VFX_ChargeKi		UMETA(DisplayName = "베지터 기차지 효과음"),
 };

@@ -84,6 +84,11 @@ public:
 	ESoundType SoundIntro;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
 	ESoundType SoundLose;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundChargeKi;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundVFXChargeKi;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<class UAnimMontage> RushAsset;

@@ -292,6 +292,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlayKamehamePa();
 
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlayLose();
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void PlayChargeKi(const bool Presss);
+
+	
 public: // Combat Character ShaderComp
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components|System")
 	TObjectPtr<class UStatSystem> StatSystem;

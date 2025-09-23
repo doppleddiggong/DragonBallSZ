@@ -2,6 +2,7 @@
 
 #include "UDBSZSoundManager.h"
 #include "USoundData.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Shared/FComponentHelper.h"
 
@@ -73,11 +74,31 @@ void UDBSZSoundManager::PlaySound(const ESoundType Type, const FVector Location)
 
 void UDBSZSoundManager::PlaySound2D(const ESoundType Type)
 {
-	if ( TObjectPtr<USoundBase>* FoundSound = SoundData.Find(Type))
+	if (TObjectPtr<USoundBase>* FoundSound = SoundData.Find(Type))
 	{
-		if ( *FoundSound )
+		if (*FoundSound)
 		{
-			UGameplayStatics::PlaySound2D(GetWorld(), *FoundSound);
+			// 이미 재생 중인 사운드가 있다면 멈추고 제거
+			if (UAudioComponent* ExistingComp = ActiveSounds.FindRef(Type))
+			{
+				ExistingComp->Stop();
+				ActiveSounds.Remove(Type);
+			}
+
+			// 새로운 사운드 재생 및 저장
+			if (UAudioComponent* NewComp = UGameplayStatics::SpawnSound2D(GetWorld(), *FoundSound))
+			{
+				ActiveSounds.Add(Type, NewComp);
+			}
 		}
+	}
+}
+
+void UDBSZSoundManager::StopSound2D(const ESoundType Type)
+{
+	if (UAudioComponent* Comp = ActiveSounds.FindRef(Type))
+	{
+		Comp->Stop();
+		ActiveSounds.Remove(Type);
 	}
 }

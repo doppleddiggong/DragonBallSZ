@@ -26,10 +26,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlaySound2D(ESoundType Type);
 
+	UFUNCTION(BlueprintCallable, Category="Sound")
+	void StopSound2D(const ESoundType Type);
+	
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class USoundData> SoundAsset;
 	
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	TMap<ESoundType, TObjectPtr<class USoundBase>> SoundData;
+
+	UPROPERTY()
+	TMap<ESoundType, UAudioComponent*> ActiveSounds;
 };

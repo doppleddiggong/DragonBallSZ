@@ -425,7 +425,9 @@ void ACombatCharacter::OnDamage(
 
 		// this->PlaySoundWin();
 		this->PlayTypeMontage(EAnimMontageType::Death);
-		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);	
+		this->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		this->PlayLose();
 	}
 	else
 	{
@@ -705,5 +707,27 @@ void ACombatCharacter::PlayKamehame()
 void ACombatCharacter::PlayKamehamePa()
 {	
 	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundKamehamePa );
+}
+
+void ACombatCharacter::PlayLose()
+{	
+	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundLose );
+}
+
+void ACombatCharacter::PlayChargeKi(bool Presss)
+{
+	if ( auto SoundManager = UDBSZSoundManager::Get(GetWorld() ))
+	{
+		if ( Presss )
+		{
+			SoundManager->PlaySound2D( CharacterData->SoundChargeKi );
+			SoundManager->PlaySound2D( CharacterData->SoundVFXChargeKi  );
+		}
+		else
+		{
+			SoundManager->StopSound2D( CharacterData->SoundChargeKi );
+			SoundManager->StopSound2D( CharacterData->SoundVFXChargeKi  );
+		}
+	}
 }
 
