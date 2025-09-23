@@ -143,6 +143,7 @@ void ACombatLevelScript::PlaySequence(class ULevelSequence* InSequence)
 	if (InSequence)
 	{
 		PlayingSequence = InSequence;
+		
 		SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
 			GetWorld(),
 			InSequence,
