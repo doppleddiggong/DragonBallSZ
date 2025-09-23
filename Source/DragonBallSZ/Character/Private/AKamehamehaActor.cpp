@@ -246,14 +246,30 @@ void AKamehamehaActor::Tick(float DeltaTime)
 
 void AKamehamehaActor::FireKamehameha()
 {
-	PPVolume->BlendWeight = 1.f;
+	auto& Blendables = PPVolume->Settings.WeightedBlendables.Array;
+
+	if (Blendables.IsValidIndex(3))
+	{
+		FWeightedBlendable& PPVTarget = Blendables[3];
+		PPVTarget.Weight = 1.f;
+		
+		PPVolume->Settings.WeightedBlendables.Array[3] = PPVTarget;
+	}
 
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		[this]()
 		{
-			PPVolume->BlendWeight = 0.f;
+			auto& Blendables = PPVolume->Settings.WeightedBlendables.Array;
+			
+			if (Blendables.IsValidIndex(3))
+			{
+				FWeightedBlendable& PPVTarget = Blendables[3];
+				PPVTarget.Weight = 0.f;
+		
+				PPVolume->Settings.WeightedBlendables.Array[3] = PPVTarget;
+			}
 		},
 		ImpactTime,
 		false
