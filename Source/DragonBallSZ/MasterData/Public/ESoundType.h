@@ -3,13 +3,13 @@
 UENUM(BlueprintType)
 enum class ESoundType : uint8
 {
-	Goku_Attack				UMETA(DisplayName = "오공 공격"),
+	Goku_Attack				UMETA(DisplayName = "오공 공격 Small"),
 	Goku_Hit				UMETA(DisplayName = "오공 피격"),
 	Goku_Jump				UMETA(DisplayName = "오공 점프"),
 	Goku_Teleport			UMETA(DisplayName = "오공 텔레포트"),
 	Goku_Win				UMETA(DisplayName = "오공 승리"),
 		
-	Vege_Attack				UMETA(DisplayName = "베지터 공격"),
+	Vege_Attack				UMETA(DisplayName = "베지터 공격 Small"),
 	Vege_Hit				UMETA(DisplayName = "베지터 피격"),
 	Vege_Jump				UMETA(DisplayName = "베지터 점프"),
 	Vege_Teleport			UMETA(DisplayName = "베지터 텔레포트"),
@@ -33,5 +33,13 @@ enum class ESoundType : uint8
 	Vege_Lose				UMETA(DisplayName = "베지터 패배"),
 
 	Goku_Vs_Vege 			UMETA(DisplayName = "오공 VS 베지터"),
-	Vege_Vs_Goku			UMETA(DisplayName = "베지터 VS 오공")
+	Vege_Vs_Goku			UMETA(DisplayName = "베지터 VS 오공"),
+
+	Goku_Attack02			UMETA(DisplayName = "오공 공격 Normal"),
+	Goku_Attack03			UMETA(DisplayName = "오공 공격 Large"),
+	Goku_Attack04			UMETA(DisplayName = "오공 공격 Huge"),
+	
+	Vege_Attack02			UMETA(DisplayName = "베지터 공격 Normal"),
+	Vege_Attack03			UMETA(DisplayName = "베지터 공격 Large"),
+	Vege_Attack04			UMETA(DisplayName = "베지터 공격 Huge"),
 };

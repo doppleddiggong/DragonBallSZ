@@ -498,7 +498,7 @@ void ACombatCharacter::RecoveryMovementMode(const EMovementMode InMovementMode)
 void ACombatCharacter::EnergyBlastShoot()
 {
 	EventManager->SendCameraShake(this, EAttackPowerType::Small );
-	this->PlaySoundAttack();
+	this->PlaySoundAttack(EAttackPowerType::Small);
 	
 	FActorSpawnParameters Params;
 	Params.Owner = this;
@@ -641,9 +641,40 @@ void ACombatCharacter::StopTargetMontage(const EAnimMontageType Type, const floa
 	AnimInstance->Montage_Stop(BlendInOutTime, AnimMontage );
 }
 
-void ACombatCharacter::PlaySoundAttack()
+void ACombatCharacter::PlaySoundAttack( EAttackPowerType Type )
 {
-	UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack );
+	switch ( Type )
+	{
+		case EAttackPowerType::Small:
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack01 );
+			}
+			break;
+
+		case EAttackPowerType::Normal:
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack02 );
+			}
+			break;
+
+		case EAttackPowerType::Large:
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack03 );
+			}
+			break;
+
+		case EAttackPowerType::Huge:
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack04 );
+			}
+			break;
+
+		default:
+			{
+				UDBSZSoundManager::Get(GetWorld())->PlaySound2D( CharacterData->SoundAttack01 );
+			}
+			break;
+	}
 }
 
 void ACombatCharacter::PlaySoundHit()

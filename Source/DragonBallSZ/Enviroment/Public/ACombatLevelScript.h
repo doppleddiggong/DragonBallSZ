@@ -100,6 +100,6 @@ public:
 	TObjectPtr<class ULevelSequence> GokuKamehameSeq;
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
-	TObjectPtr<class AActor> GokuWinActor;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sequences")
+	// TObjectPtr<class AActor> GokuWinActor;
 };

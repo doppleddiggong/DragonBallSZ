@@ -278,7 +278,7 @@ public:
 	
 public:
 	UFUNCTION(BlueprintCallable, Category="Sound")
-	void PlaySoundAttack();
+	void PlaySoundAttack( const EAttackPowerType Type );
 	UFUNCTION(BlueprintCallable, Category="Sound")
 	void PlaySoundHit();
 	UFUNCTION(BlueprintCallable, Category="Sound")

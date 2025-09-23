@@ -249,7 +249,7 @@ void URushAttackSystem::StartAttackTrace()
 
 	PRINT_STRING(TEXT("ComboCount : %d"), ComboCount);
 
-	Owner->PlaySoundAttack();
+	Owner->PlaySoundAttack( AttackPowerType[ComboCount] );
 
     GetWorld()->GetTimerManager().SetTimer(
         TraceTimeHandler,

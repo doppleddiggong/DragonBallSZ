@@ -60,7 +60,14 @@ public:
 	TSoftClassPtr<class UAnimInstance> AnimBluePrint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
-	ESoundType SoundAttack;
+	ESoundType SoundAttack01;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundAttack02;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundAttack03;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundAttack04;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
 	ESoundType SoundHit;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)

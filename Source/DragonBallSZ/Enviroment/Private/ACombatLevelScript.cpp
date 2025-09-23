@@ -44,12 +44,12 @@ void ACombatLevelScript::BeginPlay()
 	if ( AActor* Enemy = UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyActor::StaticClass() ) )
 		EnemyActor = Cast<AEnemyActor>(Enemy);
 
-	for( TActorIterator<AActor> it(GetWorld()); it; ++it )
-	{
-		auto Spawn = *it;
-		if ( Spawn->GetActorNameOrLabel().Contains((TEXT("BP_GokuWin"))))
-			GokuWinActor = Spawn;
-	}
+	// for( TActorIterator<AActor> it(GetWorld()); it; ++it )
+	// {
+	// 	auto Spawn = *it;
+	// 	if ( Spawn->GetActorNameOrLabel().Contains((TEXT("BP_GokuWin"))))
+	// 		GokuWinActor = Spawn;
+	// }
 	
 	EventManager = UDBSZEventManager::Get(GetWorld());
 	EventManager->OnMessage.AddDynamic(this, &ACombatLevelScript::OnRecvMessage);
@@ -86,7 +86,7 @@ void ACombatLevelScript::OnRecvMessage(FString InMsg)
 	}
 	else if ( InMsg.Equals(GameEvent::PlayerWin.ToString(), ESearchCase::IgnoreCase ))
 	{
-		GokuWinActor->SetActorTransform( PlayerActor->GetActorTransform());
+		// GokuWinActor->SetActorTransform( PlayerActor->GetActorTransform());
 		CombatResultProcess(true);
 	}
 	else if ( InMsg.Equals(GameEvent::EnemyWin.ToString(), ESearchCase::IgnoreCase ))
