@@ -73,6 +73,10 @@ public:
 	ESoundType SoundKamehame;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
 	ESoundType SoundKamehamePa;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundIntro;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Sound)
+	ESoundType SoundLose;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<class UAnimMontage> RushAsset;
