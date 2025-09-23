@@ -1,58 +1,31 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
-
-
-
 #include "ADynamicCameraActor.h"
 
-
-
 #include "ACombatCharacter.h"
-
 #include "AEnemyActor.h"
-
 #include "APlayerActor.h"
 
-
-
 #include "UDBSZEventManager.h"
-
-
-
 #include "Camera/CameraComponent.h"
-
 #include "GameFramework/SpringArmComponent.h"
-
 #include "Kismet/GameplayStatics.h"
-
 #include "Kismet/KismetMathLibrary.h"
-
-
-
-
-
-// Sets default values
 
 ADynamicCameraActor::ADynamicCameraActor()
 {
-	// Set this actor to call Tick() every frame. You can turn this off to improve performance if you don't need it.
-
 	PrimaryActorTick.bCanEverTick = true;
+
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SetRootComponent(SpringArmComp);
+
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
-
 }
 
 
-// Called when the game starts or when spawned
-
 void ADynamicCameraActor::BeginPlay()
-
 {
-
 	Super::BeginPlay();
 
 	PlayerRef = Cast<APlayerActor>(UGameplayStatics::GetActorOfClass(GetWorld(), APlayerActor::StaticClass()));
@@ -60,40 +33,30 @@ void ADynamicCameraActor::BeginPlay()
 
 	// 이벤트 매니저를 통한 이벤트 등록및 제어
 	EventManager = UDBSZEventManager::Get(GetWorld());
-	EventManager->OnDash.AddDynamic(this, &ADynamicCameraActor::OnDash);
-	EventManager->OnTeleport.AddDynamic(this, &ADynamicCameraActor::OnTeleport);
+	// EventManager->OnDash.AddDynamic(this, &ADynamicCameraActor::OnDash);
+	// EventManager->OnTeleport.AddDynamic(this, &ADynamicCameraActor::OnTeleport);
 	EventManager->OnAttack.AddDynamic(this, &ADynamicCameraActor::OnAttack);
-	EventManager->OnSpecialAttack.AddDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
-	EventManager->OnGuard.AddDynamic(this, &ADynamicCameraActor::OnGuard);
-	EventManager->OnAvoid.AddDynamic(this, &ADynamicCameraActor::OnAvoid);
-	EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);
-
+	// EventManager->OnSpecialAttack.AddDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
+	// EventManager->OnGuard.AddDynamic(this, &ADynamicCameraActor::OnGuard);
+	// EventManager->OnAvoid.AddDynamic(this, &ADynamicCameraActor::OnAvoid);
+	// EventManager->OnPowerCharge.AddDynamic(this, &ADynamicCameraActor::OnPowerCharge);
 }
 
-
-
 void ADynamicCameraActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-
 {
 	Super::EndPlay(EndPlayReason);
 	if (!EventManager) return;
 
-	EventManager->OnDash.RemoveDynamic(this, &ADynamicCameraActor::OnDash);
-	EventManager->OnTeleport.RemoveDynamic(this, &ADynamicCameraActor::OnTeleport);
+	// EventManager->OnDash.RemoveDynamic(this, &ADynamicCameraActor::OnDash);
+	// EventManager->OnTeleport.RemoveDynamic(this, &ADynamicCameraActor::OnTeleport);
 	EventManager->OnAttack.RemoveDynamic(this, &ADynamicCameraActor::OnAttack);
-	EventManager->OnSpecialAttack.RemoveDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
-	EventManager->OnGuard.RemoveDynamic(this, &ADynamicCameraActor::OnGuard);
-	EventManager->OnAvoid.RemoveDynamic(this, &ADynamicCameraActor::OnAvoid);
-	EventManager->OnPowerCharge.RemoveDynamic(this, &ADynamicCameraActor::OnPowerCharge);
-
+	// EventManager->OnSpecialAttack.RemoveDynamic(this, &ADynamicCameraActor::OnSpecialAttack);
+	// EventManager->OnGuard.RemoveDynamic(this, &ADynamicCameraActor::OnGuard);
+	// EventManager->OnAvoid.RemoveDynamic(this, &ADynamicCameraActor::OnAvoid);
+	// EventManager->OnPowerCharge.RemoveDynamic(this, &ADynamicCameraActor::OnPowerCharge);
 }
 
-
-
-// Called every frame
-
 void ADynamicCameraActor::Tick(float DeltaTime)
-
 {
 	Super::Tick(DeltaTime);
 	if (!PlayerRef || !TargetRef)
@@ -122,14 +85,14 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 		bool bIsMovingFwdBack = false;
 		const FVector PlayerVelocity = PlayerRef->GetVelocity();
 		if (!PlayerVelocity.IsNearlyZero())
-			{
+		{
 			const FVector DirectionToTarget = (TargetRef->GetActorLocation() - PlayerRef->GetActorLocation()).GetSafeNormal();
 			const float ForwardDot = FVector::DotProduct(PlayerVelocity.GetSafeNormal(), DirectionToTarget);
 			if (FMath::Abs(ForwardDot) > 0.5f)
-				{
+			{
 				bIsMovingFwdBack = true;
-				}
 			}
+		}
 		// 조건 3: 현재 카메라 위치에서 플레이어가 타겟을 가리는가?
 		const FVector DirToPlayer = (PlayerRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 		const FVector DirToTarget = (TargetRef->GetActorLocation() - GetActorLocation()).GetSafeNormal();
@@ -153,21 +116,20 @@ void ADynamicCameraActor::Tick(float DeltaTime)
 	}
 }
 
-
-
 void ADynamicCameraActor::PlayerRotationLock()
 {
 	FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(PlayerRef->GetActorLocation(), TargetRef->GetActorLocation());
 	FRotator LockRot = FRotator(PlayerRef->GetActorRotation().Pitch, TargetRot.Yaw,PlayerRef->GetActorRotation().Roll);
 	PlayerRef->SetActorRotation(LockRot);
 }
-	void ADynamicCameraActor::CloseCameraRotation(float DeltaTime)
+
+void ADynamicCameraActor::CloseCameraRotation(float DeltaTime)
 {
 	FRotator NewRot = UKismetMathLibrary::RInterpTo(GetActorRotation(), UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TargetRef->GetActorLocation()), DeltaTime, 5);
 	SetActorRotation(NewRot);
 }
 
-	void ADynamicCameraActor::ResetCameraLocation(float DeltaTime)
+void ADynamicCameraActor::ResetCameraLocation(float DeltaTime)
 {
 	// ✅ 타겟 가림 회피가 적용된 최종 목표 위치를 가져옵니다.
 	FVector TargetCameraLocation = GetAvoidanceAdjustedCameraLocation();
@@ -185,8 +147,6 @@ void ADynamicCameraActor::ResetCameraRotation(float DeltaTime)
 	FRotator NewRotation = UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, 10);
 	SetActorRotation(NewRotation);
 }
-
-
 
 bool ADynamicCameraActor::ShouldResetByAlignment() const
 {
@@ -206,25 +166,19 @@ bool ADynamicCameraActor::ShouldResetByAlignment() const
 
 	// 계산된 거리가 설정된 임계값보다 크면 true를 반환합니다.
 	return Distance > AlignmentResetThreshold;
-
 }
 
-
-
 FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
-
 {
 	FVector PlayerLocation = PlayerRef->GetActorLocation();
 	FVector TargetLocation = TargetRef->GetActorLocation();
 	FVector BaseCameraLocation = (PlayerLocation + (PlayerLocation - TargetLocation).GetSafeNormal() * CameraDistance);
-	
 
 	FVector DirToPlayer = (PlayerLocation - BaseCameraLocation).GetSafeNormal();
 	FVector DirToTarget = (TargetLocation - BaseCameraLocation).GetSafeNormal();
 	float AlignmentDot = FVector::DotProduct(DirToPlayer, DirToTarget);
 
 	if (AlignmentDot > ObstructionDotThreshold)
-
 	{
 		// 1. 카메라의 기본 '오른쪽' 방향을 계산합니다.
 		FVector SidewaysVector = FVector::CrossProduct(DirToPlayer, FVector::UpVector).GetSafeNormal();
@@ -251,10 +205,12 @@ FVector ADynamicCameraActor::GetAvoidanceAdjustedCameraLocation()
 
 bool ADynamicCameraActor::IsPlayerInSafeFrame(FVector2D& OutMin, FVector2D& OutMax) const
 {
-    if (!PlayerRef || !GetWorld()) return true;
+    if (!PlayerRef || !GetWorld())
+    	return true;
 
     APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-    if (!PC) return true;
+    if (!PC)
+    	return true;
 
     // 뷰포트 사이즈와 안전 영역(예: 10% 마진)을 정의합니다.
     int32 ViewportSizeX, ViewportSizeY;
@@ -327,33 +283,7 @@ void ADynamicCameraActor::UpdateSpringArmOffset(float DeltaTime)
 	SpringArmComp->TargetOffset.Z = NewZOffset;
 }
 
-
-void ADynamicCameraActor::OnDash(AActor* Target, bool IsDashing, FVector Direction)
-
-{
-	if ( PlayerRef != Target )
-		return;
-	
-// const TCHAR* PrintMsg = IsDashing ? TEXT("Player Dashing Start") : TEXT("Player Dashing Complete");
-// PRINTLOG(TEXT("%s"), PrintMsg);
-
-}
-
-
-
-void ADynamicCameraActor::OnTeleport(AActor* Target)
-
-{
-	if ( PlayerRef != Target )
-		return;
-	// PRINTLOG(TEXT("OnTeleport"));
-
-}
-
-
-
 void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
-
 {
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 	if ( PlayerRef != Target )
@@ -361,59 +291,4 @@ void ADynamicCameraActor::OnAttack(AActor* Target, int ComboCount)
 	
 	ResetCameraLocation(DeltaTime);
 	CloseCameraRotation(DeltaTime);
-
-
-	// PRINTLOG(TEXT("ComboCount : %d"), ComboCount);
-
-}
-
-
-
-void ADynamicCameraActor::OnSpecialAttack(AActor* Target, int32 SpecialIndex)
-
-{
-
-if ( PlayerRef != Target )
-	return;
-	// PRINTLOG(TEXT("OnSpecialAttack : %d"), SpecialIndex);
-
-}
-
-
-
-void ADynamicCameraActor::OnGuard(AActor* Target, bool bState)
-
-{
-	if ( PlayerRef != Target )
-	return;
-
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Guard Start") : TEXT("Player Guard End");
-
-	// PRINTLOG(TEXT("%s"), PrintMsg);
-
-}
-
-
-void ADynamicCameraActor::OnAvoid(AActor* Target, bool bState)
-{
-	if ( PlayerRef != Target )
-	return;
-
-
-	// const TCHAR* PrintMsg = bState ? TEXT("Player Avoid Start") : TEXT("Player Avoid End");
-	// PRINTLOG(TEXT("%s"), PrintMsg);
-
-}
-
-
-
-void ADynamicCameraActor::OnPowerCharge(AActor* Target, bool bState)
-
-{
-if ( PlayerRef != Target )
-return;
-	
-// const TCHAR* PrintMsg = bState ? TEXT("Player PowerCharge Start") : TEXT("Player PowerCharge End");
-// PRINTLOG(TEXT("%s"), PrintMsg);
-
 }

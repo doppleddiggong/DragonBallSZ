@@ -188,6 +188,14 @@ void ACombatLevelScript::OnSequenceFinished()
 	{
 		PRINTLOG(TEXT("GokuWinSeq finished!"));
 	}
+	else if (PlayingSequence == VegeWinSeq)
+	{
+		PRINTLOG(TEXT("VegeWinSeq finished!"));
+	}
+	else if (PlayingSequence == GokuKamehameSeq)
+	{
+		PRINTLOG(TEXT("GokuKamehameSeq finished!"));
+	}
 	else
 	{
 		PRINTLOG(TEXT("Unknown Seq finished!"));

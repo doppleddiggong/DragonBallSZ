@@ -13,16 +13,13 @@ class DRAGONBALLSZ_API ADynamicCameraActor : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	ADynamicCameraActor();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 public:
@@ -62,19 +59,7 @@ public:
 
 public:// Event-Delegate
 	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnDash(AActor* Target, bool IsDashing, FVector Direction);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnTeleport(AActor* Target);
-	UFUNCTION(BlueprintCallable, Category="Event")
 	void OnAttack(AActor* Target, int ComboCount);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnSpecialAttack(AActor* Target, int32 SpecialIndex);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnGuard(AActor* Target, bool bState);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnAvoid(AActor* Target, bool bState);
-	UFUNCTION(BlueprintCallable, Category="Event")
-	void OnPowerCharge(AActor* Target, bool bState);
 
 private:
 	UPROPERTY()
