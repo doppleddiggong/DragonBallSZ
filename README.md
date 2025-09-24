@@ -6,7 +6,7 @@
 
 > **이 프로젝트는 '드래곤볼 스파킹! 제로'의 핵심 전투 시스템을 언리얼 엔진 5와 C++를 사용하여 깊이 있게 재구현한 기술 중심의 개인 포트폴리오입니다.**
 
-![Gameplay GIF](https://raw.githubusercontent.com/user/DragonBallSZ/main/Documents/Resources/gameplay.gif)
+![Gameplay](https://raw.githubusercontent.com/user/DragonBallSZ/main/Documents/Reference/GameTitle.jpg)
 *(위 이미지는 실제 프로젝트의 플레이 GIF로 대체되어야 합니다.)*
 
 ## 📜 1. 프로젝트 소개
