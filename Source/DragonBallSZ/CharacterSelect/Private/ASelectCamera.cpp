@@ -21,41 +21,40 @@ void ASelectCamera::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// TArray<AActor*> AllActors;
-	// UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
-	// for (AActor* Actor : AllActors)
-	// {
-	// 	if (Actor && Actor->ActorHasTag(FName(TEXT("SelectTransform"))))
-	// 		SelectTransforms.Add(Actor);
-	// }
+	TArray<AActor*> AllActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), AllActors);
+	for (AActor* Actor : AllActors)
+	{
+		if (Actor && Actor->ActorHasTag(FName(TEXT("SelectTransform"))))
+			SelectTransforms.Add(Actor);
+	}
 
 	// SelectTransforms.Sort([](const TObjectPtr<AActor>& A, const TObjectPtr<AActor>& B) {
 	// 	return A->GetActorLabel() < B->GetActorLabel();
 	// });
 
-	// Spawn pawns
-	// SelectPawns.Empty();
-	// FActorSpawnParameters SpawnParams;
-	// SpawnParams.Owner = this;
-	// SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SelectPawns.Empty();
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	// for (int32 i = 0; i < SelectData.Num(); ++i)
-	// {
-	// 	if (SelectTransforms.IsValidIndex(i) && SelectTransforms[i])
-	// 	{
-	// 		const FTransform SpawnTransform = SelectTransforms[i]->GetActorTransform();
-	// 		ASelectPawn* NewPawn = GetWorld()->SpawnActor<ASelectPawn>(PawnFactory, SpawnTransform, SpawnParams);
-	// 		if (NewPawn)
-	// 		{
-	// 			NewPawn->SetupCharacterFromType(SelectData[i].PowerType, SelectData[i].bIsAnother);
-	// 			SelectPawns.Add(NewPawn);
-	// 		}
-	// 	}
-	// }
-	//
-	// PawnSelectionStates.Init(ESelectionState::None, SelectPawns.Num());
-	// if (SelectPawns.Num() > 0)
-	// 	FocusCharacter(CurrentFocusIndex);
+	for (int32 i = 0; i < SelectData.Num(); ++i)
+	{
+		if (SelectTransforms.IsValidIndex(i) && SelectTransforms[i])
+		{
+			const FTransform SpawnTransform = SelectTransforms[i]->GetActorTransform();
+			ASelectPawn* NewPawn = GetWorld()->SpawnActor<ASelectPawn>(PawnFactory, SpawnTransform, SpawnParams);
+			if (NewPawn)
+			{
+				NewPawn->SetupCharacterFromType(SelectData[i].PowerType, SelectData[i].bIsAnother);
+				SelectPawns.Add(NewPawn);
+			}
+		}
+	}
+	
+	PawnSelectionStates.Init(ESelectionState::None, SelectPawns.Num());
+	if (SelectPawns.Num() > 0)
+		FocusCharacter(CurrentFocusIndex);
 }
 
 void ASelectCamera::Tick(float DeltaTime)

@@ -81,7 +81,6 @@ private:
 	TMap<ECharacterType, FCharacterInfoData> CharacterInfoCache;
 #pragma endregion CHARACTER_INFO_DATA
 
-
 #pragma region CHARACTER_ASSET_DATA
 public:
 	UPROPERTY(EditAnywhere, Category="MasterData|CharacterAsset")
@@ -98,4 +97,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Cache", meta = (AllowPrivateAccess = "true"))
 	TMap<ECharacterType, FCharacterAssetData> CharacterAssetCache;
 #pragma endregion CHARACTER_ASSET_DATA
+
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Player")
+	ECharacterType PlayerType = ECharacterType::Songoku;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character|Enemy")
+	ECharacterType EnemyType = ECharacterType::Vegeta;
 };
