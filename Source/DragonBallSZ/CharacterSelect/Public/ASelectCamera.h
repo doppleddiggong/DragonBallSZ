@@ -57,8 +57,8 @@ protected:
 	void FocusCharacter(int32 FocusIndex);
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Select")
-	TArray<TObjectPtr<AActor>> SelectTransforms;
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Select")
+	// TArray<TObjectPtr<AActor>> SelectTransforms;
 	
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Data", meta = (AllowPrivateAccess = "true"))

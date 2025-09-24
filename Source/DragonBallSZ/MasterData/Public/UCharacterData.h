@@ -8,6 +8,8 @@
 #include "Engine/DataAsset.h"
 #include "UCharacterData.generated.h"
 
+class UMaterialInstanceConstant;
+
 UCLASS(BlueprintType)
 class DRAGONBALLSZ_API UCharacterData : public UDataAsset
 {

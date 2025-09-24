@@ -601,6 +601,8 @@ void ACombatCharacter::PlayTargetMontage(UAnimMontage* AnimMontage)
 {
 	if ( IsValid(AnimInstance) && IsValid(AnimMontage) )
 	{
+		RushAttackSystem-> bIsAttacking = false;
+		
 		AnimInstance->Montage_Play(
 			AnimMontage,
 			1.0f,
