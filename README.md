@@ -13,9 +13,9 @@
 <h2>✓ 최종 결과물</h2>
 
 <div align="left">
-  🎥 <a href="https://youtu.be/W4P-xAtt1v4">프로토 구현</a><br>
+  🎥 <a href="https://youtu.be/aUEw7xU_XEw">프로토 구현</a><br>
   🎥 <a href="https://youtu.be/Fo74JgOmnWM">알파 구현</a><br>
-  🎥 <a href="https://youtu.be/aUEw7xU_XEw">베타 구현</a>
+  🎥 <a href="https://youtu.be/W4P-xAtt1v4">베타 구현</a>
 </div>
 
 
